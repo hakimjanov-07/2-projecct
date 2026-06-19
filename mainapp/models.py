@@ -44,6 +44,7 @@ class Book(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='book')
     author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='book')
     language = models.CharField(choices=LANGUAGE, verbose_name='Tili:')
+    price = models.PositiveIntegerField(verbose_name='Narxi:', null=True, blank=True)
     about = models.TextField(verbose_name='Batafsil:')
     publisher = models.CharField(max_length=100, verbose_name='Nashriyotchi:')
     pages = models.PositiveIntegerField(verbose_name='Sahifalar soni:')

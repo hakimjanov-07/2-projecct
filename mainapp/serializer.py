@@ -17,4 +17,4 @@ class Author_Serializer(serializers.ModelSerializer):
 class Book_Serializer(serializers.ModelSerializer):
     class Meta:
         model = Book
-        fields = ["id", "name", 'category','author','language','about','publisher','pages','audio_file','pdf_file','photo',"status", "created_on"]
+        fields = ["id", "name", 'category','author','language','price','about','publisher','pages','audio_file','pdf_file','photo',"status", "created_on"]

@@ -30,7 +30,12 @@ SECRET_KEY = config('SECRET_KEY')
 
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'bookshoptest.pythonanywhere.com',
+    # "http://127.0.0.1:8000/",
+    "127.0.0.1",
+    # "127.0.0.1:8000"
+    ]
 
 
 # Application definition
@@ -125,8 +130,14 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
+import os
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
