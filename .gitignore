@@ -1,2 +1,17 @@
 .env
-myenv
+.venv/
+myenv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite3
+db.sqlite3
+media/
+staticfiles/
+.vscode/
+.idea/
+*.log
+
+# Frontend
+bookshop-react/node_modules/
+bookshop-react/dist/
