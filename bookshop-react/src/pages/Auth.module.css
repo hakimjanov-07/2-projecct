@@ -1,0 +1,45 @@
+.page {
+  min-height: 620px;
+  display: grid;
+  place-items: center;
+  padding: 64px 24px;
+  background: var(--gray-50);
+}
+
+.card {
+  width: min(100%, 440px);
+  padding: 40px;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+.eyebrow {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.card h1 { margin-top: 8px; font-size: 30px; }
+.subtitle { margin-top: 4px; color: var(--gray-600); }
+.form { display: grid; gap: 18px; margin-top: 28px; }
+.form label { display: grid; gap: 7px; font-size: 13px; font-weight: 500; }
+.form input { width: 100%; padding: 12px 14px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); font: inherit; }
+.form input:focus { outline: 2px solid var(--accent-bg); border-color: var(--accent); }
+.submitArea { display: block; width: 100%; margin-top: 2px; }
+.submit { display: block; width: 100%; min-height: 46px; border: 0; border-radius: var(--radius-sm); padding: 13px; color: white; background: var(--brown); font-weight: 600; cursor: pointer; }
+.submit:disabled { opacity: .6; cursor: wait; }
+.error { color: #c0392b; font-size: 13px; }
+.switch { color: var(--gray-600); text-align: center; font-size: 13px; }
+.switch a { color: var(--accent); font-weight: 600; }
+
+@media (max-width: 480px) {
+  .card { padding: 28px 22px; }
+}
+
+.forgot { justify-self: end; margin-top: -6px; color: var(--brown-2); font-size: 13px; font-weight: 600; text-decoration: none; }
+.forgot:hover { text-decoration: underline; }
+.success { margin: 0; padding: 10px 14px; border-radius: 12px; background: #eef7ec; color: #3f6b38; font-size: 13px; }

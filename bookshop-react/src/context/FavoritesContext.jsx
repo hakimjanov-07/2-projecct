@@ -1,0 +1,62 @@
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useLang } from '../i18n/LanguageContext'
+import { useToast } from './ToastContext'
+
+const FavoritesContext = createContext(null)
+const STORAGE_KEY = 'bookshop-favorites'
+
+const readSaved = () => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
+    return Array.isArray(saved) ? saved.map(Number).filter(Number.isFinite) : []
+  } catch {
+    return []
+  }
+}
+
+// Sevimli kitoblar (yurakcha). Faqat kitob id'lari shu brauzerda saqlanadi.
+export function FavoritesProvider({ children }) {
+  const { t } = useLang()
+  const { showToast } = useToast()
+  const [ids, setIds] = useState(readSaved)
+  const idsRef = useRef(ids)
+  useEffect(() => { idsRef.current = ids }, [ids])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(ids))
+    } catch {
+      // Brauzer xotirasi mavjud bo'lmasa, ro'yxat faqat shu sessiya uchun saqlanadi.
+    }
+  }, [ids])
+
+  const toggleFavorite = useCallback((bookId) => {
+    const id = Number(bookId)
+    // Ketma-ket tez bosishlarda ham eng so'nggi ro'yxat bilan ishlash uchun ref ishlatiladi
+    const current = idsRef.current
+    const exists = current.includes(id)
+    const next = exists ? current.filter((item) => item !== id) : [id, ...current]
+    idsRef.current = next
+    setIds(next)
+    showToast(t(exists ? 'toast.favRemoved' : 'toast.favAdded'), { icon: '♥' })
+  }, [showToast, t])
+
+  const value = useMemo(
+    () => ({
+      favoriteIds: ids,
+      favoritesCount: ids.length,
+      isFavorite: (bookId) => ids.includes(Number(bookId)),
+      toggleFavorite,
+    }),
+    [ids, toggleFavorite]
+  )
+
+  return <FavoritesContext.Provider value={value}>{children}</FavoritesContext.Provider>
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function useFavorites() {
+  const context = useContext(FavoritesContext)
+  if (!context) throw new Error('useFavorites must be used inside FavoritesProvider')
+  return context
+}

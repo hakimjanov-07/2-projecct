@@ -1,0 +1,69 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --cream:    #f7f3ee;
+  --cream-2:  #ede8e0;
+  --white:    #ffffff;
+  --black:    #1a1a1a;
+  --brown:    #c8956c;
+  --brown-2:  #a0704a;
+  --nav-dark: #c8956c;
+  --nav-soft: #f3e8df;
+  --gray-100: #f0ebe4;
+  --gray-200: #e0d8d0;
+  --gray-400: #a0978e;
+  --gray-600: #6b6460;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --shadow-sm: 0 2px 12px rgba(0,0,0,0.06);
+  --shadow-md: 0 8px 32px rgba(0,0,0,0.12);
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--black);
+  background: var(--cream);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { text-decoration: none; color: inherit; }
+img { display: block; width: 100%; height: 100%; object-fit: cover; }
+button { font-family: inherit; cursor: pointer; border: none; }
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 80px;
+}
+
+.loading {
+  text-align: center;
+  padding: 60px;
+  color: var(--gray-400);
+  font-size: 14px;
+}
+
+/* Bo'limlarning animatsiya bilan chiqishi (data-reveal, RevealOnScroll.jsx) */
+@keyframes reveal-up {
+  from { opacity: 0; translate: 0 18px; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+html.reveal-ready [data-reveal]:not([data-revealed]) {
+  opacity: 0;
+  translate: 0 18px;
+}
+
+html.reveal-ready [data-reveal][data-revealed] {
+  animation: reveal-up 600ms ease both;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+/* Qatordagi kartochkalar birin-ketin chiqadi */
+[data-reveal]:nth-child(4n + 2) { --reveal-delay: 100ms; }
+[data-reveal]:nth-child(4n + 3) { --reveal-delay: 200ms; }
+[data-reveal]:nth-child(4n + 4) { --reveal-delay: 300ms; }

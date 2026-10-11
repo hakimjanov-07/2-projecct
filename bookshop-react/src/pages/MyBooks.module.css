@@ -1,0 +1,104 @@
+.page {
+  padding: 40px 0 72px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 36px;
+}
+
+.sub {
+  margin: 6px 0 0;
+  color: var(--gray-600);
+}
+
+.catalogBtn {
+  padding: 12px 22px;
+  border-radius: 14px;
+  background: var(--brown);
+  color: var(--white);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.catalogBtn:hover {
+  background: var(--brown-2);
+}
+
+.stat {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 200px;
+  margin-bottom: 28px;
+  padding: 16px 22px;
+  border: 1px solid var(--gray-200);
+  border-radius: 18px;
+  background: var(--white);
+  color: var(--gray-600);
+  font-size: 14px;
+}
+
+.stat strong {
+  color: var(--black);
+  font-size: 28px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.empty {
+  padding: 56px 24px;
+  border: 2px dashed var(--gray-200);
+  border-radius: 24px;
+  color: var(--gray-600);
+  text-align: center;
+}
+
+.emptyIcon {
+  margin: 0;
+  color: var(--brown);
+  font-size: 48px;
+  line-height: 1;
+}
+
+.empty h2 {
+  margin: 8px 0 4px;
+  color: var(--black);
+  font-size: 20px;
+}
+
+.empty p {
+  margin: 0;
+}
+
+@media (max-width: 1200px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

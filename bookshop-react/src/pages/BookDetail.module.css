@@ -1,0 +1,538 @@
+.page {
+  padding: 24px 0 72px;
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.backBtn {
+  margin: 16px;
+  padding: 10px 18px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  background: var(--white);
+  cursor: pointer;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+  color: var(--gray-600);
+  font-size: 14px;
+}
+
+.breadcrumb a {
+  color: var(--gray-600);
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  color: var(--brown-2);
+}
+
+.current {
+  color: var(--black);
+  font-weight: 600;
+}
+
+/* Asosiy kartochka */
+.hero {
+  display: grid;
+  grid-template-columns: 440px minmax(0, 1fr);
+  gap: 32px;
+  padding: 28px;
+  border: 1px solid var(--gray-200);
+  border-radius: 22px;
+  background: rgba(201, 157, 104, 0.1);
+}
+
+.cover {
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  border-radius: 18px;
+  background: var(--white);
+  box-shadow: var(--shadow-sm);
+}
+
+.cover img {
+  width: 100%;
+  max-height: 540px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.infoCol {
+  min-width: 0;
+}
+
+.category {
+  color: var(--brown-2);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.category:hover {
+  text-decoration: underline;
+}
+
+.title {
+  margin: 8px 0 10px;
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.author {
+  margin: 0 0 16px;
+  color: var(--gray-600);
+  font-size: 18px;
+}
+
+.ratingRow {
+  margin-bottom: 20px;
+}
+
+.ratingBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: var(--gray-100);
+  font-size: 14px;
+}
+
+.stars {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.starOn {
+  color: #f5a524;
+}
+
+.starOff {
+  color: var(--gray-200);
+}
+
+.ratingCount {
+  color: var(--gray-600);
+}
+
+/* Xususiyatlar ro'yxati: nomi ...... qiymati */
+.specs,
+.detailList {
+  margin: 0 0 22px;
+}
+
+.specRow {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.specRow dt {
+  color: var(--gray-600);
+}
+
+.specRow::after {
+  order: 1;
+  flex: 1;
+  border-bottom: 1px dotted var(--gray-400);
+  content: '';
+  transform: translateY(-4px);
+}
+
+.specRow dd {
+  order: 2;
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Narx va savat */
+.buyCard {
+  padding: 20px;
+  border: 1px solid rgba(160, 112, 74, 0.35);
+  border-radius: 18px;
+  background: var(--white);
+}
+
+.price {
+  margin: 0 0 14px;
+  color: var(--brown-2);
+  font-size: 30px;
+  font-weight: 800;
+}
+
+.buyRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.quantityControl {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--gray-200);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.quantityControl button {
+  width: 42px;
+  height: 46px;
+  border: none;
+  background: var(--gray-100);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.quantityControl button:hover {
+  background: var(--gray-200);
+}
+
+.quantityControl span {
+  min-width: 44px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.cartBtn {
+  flex: 1;
+  height: 48px;
+  border: none;
+  border-radius: 14px;
+  background: var(--brown);
+  color: var(--white);
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.cartBtn:hover:not(:disabled) {
+  background: var(--brown-2);
+}
+
+.cartBtn:disabled {
+  background: var(--gray-200);
+  color: var(--gray-600);
+  cursor: not-allowed;
+}
+
+.cartBtnAdded {
+  background: #6f8f68;
+}
+
+.cartBtnAdded:hover:not(:disabled) {
+  background: #5e7d58;
+}
+
+.fileLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.fileLinks a {
+  padding: 8px 14px;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  color: var(--black);
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.fileLinks a:hover {
+  border-color: var(--brown);
+}
+
+.favBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 14px;
+  height: 48px;
+  border: 1px solid var(--gray-200);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.85);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.favBtn:hover {
+  border-color: var(--brown);
+}
+
+.favBtn svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: var(--brown);
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+}
+
+.favBtnActive svg {
+  fill: var(--brown);
+}
+
+/* Tablar */
+.tabsSection {
+  margin-top: 28px;
+  padding: 14px;
+  border: 1px solid var(--gray-200);
+  border-radius: 26px;
+  background: rgba(201, 157, 104, 0.1);
+}
+
+.tabBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.tabBtn {
+  padding: 12px 22px;
+  border: none;
+  border-radius: 16px;
+  background: transparent;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.tabBtn:hover {
+  background: var(--gray-100);
+}
+
+.tabActive,
+.tabActive:hover {
+  background: var(--brown);
+  color: var(--white);
+}
+
+.tabPanel {
+  margin-top: 14px;
+  padding: 24px;
+  border-radius: 22px;
+  background: var(--white);
+}
+
+.tabPanel h2 {
+  margin: 0 0 14px;
+  font-size: 22px;
+}
+
+.about {
+  margin: 0;
+  color: var(--gray-600);
+  line-height: 1.8;
+  white-space: pre-line;
+}
+
+.reviewList {
+  display: grid;
+  gap: 16px;
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+}
+
+.reviewList li {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.reviewTop {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.reviewTop time {
+  margin-left: auto;
+  color: var(--gray-400);
+  font-size: 13px;
+}
+
+.reviewList p {
+  margin: 6px 0 0;
+  color: var(--gray-600);
+}
+
+.allReviews {
+  margin-top: 10px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--brown-2);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.allReviews:hover {
+  text-decoration: underline;
+}
+
+/* Shu janrdagi kitoblar */
+.similar {
+  margin-top: 40px;
+}
+
+.similarHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.similarHead h2 {
+  margin: 0;
+  font-size: 26px;
+}
+
+.arrows {
+  display: flex;
+  gap: 8px;
+}
+
+.arrows button {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--gray-200);
+  border-radius: 50%;
+  background: var(--white);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.arrows button:hover {
+  border-color: var(--brown);
+  color: var(--brown-2);
+}
+
+.slider {
+  display: flex;
+  gap: 18px;
+  padding: 6px 4px 14px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+
+.sliderItem {
+  flex: 0 0 260px;
+  scroll-snap-align: start;
+}
+
+@media (max-width: 960px) {
+  .hero {
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+
+  .cover {
+    max-width: 420px;
+    margin: 0 auto;
+  }
+
+  .title {
+    font-size: 26px;
+  }
+}
+
+@media (max-width: 520px) {
+  .buyRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .quantityControl {
+    justify-content: space-between;
+  }
+
+  .quantityControl span {
+    flex: 1;
+  }
+
+  .tabBtn {
+    flex: 1;
+    padding: 10px 12px;
+  }
+
+  .sliderItem {
+    flex-basis: 220px;
+  }
+}
+
+/* Tab sarlavhalari va tafsilotlar kartochkalari (Izohlar bilan bir xil uslub) */
+.panelTitle {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.panelSubtitle {
+  margin: 8px 0 24px;
+  color: var(--gray-600);
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+}
+
+.infoCard {
+  padding: 18px 26px;
+  border: 1px solid rgba(160, 112, 74, 0.14);
+  border-radius: 22px;
+  background: rgba(201, 157, 104, 0.07);
+}
+
+.infoCard dt {
+  color: var(--gray-600);
+  font-size: 15px;
+}
+
+.infoCard dd {
+  margin: 8px 0 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  .infoGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .panelTitle {
+    font-size: 24px;
+  }
+}

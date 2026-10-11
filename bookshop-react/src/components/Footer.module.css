@@ -1,0 +1,225 @@
+.footer {
+  position: relative;
+  margin-top: 40px;
+  padding: 56px 40px 0;
+  background: linear-gradient(180deg, #4a3428 0%, #2a1d16 100%);
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.inner {
+  display: grid;
+  grid-template-columns: minmax(260px, 1.4fr) repeat(3, minmax(160px, 1fr));
+  gap: 40px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding-bottom: 44px;
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--white);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+}
+
+.logoMark {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--brown) 0%, var(--brown) 50%, #f3d3b3 50%, #f3d3b3 100%);
+  transform: rotate(45deg);
+}
+
+.tagline {
+  margin: 18px 0 0;
+  max-width: 340px;
+  line-height: 1.7;
+}
+
+.followTitle {
+  margin: 28px 0 12px;
+  color: var(--white);
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.socials {
+  display: flex;
+  gap: 10px;
+}
+
+.socials a {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.socials a:hover {
+  border-color: var(--brown);
+  background: rgba(200, 149, 108, 0.25);
+}
+
+.socials svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: var(--white);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.col h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 6px;
+  color: var(--white);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.col h3::before {
+  width: 5px;
+  height: 20px;
+  border-radius: 3px;
+  background: var(--brown);
+  content: '';
+}
+
+.accent h3::before {
+  background: #f3d3b3;
+}
+
+.col a {
+  color: rgba(255, 255, 255, 0.72);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.col a:hover {
+  color: var(--white);
+}
+
+.contactCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--white);
+}
+
+.col a.contactCard {
+  color: var(--white);
+}
+
+.contactCard small {
+  display: block;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+}
+
+.contactCard strong {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.contactIcon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.contactIcon svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: var(--white);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.contactIcon .phoneIcon {
+  fill: var(--white);
+  stroke: none;
+}
+
+.bottom {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 22px 0 26px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.copy {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 13px;
+}
+
+.toTop {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: none;
+  border-radius: 50%;
+  background: var(--white);
+  color: var(--black);
+  font-size: 22px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.toTop:hover {
+  transform: translateY(-3px);
+}
+
+@media (max-width: 1000px) {
+  .inner {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .brandCol {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 560px) {
+  .footer {
+    padding: 40px 20px 0;
+  }
+
+  .inner {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+}

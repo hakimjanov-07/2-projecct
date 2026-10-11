@@ -1,0 +1,349 @@
+.title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.subtitle {
+  margin: 8px 0 24px;
+  color: var(--gray-600);
+}
+
+.muted {
+  margin: 20px 0 0;
+  color: var(--gray-600);
+}
+
+/* Izoh yozish formasi (tizimga kirganlar uchun) */
+.form,
+.gate,
+.card {
+  padding: 20px 26px;
+  border: 1px solid rgba(160, 112, 74, 0.14);
+  border-radius: 22px;
+  background: rgba(201, 157, 104, 0.07);
+}
+
+.form {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.form h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.ratingSet {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.ratingSet legend {
+  margin-bottom: 6px;
+  color: var(--gray-600);
+  font-size: 14px;
+}
+
+.starPicker {
+  display: flex;
+  gap: 4px;
+}
+
+.starOption {
+  position: relative;
+  cursor: pointer;
+}
+
+.starOption input {
+  position: absolute;
+  opacity: 0;
+}
+
+.starOption span {
+  color: var(--gray-200);
+  font-size: 32px;
+  line-height: 1;
+  transition: color 0.15s, transform 0.15s;
+}
+
+.starOption:hover span {
+  transform: scale(1.1);
+}
+
+.starOption input:focus-visible + span {
+  outline: 2px solid var(--brown);
+  border-radius: 4px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  color: var(--gray-600);
+  font-size: 14px;
+}
+
+.field textarea {
+  padding: 12px 14px;
+  border: 1px solid var(--gray-200);
+  border-radius: 14px;
+  background: var(--white);
+  color: var(--black);
+  font: inherit;
+  resize: vertical;
+  outline: none;
+}
+
+.field textarea:focus {
+  border-color: var(--brown);
+  box-shadow: 0 0 0 3px rgba(200, 149, 108, 0.2);
+}
+
+.submit {
+  justify-self: start;
+  height: 46px;
+  padding: 0 28px;
+  border: none;
+  border-radius: 14px;
+  background: var(--brown);
+  color: var(--white);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.submit:hover:not(:disabled) {
+  background: var(--brown-2);
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error,
+.notice {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+.error {
+  background: #fdecef;
+  color: #d3354f;
+}
+
+.notice {
+  background: #eef7ec;
+  color: #3f6b38;
+}
+
+/* Tizimga kirmaganlar uchun */
+.gate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+
+.gate p {
+  margin: 0;
+  font-weight: 600;
+}
+
+.gateButtons {
+  display: flex;
+  gap: 10px;
+}
+
+.gateLogin,
+.gateRegister {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 22px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.gateLogin {
+  border: 1px solid var(--gray-200);
+  background: var(--white);
+  color: var(--black);
+}
+
+.gateRegister {
+  background: var(--brown);
+  color: var(--white);
+}
+
+.gateLogin:hover {
+  border-color: var(--brown);
+}
+
+.gateRegister:hover {
+  background: var(--brown-2);
+}
+
+/* Izohlar ro'yxati: kartochkalar, Tafsilotlar bilan bir xil uslubda */
+.list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card p {
+  margin: 12px 0 0;
+  color: var(--black);
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--brown);
+  color: var(--white);
+  font-weight: 700;
+}
+
+.who {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+}
+
+.who strong {
+  overflow: hidden;
+  font-size: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.who time {
+  color: var(--gray-600);
+  font-size: 13px;
+}
+
+.you {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--nav-soft);
+  color: var(--brown-2);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.stars {
+  display: inline-flex;
+  gap: 2px;
+  font-size: 16px;
+}
+
+.starOn {
+  color: #f5a524;
+}
+
+.starOff {
+  color: var(--gray-200);
+}
+
+.photo {
+  display: block;
+  max-width: 100%;
+  max-height: 220px;
+  margin-top: 12px;
+  border-radius: 14px;
+  object-fit: cover;
+}
+
+@media (max-width: 760px) {
+  .list {
+    grid-template-columns: 1fr;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+}
+
+.starOption .starOn {
+  color: #f5a524;
+}
+
+.formHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cancel {
+  padding: 8px 16px;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  background: var(--white);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.cancel:hover {
+  border-color: var(--brown);
+}
+
+.notice,
+.error {
+  margin: 0 0 18px;
+}
+
+.editBtn {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid rgba(160, 112, 74, 0.25);
+  border-radius: 50%;
+  background: var(--white);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.editBtn svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: var(--brown-2);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.editBtn:hover {
+  border-color: var(--brown);
+  background: var(--nav-soft);
+}

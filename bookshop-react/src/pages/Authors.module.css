@@ -1,0 +1,373 @@
+.page {
+  padding: 40px 0 72px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: var(--brown-2);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 34px;
+}
+
+.sub {
+  margin: 4px 0 0;
+  color: var(--gray-600);
+}
+
+.search {
+  width: 100%;
+  max-width: 320px;
+  padding: 12px 18px;
+  border: 1px solid var(--gray-200);
+  border-radius: 999px;
+  background: var(--white);
+  font-size: 15px;
+  outline: none;
+}
+
+.search:focus {
+  border-color: var(--brown);
+  box-shadow: 0 0 0 3px rgba(200, 149, 108, 0.2);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 22px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 22px 22px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  background: var(--white);
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 110px;
+  height: 110px;
+  margin-bottom: 16px;
+  border-radius: 50%;
+  background: var(--cream-2);
+  font-size: 44px;
+  overflow: hidden;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.about {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  margin: 0 0 18px;
+  overflow: hidden;
+  color: var(--gray-600);
+  font-size: 14px;
+}
+
+.link {
+  margin-top: auto;
+  color: var(--brown-2);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.empty {
+  padding: 48px 0;
+  color: var(--gray-600);
+  text-align: center;
+}
+
+.card {
+  cursor: pointer;
+}
+
+.card:focus-visible {
+  outline: 3px solid var(--brown);
+  outline-offset: 2px;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.modal {
+  position: relative;
+  width: min(640px, 100%);
+  max-height: 88vh;
+  padding: 32px;
+  overflow-y: auto;
+  border-radius: 22px;
+  background: var(--white);
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.35);
+}
+
+.modal h3 {
+  margin: 24px 0 8px;
+  font-size: 16px;
+}
+
+.close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: var(--gray-100);
+  color: var(--black);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.close:hover {
+  background: var(--gray-200);
+}
+
+.modalHead {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-right: 36px;
+}
+
+.modalHead h2 {
+  margin: 0;
+  font-size: 26px;
+}
+
+.modalAvatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: var(--cream-2);
+  font-size: 48px;
+  overflow: hidden;
+}
+
+.modalAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.modalAbout {
+  margin: 0;
+  color: var(--gray-600);
+  white-space: pre-line;
+}
+
+.bookList {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+}
+
+.bookList a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  color: var(--black);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.bookList a:hover {
+  border-color: var(--brown);
+  background: var(--cream);
+}
+
+.bookList em {
+  color: var(--brown-2);
+  font-size: 14px;
+  font-style: normal;
+}
+
+@media (max-width: 520px) {
+  .modal {
+    padding: 24px 20px;
+  }
+
+  .modalHead {
+    flex-direction: column;
+    text-align: center;
+    padding-right: 0;
+  }
+}
+
+/* Kartochka ustiga borganda: "Maqolalar" kartochkasidagidek jigarrang fon va oq yozuv */
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+}
+
+.card h2,
+.about,
+.link {
+  transition: color 0.3s ease;
+}
+
+.avatar img,
+.avatar span {
+  transition: transform 0.5s ease, filter 0.5s ease;
+}
+
+.card:hover,
+.card:focus-visible {
+  transform: translateY(-8px);
+  border-color: var(--brown);
+  background: var(--brown);
+  box-shadow: 0 18px 34px rgba(96, 63, 39, 0.16);
+}
+
+.card:hover h2,
+.card:hover .about,
+.card:hover .link,
+.card:focus-visible h2,
+.card:focus-visible .about,
+.card:focus-visible .link {
+  color: var(--white);
+}
+
+.card:hover .avatar img,
+.card:hover .avatar span {
+  transform: scale(1.08);
+  filter: saturate(1.12) contrast(1.04);
+}
+
+.card:hover .avatar {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+/* Oyna ichidagi bloklar: "Biz haqimizda" sahifasidagi missiya bloki kabi oq to'rtburchak,
+   ustiga borganda jigarrang */
+.modal {
+  background: var(--cream);
+}
+
+.infoBlock {
+  margin-top: 20px;
+  padding: 30px 34px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  background: var(--white);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.infoBlock h3 {
+  margin: 0 0 14px;
+  font-size: 22px;
+  font-weight: 700;
+  transition: color 0.3s ease;
+}
+
+.infoBlock .modalAbout {
+  line-height: 1.8;
+  transition: color 0.3s ease;
+}
+
+.infoBlock .link {
+  display: inline-block;
+}
+
+.infoBlock:hover {
+  transform: translateY(-3px);
+  border-color: var(--brown-2);
+  background: var(--brown);
+  box-shadow: 0 18px 34px rgba(96, 63, 39, 0.16);
+}
+
+.infoBlock:hover h3,
+.infoBlock:hover .modalAbout,
+.infoBlock:hover .link {
+  color: var(--white);
+}
+
+.infoBlock:hover .bookList a {
+  border-color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--white);
+}
+
+.infoBlock:hover .bookList a:hover {
+  background: var(--white);
+  color: var(--brown-2);
+}
+
+.infoBlock:hover .bookList em {
+  color: inherit;
+}
+
+@media (max-width: 520px) {
+  .infoBlock {
+    padding: 22px 20px;
+  }
+}
+
+/* Oynadagi muallif ismi: ustiga borganda sayt rangiga o'tadi */
+.modalHead h2 {
+  transition: color 0.25s ease;
+}
+
+.modalHead:hover h2,
+.modalHead h2:hover {
+  color: var(--brown-2);
+}

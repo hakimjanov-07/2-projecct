@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" role="img" aria-labelledby="title desc">
+<title id="title">Book cover placeholder</title>
+<desc id="desc">Book cover shown when a photo is unavailable</desc>
+<rect width="800" height="1000" fill="#eaf3de"/>
+<rect x="100" y="100" width="600" height="800" rx="12" fill="#2c5f2e"/>
+<rect x="145" y="145" width="510" height="710" fill="#f8fbf2"/>
+<path d="M400 280 540 360v220l-140 80-140-80V360z" fill="#d9e8c7"/>
+<path d="M400 280v380M260 360l140 80 140-80M260 580l140 80 140-80" fill="none" stroke="#2c5f2e" stroke-width="12"/>
+<text x="400" y="760" fill="#2c5f2e" font-family="Georgia,serif" font-size="42" text-anchor="middle">Kitob</text>
+<text x="400" y="815" fill="#6b6b6b" font-family="Arial,sans-serif" font-size="22" text-anchor="middle">Rasm mavjud emas</text>
+</svg>
