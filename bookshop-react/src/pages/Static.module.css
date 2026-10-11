@@ -295,8 +295,9 @@
 }
 
 .articleBody { padding: 20px; }
-.articleTitle { font-size: 15px; font-weight: 600; margin-bottom: 8px; line-height: 1.4; }
+.articleTitle { color: var(--brown-dark); font-size: 15px; font-weight: 600; margin-bottom: 8px; line-height: 1.4; }
 .articleExcerpt { font-size: 13px; color: var(--gray-600); line-height: 1.65; margin-bottom: 12px; }
 .articleMeta { font-size: 11px; color: var(--gray-400); }
+.articleCard:hover .articleTitle,
 .articleCard:hover .articleExcerpt,
 .articleCard:hover .articleMeta { color: rgba(255,255,255,0.84); }

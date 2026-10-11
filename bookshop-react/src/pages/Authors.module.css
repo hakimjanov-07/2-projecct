@@ -349,7 +349,7 @@
 
 .infoBlock:hover .bookList a:hover {
   background: var(--white);
-  color: var(--brown-2);
+  color: var(--brown-dark);
 }
 
 .infoBlock:hover .bookList em {
@@ -369,5 +369,5 @@
 
 .modalHead:hover h2,
 .modalHead h2:hover {
-  color: var(--brown-2);
+  color: var(--brown-dark);
 }

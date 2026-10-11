@@ -376,3 +376,53 @@ class PasswordResetTests(TestCase):
         res = self.reset('123456', email='nobody@example.com')
         self.assertEqual(res.status_code, 400)
         self.assertIn('code', res.data)
+
+
+class ProfileTests(BookShopAPITestCase):
+    url = '/api/profile/'
+
+    def test_requires_login(self):
+        self.assertEqual(self.client.get(self.url).status_code, 401)
+        self.assertEqual(self.client.patch(self.url, {'phone': '1'}, format='json').status_code, 401)
+
+    def test_get_creates_empty_profile(self):
+        self.client.force_authenticate(user=self.user)
+        res = self.client.get(self.url)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['username'], 'testuser')
+        self.assertEqual(res.data['email'], 'test@example.com')
+        self.assertEqual(res.data['phone'], '')
+
+    def test_patch_saves_fields_and_email(self):
+        self.client.force_authenticate(user=self.user)
+        res = self.client.patch(self.url, {
+            'full_name': 'Test Foydalanuvchi', 'phone': '+998901234567',
+            'address': 'Toshkent', 'bio': 'Kitob sevaman', 'email': 'new@example.com',
+        }, format='json')
+        self.assertEqual(res.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, 'new@example.com')
+        again = self.client.get(self.url)
+        self.assertEqual(again.data['full_name'], 'Test Foydalanuvchi')
+        self.assertEqual(again.data['address'], 'Toshkent')
+
+    def test_partial_patch_keeps_other_fields(self):
+        self.client.force_authenticate(user=self.user)
+        self.client.patch(self.url, {'phone': '123'}, format='json')
+        res = self.client.patch(self.url, {'address': 'Samarqand'}, format='json')
+        self.assertEqual(res.data['phone'], '123')
+        self.assertEqual(res.data['address'], 'Samarqand')
+
+    def test_email_cannot_duplicate_other_user(self):
+        User.objects.create_user(username='other', email='taken@example.com', password='password123')
+        self.client.force_authenticate(user=self.user)
+        res = self.client.patch(self.url, {'email': 'TAKEN@example.com'}, format='json')
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('email', res.data)
+
+    def test_users_have_separate_profiles(self):
+        other = User.objects.create_user(username='other', email='o@example.com', password='password123')
+        self.client.force_authenticate(user=self.user)
+        self.client.patch(self.url, {'phone': '111'}, format='json')
+        self.client.force_authenticate(user=other)
+        self.assertEqual(self.client.get(self.url).data['phone'], '')

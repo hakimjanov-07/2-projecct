@@ -141,3 +141,15 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.book.name} ({self.rating}/5)"
+
+
+class Profile(models.Model):
+    """ Foydalanuvchi profili (email User jadvalida saqlanadi) """
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    full_name = models.CharField(max_length=150, blank=True, default='', verbose_name='Ism Familiya:')
+    phone = models.CharField(max_length=32, blank=True, default='', verbose_name='Telefon:')
+    address = models.CharField(max_length=255, blank=True, default='', verbose_name='Manzil:')
+    bio = models.TextField(max_length=1000, blank=True, default='', verbose_name='Haqida:')
+
+    def __str__(self):
+        return self.user.username

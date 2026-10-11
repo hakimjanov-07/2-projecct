@@ -71,7 +71,7 @@
 }
 
 .clearLink:hover {
-  color: var(--brown-2);
+  color: var(--brown-dark);
 }
 
 .field {
@@ -163,7 +163,7 @@
 
 .filterItem:hover {
   border-color: var(--brown);
-  color: var(--brown-2);
+  color: var(--brown-dark);
 }
 
 .filterActive {
@@ -215,7 +215,7 @@
 
 .clearBtn:hover {
   border-color: var(--brown);
-  color: var(--brown-2);
+  color: var(--brown-dark);
   background: rgba(201, 157, 104, 0.06);
 }
 

@@ -644,7 +644,7 @@
 .iconButton:hover .iconLabel,
 .iconButton:focus-visible .iconWrap,
 .iconButton:focus-visible .iconLabel {
-  color: var(--brown-2);
+  color: var(--brown-dark);
 }
 
 .iconButton:hover .iconWrap,

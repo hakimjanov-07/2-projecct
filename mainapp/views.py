@@ -16,12 +16,12 @@ from rest_framework.decorators import throttle_classes
 from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import Author, Book, Category, Order, OrderItem, Review
+from .models import Author, Book, Category, Order, OrderItem, Profile, Review
 from .password_reset import check_code, find_user, issue_code
 from .pricing import calculate_totals, find_promo
 from .serializer import (
     AddToCartSerializer, Author_Serializer, Book_Serializer, Category_Serializer,
-    OrderSerializer, RegisterSerializer, Review_Serializer,
+    OrderSerializer, ProfileSerializer, RegisterSerializer, Review_Serializer,
 )
 
 
@@ -339,3 +339,36 @@ class Review_ViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+
+""" PROFIL """
+
+def profile_data(user):
+    profile, _ = Profile.objects.get_or_create(user=user)
+    return {
+        'username': user.username,
+        'email': user.email,
+        'full_name': profile.full_name,
+        'phone': profile.phone,
+        'address': profile.address,
+        'bio': profile.bio,
+    }
+
+
+@api_view(['GET', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def my_profile(request):
+    user = request.user
+    if request.method == 'PATCH':
+        serializer = ProfileSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        profile, _ = Profile.objects.get_or_create(user=user)
+        for field in ('full_name', 'phone', 'address', 'bio'):
+            if field in data:
+                setattr(profile, field, data[field])
+        profile.save()
+        if data.get('email'):
+            user.email = data['email']
+            user.save(update_fields=['email'])
+    return Response(profile_data(user))

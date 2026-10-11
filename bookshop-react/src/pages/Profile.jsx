@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { clearSession, getBooks, getMyOrders } from '../api'
+import { clearSession, getBooks, getMyOrders, getProfile, updateProfile } from '../api'
 import { useFavorites } from '../context/FavoritesContext'
 import { useToast } from '../context/ToastContext'
 import { useLang } from '../i18n/LanguageContext'
@@ -9,19 +9,34 @@ import styles from './Profile.module.css'
 const PROFILE_KEY = 'bookshop-profile'
 const TABS = ['info', 'orders', 'favorites']
 
-const readProfile = () => {
-  let saved
+const EMPTY_PROFILE = { fullName: '', email: '', phone: '', address: '', bio: '' }
+
+// Server javobi (full_name) <-> forma maydonlari (fullName)
+const fromServer = (data) => ({
+  fullName: data.full_name || '',
+  email: data.email || '',
+  phone: data.phone || '',
+  address: data.address || '',
+  bio: data.bio || '',
+})
+
+const toServer = (profile) => ({
+  full_name: profile.fullName,
+  email: profile.email,
+  phone: profile.phone,
+  address: profile.address,
+  bio: profile.bio,
+})
+
+// Eski versiyada profil faqat brauzerda saqlangan edi: bir marta serverga ko'chiramiz
+const readLegacyProfile = () => {
   try {
-    saved = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}')
+    const saved = JSON.parse(localStorage.getItem(PROFILE_KEY) || 'null')
+    if (!saved) return null
+    const legacy = { ...EMPTY_PROFILE, ...saved, email: '' }
+    return Object.values(legacy).some(Boolean) ? legacy : null
   } catch {
-    saved = {}
-  }
-  return {
-    fullName: saved.fullName || localStorage.getItem('username') || '',
-    email: saved.email || localStorage.getItem('user_email') || '',
-    phone: saved.phone || '',
-    address: saved.address || '',
-    bio: saved.bio || '',
+    return null
   }
 }
 
@@ -31,7 +46,9 @@ export default function Profile() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { favoriteIds, toggleFavorite } = useFavorites()
   const { showToast } = useToast()
-  const [profile, setProfile] = useState(readProfile)
+  const [profile, setProfile] = useState({ ...EMPTY_PROFILE, fullName: localStorage.getItem('username') || '' })
+  const [profileError, setProfileError] = useState('')
+  const [saving, setSaving] = useState(false)
   const [orders, setOrders] = useState([])
   const [books, setBooks] = useState([])
   const [ordersError, setOrdersError] = useState(false)
@@ -47,6 +64,27 @@ export default function Profile() {
       navigate('/login', { state: { from: '/profile' } })
       return
     }
+
+    getProfile()
+      .then(async (response) => {
+        let data = fromServer(response.data)
+        const legacy = readLegacyProfile()
+        if (legacy && !data.fullName && !data.phone && !data.address && !data.bio) {
+          try {
+            const migrated = await updateProfile(toServer({ ...legacy, email: data.email }))
+            data = fromServer(migrated.data)
+          } catch {
+            data = { ...data, ...legacy, email: data.email }
+          }
+        }
+        try { localStorage.removeItem(PROFILE_KEY) } catch { /* xotira yo'q */ }
+        if (data.email) localStorage.setItem('user_email', data.email)
+        setProfile(data)
+      })
+      .catch((error) => {
+        if (error.response?.status === 401) navigate('/login', { state: { from: '/profile' } })
+        else setProfileError('loadError')
+      })
 
     getMyOrders()
       .then((response) => setOrders(response.data.results || response.data))
@@ -76,17 +114,23 @@ export default function Profile() {
     setProfile((current) => ({ ...current, [name]: value }))
   }
 
-  const handleSave = (event) => {
+  const handleSave = async (event) => {
     event.preventDefault()
+    setSaving(true)
+    setProfileError('')
     try {
-      localStorage.setItem(PROFILE_KEY, JSON.stringify(profile))
-      if (profile.email) localStorage.setItem('user_email', profile.email)
-    } catch {
-      // Brauzer xotirasi mavjud bo'lmasa, o'zgarish faqat shu sessiyada qoladi.
+      const response = await updateProfile(toServer(profile))
+      const data = fromServer(response.data)
+      setProfile(data)
+      if (data.email) localStorage.setItem('user_email', data.email)
+      setSaved(true)
+      showToast(t('toast.profileSaved'))
+      setTimeout(() => setSaved(false), 1800)
+    } catch (error) {
+      setProfileError(error.response?.data?.email ? 'emailTaken' : 'saveError')
+    } finally {
+      setSaving(false)
     }
-    setSaved(true)
-    showToast(t('toast.profileSaved'))
-    setTimeout(() => setSaved(false), 1800)
   }
 
   const logout = () => {
@@ -192,7 +236,9 @@ export default function Profile() {
                   </label>
                 </div>
 
-                <button className={styles.saveBtn} type="submit">
+                {profileError && <p className={styles.errorBox}>{t(`profile.${profileError}`)}</p>}
+
+                <button className={styles.saveBtn} type="submit" disabled={saving}>
                   {saved ? t('profile.saved') : t('profile.save')}
                 </button>
               </form>

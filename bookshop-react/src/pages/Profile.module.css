@@ -348,7 +348,7 @@
 }
 
 .itemInfo a:hover {
-  color: var(--brown-2);
+  color: var(--brown-dark);
 }
 
 .itemInfo span {
@@ -467,7 +467,7 @@
 }
 
 .shelfTitle:hover {
-  color: var(--brown-2);
+  color: var(--brown-dark);
 }
 
 .shelfAuthor {

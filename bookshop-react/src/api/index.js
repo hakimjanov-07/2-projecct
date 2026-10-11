@@ -176,3 +176,7 @@ export const getCartQuote = (items, promoCode = '') =>
 
 export const getMyOrders = () =>
   api.get('/order/', { params: { page_size: 100 } })
+
+export const getProfile = () => api.get('/profile/')
+
+export const updateProfile = (data) => api.patch('/profile/', data)

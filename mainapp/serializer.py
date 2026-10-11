@@ -138,3 +138,17 @@ class Review_Serializer(serializers.ModelSerializer):
         model = Review
         fields = ['id', 'book', 'user', 'username', 'rating', 'comment', 'photo', 'photo_url', 'created_on']
         read_only_fields = ['user', 'created_on']
+
+
+class ProfileSerializer(serializers.Serializer):
+    full_name = serializers.CharField(max_length=150, allow_blank=True, required=False)
+    email = serializers.EmailField(required=False, allow_blank=True)
+    phone = serializers.CharField(max_length=32, allow_blank=True, required=False)
+    address = serializers.CharField(max_length=255, allow_blank=True, required=False)
+    bio = serializers.CharField(max_length=1000, allow_blank=True, required=False)
+
+    def validate_email(self, value):
+        user = self.context['request'].user
+        if value and User.objects.filter(email__iexact=value).exclude(pk=user.pk).exists():
+            raise serializers.ValidationError("Bu email boshqa foydalanuvchida bor.")
+        return value

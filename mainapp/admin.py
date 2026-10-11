@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Author, Book, Order, OrderItem, PromoCode, Review
+from .models import Category, Author, Book, Order, OrderItem, Profile, PromoCode, Review
 
 
 class OrderItemInline(admin.TabularInline):
@@ -85,3 +85,9 @@ class Review_Admin(admin.ModelAdmin):
     list_filter = ('rating', 'created_on')
     search_fields = ('user__username', 'comment', 'book__name')
     ordering = ('-created_on',)
+
+
+@admin.register(Profile)
+class Profile_Admin(admin.ModelAdmin):
+    list_display = ('user', 'full_name', 'phone', 'address')
+    search_fields = ('user__username', 'full_name', 'phone')

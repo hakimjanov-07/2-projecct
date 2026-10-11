@@ -6,7 +6,7 @@
 
 .container { width: min(100%, 920px); margin: 0 auto; }
 .back { padding: 0; color: var(--gray-600); background: transparent; font-size: 14px; }
-.back:hover { color: var(--brown-2); }
+.back:hover { color: var(--brown-dark); }
 
 .bookHeader {
   display: flex;
@@ -56,7 +56,7 @@
   font-size: 12px;
   cursor: pointer;
 }
-.cancelEdit:hover { color: var(--brown-2); border-color: var(--brown); }
+.cancelEdit:hover { color: var(--brown-dark); border-color: var(--brown); }
 .form label { display: grid; gap: 6px; font-size: 13px; font-weight: 500; }
 .form textarea {
   width: 100%;
