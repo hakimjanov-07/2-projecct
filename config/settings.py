@@ -1,4 +1,3 @@
-from decouple import config
 """
 Django settings for config project.
 
@@ -11,31 +10,27 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+from datetime import timedelta
+from email.utils import formataddr
 from pathlib import Path
+
+from decouple import Csv, config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
-
 SECRET_KEY = config('SECRET_KEY')
 
-
-
 # SECURITY WARNING: don't run with debug turned on in production!
-
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = [
-    'bookshoptest.pythonanywhere.com',
-    # "http://127.0.0.1:8000/",
-    "127.0.0.1",
-    # "127.0.0.1:8000"
-    ]
+ALLOWED_HOSTS = config(
+    'ALLOWED_HOSTS',
+    default='bookshoptest.pythonanywhere.com,127.0.0.1,localhost',
+    cast=Csv(),
+)
 
 
 # Application definition
@@ -48,17 +43,17 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'mainapp',
-    "rest_framework",
+    'rest_framework',
     'django_filters',
-    'drf_spectacular',
     'drf_yasg',
-    'corsheaders'
+    'corsheaders',
+    'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    "corsheaders.middleware.CorsMiddleware",
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -128,72 +123,106 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
+# Static va media fayllar
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
-import os
-from pathlib import Path
-
-BASE_DIR = Path(__file__).resolve().parent.parent
 
 STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Email (parolni tiklash kodi shu orqali yuboriladi).
+# Xat EMAIL_FROM_NAME nomidan ("BookShop <manzil>") boradi. Xizmat sozlamalari .env da:
+#   Gmail:  EMAIL_HOST_USER=gmail manzilingiz, EMAIL_HOST_PASSWORD=Google "App password"
+#   Boshqa (Resend, Brevo, SendGrid...): EMAIL_HOST, EMAIL_PORT, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
+#   va o'z domeningizdagi manzil: EMAIL_FROM_ADDRESS=noreply@sizning-domeningiz.uz
+# EMAIL_HOST_USER yozilmasa, xat server konsoliga chiqadi (sinash uchun).
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+    EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+    EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
+    EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=not EMAIL_USE_SSL, cast=bool)
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+SITE_NAME = config('SITE_NAME', default='BookShop')
+EMAIL_FROM_NAME = config('EMAIL_FROM_NAME', default=SITE_NAME)
+EMAIL_FROM_ADDRESS = config('EMAIL_FROM_ADDRESS', default=EMAIL_HOST_USER or 'noreply@bookshop.local')
+DEFAULT_FROM_EMAIL = formataddr((EMAIL_FROM_NAME, EMAIL_FROM_ADDRESS))
+
+# Parolni tiklash kodi: amal qilish muddati, noto'g'ri urinishlar soni, qayta yuborish oralig'i
+PASSWORD_RESET_CODE_TTL_MINUTES = 15
+PASSWORD_RESET_MAX_ATTEMPTS = 5
+PASSWORD_RESET_RESEND_SECONDS = 60
+
+# Yetkazib berish: shu summadan (chegirmadan keyin) boshlab bepul, aks holda DELIVERY_FEE
+DELIVERY_FEE = config('DELIVERY_FEE', default=20000, cast=int)
+FREE_DELIVERY_FROM = config('FREE_DELIVERY_FROM', default=300000, cast=int)
 
 
 REST_FRAMEWORK = {
-    # Use Django's standard `django.contrib.auth` permissions,
-    # or allow read-only access for unauthenticated users.
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.AllowAny"
+    # Ro'yxat va detallarni hamma ko'radi, o'zgartirish uchun login kerak.
+    # Katalogni (kitob, muallif, kategoriya) faqat admin o'zgartiradi — views.py ga qarang.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
-    """ Pagination """
-    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
-        'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 10,
 
-    """ Throttling"""
+    # Filter
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+
+    # Pagination
+    'DEFAULT_PAGINATION_CLASS': 'mainapp.pagination.StandardPagination',
+
+    # Throttling
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle',
     ],
-
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '10/minute',
-        'user': '100/minute',
-        'example' : '10/minute'
-    }
+        'anon': '1000/minute',
+        'user': '1000/minute',
+        'catalog': '100/minute',
+        'password': '10/hour',
+    },
 
-    
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
 }
 
-SPECTACULAR_SETTINGS = {
-    'TITLE': 'Book Shop API',
-    'DESCRIPTION': 'Book Shop API Documentation',
-    'VERSION': '1.0.0',
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
 }
 
-""" CORS-HEADERS"""
 
-CORS_ALLOWED_ORIGINS = [
-    "https://example.com",
-    "https://sub.example.com",
-    "http://localhost:8080",
-    "http://127.0.0.1:9000",
-]
+# CORS-HEADERS
+
+CORS_ALLOWED_ORIGINS = config(
+    'CORS_ALLOWED_ORIGINS',
+    default='http://localhost:5173,http://127.0.0.1:5173',
+    cast=Csv(),
+)
 
 CORS_ALLOW_METHODS = (
-    "DELETE",
-    "GET",
-    "OPTIONS",
-    "PATCH",
-    "POST",
-    "PUT",
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
 )
 
 CORS_ALLOW_HEADERS = (
-    "accept",
-    "authorization",
-    "content-type",
-    "user-agent",
-    "x-csrftoken",
-    "x-requested-with",
+    'accept',
+    'authorization',
+    'content-type',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
 )

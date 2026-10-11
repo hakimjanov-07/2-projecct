@@ -1,20 +1,25 @@
-from django.urls import path, include
-from django.contrib.auth.models import User
-from rest_framework import routers, serializers, viewsets
-from .views import Category_ViewSet, Author_ViewSet, Book_ViewSet
+from django.urls import include, path
+from rest_framework import routers
 
-
-
+from .views import (
+    Author_ViewSet, Book_ViewSet, Category_ViewSet, Order_ViewSet, Review_ViewSet,
+    add_to_cart, cart_detail, checkout, quote, remove_from_cart,
+)
 
 # Routers provide an easy way of automatically determining the URL conf.
 router = routers.DefaultRouter()
 router.register(r"category", Category_ViewSet)
 router.register(r"author", Author_ViewSet)
 router.register(r"book", Book_ViewSet)
+router.register(r"review", Review_ViewSet, basename='review')
+router.register(r"order", Order_ViewSet, basename='order')
 
-# Wire up our API using automatic URL routing.
-# Additionally, we include login URLs for the browsable API.
 urlpatterns = [
     path("", include(router.urls)),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
+    path('cart/', cart_detail),
+    path('cart/add/', add_to_cart),
+    path('cart/checkout/', checkout),
+    path('cart/quote/', quote),
+    path('cart/remove/<int:item_id>/', remove_from_cart),
 ]
