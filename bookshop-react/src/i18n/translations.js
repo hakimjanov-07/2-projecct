@@ -96,6 +96,10 @@ const dict = {
   'footer.hours': { uz: 'Ish vaqti', ru: 'Время работы', en: 'Working hours' },
   'footer.myBooks': { uz: 'Mening kitoblarim', ru: 'Мои книги', en: 'My books' },
   'footer.cart': { uz: 'Savat', ru: 'Корзина', en: 'Cart' },
+  'footer.help': { uz: 'Yordam', ru: 'Помощь', en: 'Help' },
+  'footer.payment': { uz: "To'lov", ru: 'Оплата', en: 'Payment' },
+  'footer.delivery': { uz: 'Yetkazib berish', ru: 'Доставка', en: 'Delivery' },
+  'footer.privacy': { uz: 'Maxfiylik siyosati', ru: 'Конфиденциальность', en: 'Privacy policy' },
   'footer.toTop': { uz: 'Tepaga qaytish', ru: 'Наверх', en: 'Back to top' },
   'footer.copy': { uz: '© 2026 Kitobxona. Barcha huquqlar himoyalangan.', ru: '© 2026 Kitobxona. Все права защищены.', en: '© 2026 Kitobxona. All rights reserved.' },
 

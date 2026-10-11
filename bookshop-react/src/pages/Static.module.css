@@ -34,6 +34,64 @@
   background-image: url('https://images.unsplash.com/photo-1526243741027-444d633d7365?auto=format&fit=crop&w=1800&q=85');
 }
 
+.articlesHero::before {
+  background-image: url('https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=1800&q=85');
+}
+
+.paymentHero::before {
+  background-position: center 25%;
+  background-image: url('https://images.unsplash.com/photo-1556742111-a301076d9d18?auto=format&fit=crop&w=1800&q=85');
+}
+
+.deliveryHero::before {
+  background-image: url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1800&q=85');
+}
+
+.privacyHero::before {
+  background-position: center 20%;
+  background-image: url('https://images.unsplash.com/photo-1633265486064-086b219458ec?auto=format&fit=crop&w=1800&q=85');
+}
+
+.helpHero {
+  padding: 130px 24px 110px;
+}
+
+.helpHero h1 {
+  font-size: 44px;
+}
+
+.helpHero h1,
+.helpHero p {
+  transition: transform 600ms ease, letter-spacing 600ms ease, text-shadow 600ms ease;
+}
+
+.helpHero:hover h1 {
+  transform: scale(1.12);
+  letter-spacing: 0.5px;
+  text-shadow: 0 6px 28px rgba(0, 0, 0, 0.35);
+}
+
+.helpHero:hover p {
+  transform: scale(1.06);
+}
+
+.helpBlock {
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.block.helpBlock:hover {
+  transform: translateY(-8px);
+  background: var(--brown);
+  border-color: var(--brown-2);
+  box-shadow: 0 18px 34px rgba(96, 63, 39, 0.16);
+}
+
+.block.helpBlock:hover h2,
+.block.helpBlock:hover p {
+  color: var(--white);
+}
+
 .hero > * {
   position: relative;
   z-index: 1;

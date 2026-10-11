@@ -106,6 +106,11 @@ export default function Footer() {
 
       <div className={styles.bottom} data-reveal>
         <span className={styles.copy}>{t('footer.copy')}</span>
+        <nav className={styles.legal} aria-label={t('footer.help')}>
+          <Link to="/help/payment">{t('footer.payment')}</Link>
+          <Link to="/help/delivery">{t('footer.delivery')}</Link>
+          <Link to="/help/privacy">{t('footer.privacy')}</Link>
+        </nav>
       </div>
 
       {showTop && (
