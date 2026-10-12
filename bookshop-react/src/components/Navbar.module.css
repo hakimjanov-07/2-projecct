@@ -560,12 +560,12 @@
   top: calc(100% + 8px);
   right: 0;
   z-index: 80;
-  min-width: 190px;
-  padding: 6px;
-  background: #fff;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 14px;
-  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.2);
+  min-width: 220px;
+  padding: 8px;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
 }
 
 .profileItem {
@@ -573,17 +573,22 @@
   width: 100%;
   padding: 10px 14px;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   background: transparent;
-  color: #0f172a;
+  color: var(--black);
+  font-family: inherit;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   text-align: left;
   cursor: pointer;
+  transition: background-color 0.15s, color 0.15s, box-shadow 0.15s;
 }
 
 .profileItem:hover {
-  background: #f1f5f9;
+  background: var(--nav-soft);
+  color: var(--brown-dark);
+  font-weight: 600;
+  box-shadow: 0 0 0 1px #e6d3c2;
 }
 
 .profileLogout {
@@ -592,6 +597,8 @@
 
 .profileLogout:hover {
   background: #fdecef;
+  color: #d3354f;
+  box-shadow: 0 0 0 1px #f7cdd5;
 }
 
 /* Kirish va Ro'yxatdan o'tish: oq tugma, ustiga borganda och jigarrang rang chapdan yoyiladi */

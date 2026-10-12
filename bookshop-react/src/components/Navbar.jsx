@@ -276,6 +276,22 @@ export default function Navbar() {
                     <button
                       type="button"
                       role="menuitem"
+                      className={styles.profileItem}
+                      onClick={() => { setProfileOpen(false); navigate('/orders') }}
+                    >
+                      {t('profile.tabOrders')}
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className={styles.profileItem}
+                      onClick={() => { setProfileOpen(false); navigate('/favorites') }}
+                    >
+                      {t('profile.tabFavorites')}
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
                       className={`${styles.profileItem} ${styles.profileLogout}`}
                       onClick={logout}
                     >
