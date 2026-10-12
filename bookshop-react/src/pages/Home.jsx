@@ -11,7 +11,6 @@ export default function Home() {
   const [authors, setAuthors] = useState([])
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
-  const [activeIdx, setActiveIdx] = useState(0)
   const sliderRef = useRef(null)
 
   useEffect(() => {
@@ -54,7 +53,6 @@ export default function Home() {
     }
   }
 
-  const heroBooks = books.slice(0, 4)
   const topBooks = books.slice(0, 10)
 
   return (

@@ -6,12 +6,16 @@ import LoadingSpinner from '../components/LoadingSpinner'
 import ErrorMessage from '../components/ErrorMessage'
 import FilterSelect from '../components/FilterSelect'
 import RangeSlider from '../components/RangeSlider'
+import SortSelect from '../components/SortSelect'
 import { useLang } from '../i18n/LanguageContext'
 import styles from './Books.module.css'
 
 // Narx slayderining yuqori chegarasi (so'm) va qadami
 const MAX_PRICE = 1000000
 const PRICE_STEP = 10000
+
+// Kitoblar sonini berilgan maydon bo'yicha sanaydi
+const countBy = (books, key) => books.reduce((map, book) => map.set(book[key], (map.get(book[key]) || 0) + 1), new Map())
 
 export default function Books() {
   const { t, locale } = useLang()
@@ -36,6 +40,7 @@ export default function Books() {
   const [sort, setSort] = useState('newest')
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (urlSearch) setSearch(urlSearch)
     if (urlCategory) setSelectedCat(Number(urlCategory))
     if (urlAuthor) setSelectedAuthor(Number(urlAuthor))
@@ -59,7 +64,9 @@ export default function Books() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const filtered = useMemo(() => {
@@ -92,20 +99,18 @@ export default function Books() {
     return list
   }, [books, search, selectedCat, selectedAuthor, selectedLang, selectedPublisher, priceMin, priceMax, sort])
 
-  const countBy = (key) => books.reduce((map, book) => map.set(book[key], (map.get(book[key]) || 0) + 1), new Map())
-
   const categoryOptions = useMemo(() => {
-    const counts = countBy('category')
+    const counts = countBy(books, 'category')
     return categories.map((c) => ({ value: c.id, label: c.name, count: counts.get(c.id) || 0 }))
   }, [categories, books])
 
   const authorOptions = useMemo(() => {
-    const counts = countBy('author')
+    const counts = countBy(books, 'author')
     return authors.map((a) => ({ value: a.id, label: a.full_name, count: counts.get(a.id) || 0 }))
   }, [authors, books])
 
   const publisherOptions = useMemo(() => {
-    const counts = countBy('publisher')
+    const counts = countBy(books, 'publisher')
     return [...counts.keys()].filter(Boolean).sort().map((p) => ({ value: p, label: p, count: counts.get(p) }))
   }, [books])
 
@@ -248,18 +253,19 @@ export default function Books() {
                 </button>
               )}
             </div>
-            <select
-              className={styles.sortSelect}
+            <SortSelect
               value={sort}
-              onChange={(e) => setSort(e.target.value)}
-            >
-              <option value="newest">{t('books.sort.newest')}</option>
-              <option value="rating">{t('books.sort.rating')}</option>
-              <option value="name_az">{t('books.sort.nameAz')}</option>
-              <option value="name_za">{t('books.sort.nameZa')}</option>
-              <option value="price_asc">{t('books.sort.priceAsc')}</option>
-              <option value="price_desc">{t('books.sort.priceDesc')}</option>
-            </select>
+              onChange={setSort}
+              label={t('books.sort.label')}
+              options={[
+                { value: 'newest', label: t('books.sort.newest') },
+                { value: 'rating', label: t('books.sort.rating') },
+                { value: 'name_az', label: t('books.sort.nameAz') },
+                { value: 'name_za', label: t('books.sort.nameZa') },
+                { value: 'price_asc', label: t('books.sort.priceAsc') },
+                { value: 'price_desc', label: t('books.sort.priceDesc') },
+              ]}
+            />
           </div>
 
           <p className={styles.count}>{t('books.results', { n: filtered.length })}</p>

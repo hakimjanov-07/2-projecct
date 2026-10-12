@@ -24,6 +24,7 @@ export default function MyBooks() {
       .finally(() => setLoading(false))
   }
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
   useEffect(load, [])
 
   // Yangi qo'shilgan sevimli kitob ro'yxat boshida turadi

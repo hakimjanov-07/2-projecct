@@ -85,7 +85,7 @@
   width: 100%;
   padding: 9px 12px;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   background: transparent;
   color: var(--black);
   font-size: 14px;
@@ -93,14 +93,24 @@
   cursor: pointer;
 }
 
-.option:hover {
-  background: var(--cream);
-}
-
+.option:hover,
 .optionActive {
   background: var(--nav-soft);
-  color: var(--brown-2);
+  color: var(--brown-dark);
   font-weight: 600;
+  box-shadow: 0 0 0 1px #e6d3c2;
+}
+
+.option:hover .count,
+.optionActive .count {
+  color: var(--brown-dark);
+}
+
+.option:hover .count,
+.optionActive .count {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e6d3c2;
 }
 
 .count {

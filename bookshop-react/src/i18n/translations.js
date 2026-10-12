@@ -179,6 +179,7 @@ const dict = {
   'books.author': { uz: 'Muallif', ru: 'Автор', en: 'Author' },
   'books.clearFilters': { uz: 'Filtrlarni tozalash', ru: 'Сбросить фильтры', en: 'Clear filters' },
   'books.searchPlaceholder': { uz: 'Kitob yoki muallif qidirish...', ru: 'Поиск книги или автора...', en: 'Search for a book or author...' },
+  'books.sort.label': { uz: 'Saralash', ru: 'Сортировка', en: 'Sort by' },
   'books.sort.newest': { uz: "Yangi qo'shilganlar", ru: 'Новинки', en: 'Newest' },
   'books.sort.rating': { uz: "Reyting bo'yicha (yuqori)", ru: 'По рейтингу (высокий)', en: 'By rating (highest)' },
   'books.sort.nameAz': { uz: 'Nom: A→Z', ru: 'Название: А→Я', en: 'Name: A→Z' },

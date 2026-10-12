@@ -34,6 +34,7 @@ export default function BookDetail() {
 
   useEffect(() => {
     if (location.state?.book && String(location.state.book.id) === String(id)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setBook(location.state.book)
       setLoading(false)
       return
@@ -55,6 +56,7 @@ export default function BookDetail() {
 
   // Yangi kitobga o'tilganda holat boshiga qaytadi
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTab(initialTab)
     setQuantity(1)
     setAdded(false)

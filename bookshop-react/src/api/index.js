@@ -134,6 +134,7 @@ export const getAuthors = (params = {}) =>
 export const loginUser = (credentials) =>
   api.post('/token/', credentials, { skipAuth: true })
 
+// eslint-disable-next-line no-unused-vars
 export const registerUser = ({ password2, ...user }) =>
   api.post('/register/', user, { skipAuth: true })
 

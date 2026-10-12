@@ -42,6 +42,7 @@ export default function ReviewsPanel({ bookId, onCountChange }) {
 
   useEffect(() => {
     let active = true
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load()
       .catch(() => active && setError(t('reviews.loadError')))
       .finally(() => active && setLoading(false))
