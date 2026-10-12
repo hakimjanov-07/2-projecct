@@ -14,6 +14,7 @@ import { Login, Register } from './pages/Auth'
 import Profile from './pages/Profile'
 import ForgotPassword from './pages/ForgotPassword'
 import Help from './pages/Help'
+import Services from './pages/Services'
 import MyBooks from './pages/MyBooks'
 import { CartProvider } from './context/CartContext'
 import { FavoritesProvider } from './context/FavoritesContext'
@@ -45,6 +46,7 @@ export default function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/about" element={<About />} />
           <Route path="/articles" element={<Articles />} />
+          <Route path="/services" element={<Services />} />
           <Route path="/help/:page" element={<Help />} />
         </Routes>
         <Footer />

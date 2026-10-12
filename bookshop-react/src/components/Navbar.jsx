@@ -1,4 +1,4 @@
-import { NavLink, useNavigate, useSearchParams } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { useCart } from '../context/CartContext'
 import { useFavorites } from '../context/FavoritesContext'
@@ -15,7 +15,7 @@ const categoryLinks = [
   { key: 'nav.authors', to: '/authors' },
   { key: 'nav.news', to: '/articles' },
   { key: 'nav.about', to: '/about' },
-  { key: 'nav.services', to: '/books' },
+  { key: 'nav.services', to: '/services' },
 ]
 
 function ClockIcon() {
@@ -85,6 +85,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [langOpen, setLangOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const { pathname } = useLocation()
   const profileRef = useRef(null)
   const searchAreaRef = useRef(null)
   const langRef = useRef(null)
@@ -304,11 +305,12 @@ export default function Navbar() {
               key={item.key}
               to={item.to}
               end={item.to === '/'}
-              className={({ isActive }) => `${styles.categoryLink} ${isActive ? styles.activeCategory : ''}`}
+              className={({ isActive }) => `${styles.categoryLink} ${isActive || (item.to === '/services' && pathname.startsWith('/help/')) ? styles.activeCategory : ''}`}
             >
               {t(item.key)}
             </NavLink>
           ))}
+
         </div>
       </nav>
     </header>

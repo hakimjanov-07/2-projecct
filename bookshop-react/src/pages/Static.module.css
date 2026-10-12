@@ -44,7 +44,8 @@
 }
 
 .deliveryHero::before {
-  background-image: url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1800&q=85');
+  background-position: center 65%;
+  background-image: url('https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?auto=format&fit=crop&w=1800&q=85');
 }
 
 .privacyHero::before {
@@ -90,6 +91,10 @@
 .block.helpBlock:hover h2,
 .block.helpBlock:hover p {
   color: var(--white);
+}
+
+.servicesHero::before {
+  background-image: url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1800&q=85');
 }
 
 .hero > * {
@@ -301,3 +306,100 @@
 .articleCard:hover .articleTitle,
 .articleCard:hover .articleExcerpt,
 .articleCard:hover .articleMeta { color: rgba(255,255,255,0.84); }
+
+/* Xizmatlar sahifasi: ikkita alohida tugma-karta */
+.servicesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+}
+
+.serviceCard {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  background: var(--white);
+  color: var(--black);
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+}
+
+.serviceCard:hover {
+  transform: translateY(-8px);
+  border-color: var(--brown-2);
+  background: var(--brown);
+  color: var(--white);
+  box-shadow: 0 18px 34px rgba(96, 63, 39, 0.16);
+}
+
+.serviceImg {
+  height: 220px;
+  overflow: hidden;
+  background: var(--gray-100);
+}
+
+.serviceImg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease, filter 0.5s ease;
+}
+
+.serviceCard:hover .serviceImg img {
+  transform: scale(1.08);
+  filter: saturate(1.12) contrast(1.04);
+}
+
+.serviceBody {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 24px;
+}
+
+.serviceBody h2 {
+  margin: 0;
+  color: var(--brown-dark);
+  font-size: 22px;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.serviceBody p {
+  margin: 0;
+  color: var(--gray-600);
+  font-size: 14px;
+  line-height: 1.65;
+  transition: color 0.3s ease;
+}
+
+.serviceBtn {
+  margin-top: 8px;
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: var(--brown-dark);
+  color: var(--white);
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.serviceCard:hover h2,
+.serviceCard:hover p {
+  color: var(--white);
+}
+
+.serviceCard:hover .serviceBtn {
+  background: var(--white);
+  color: var(--brown-dark);
+}
+
+@media (max-width: 760px) {
+  .servicesGrid {
+    grid-template-columns: 1fr;
+  }
+}
