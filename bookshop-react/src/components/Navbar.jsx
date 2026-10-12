@@ -204,10 +204,6 @@ export default function Navbar() {
       <div className={styles.mainBar}>
         <div className={styles.mainBarInner}>
           <div className={styles.brandWrap}>
-            <button type="button" className={styles.menuBtn} aria-label={t('nav.menu')}>
-              <span /><span /><span />
-            </button>
-
             <NavLink to="/" className={styles.logo}>
               <span className={styles.logoMark} aria-hidden="true" />
               <span className={styles.logoText}>BOOK.UZ</span>
