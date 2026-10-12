@@ -23,7 +23,6 @@ const dict = {
   'nav.delivery': { uz: 'Yetkazib berish', ru: 'Доставка', en: 'Delivery' },
   'nav.services': { uz: 'Xizmatlar', ru: 'Услуги', en: 'Services' },
   'nav.mainSections': { uz: "Asosiy bo'limlar", ru: 'Основные разделы', en: 'Main sections' },
-  'nav.menu': { uz: 'Menyu', ru: 'Меню', en: 'Menu' },
   'nav.theme': { uz: 'Tema', ru: 'Тема', en: 'Theme' },
   'nav.language': { uz: 'Til', ru: 'Язык', en: 'Language' },
   'nav.allGenres': { uz: 'Barcha janrlar', ru: 'Все жанры', en: 'All genres' },
