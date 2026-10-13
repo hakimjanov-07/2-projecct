@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { getOrder, getOrders, setOrderStatus } from '../api'
 import { useFetch } from '../useFetch'
-import { dateTime, money, num } from '../format'
+import { dateTime, money, num, STAGES, STATUS_LABELS } from '../format'
 import { Loading, Pagination, StatusBadge } from '../components/Bits'
 
 const PAGE_SIZE = 20
@@ -47,8 +47,7 @@ export default function Orders() {
         <input placeholder="Qidirish: foydalanuvchi, email, promo kod yoki №" value={search} onChange={(e) => setSearch(e.target.value)} />
         <select value={status} onChange={(e) => update({ status: e.target.value })}>
           <option value="">Barcha holatlar</option>
-          <option value="confirmed">Tasdiqlangan</option>
-          <option value="cancelled">Bekor qilingan</option>
+          {[...STAGES, 'cancelled'].map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
         </select>
         <button type="submit" className="btn btn-primary">Qidirish</button>
         {(q || status || user) && (
@@ -95,9 +94,8 @@ function OrderDrawer({ id, onClose, onChanged }) {
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
 
-  const change = async (next) => {
-    const text = next === 'cancelled' ? 'Buyurtmani bekor qilasizmi?' : 'Buyurtmani qayta tasdiqlaysizmi?'
-    if (!window.confirm(text)) return
+  const change = async (next, question) => {
+    if (!window.confirm(question)) return
     setBusy(true)
     setMessage('')
     try {
@@ -110,6 +108,9 @@ function OrderDrawer({ id, onClose, onChanged }) {
       setBusy(false)
     }
   }
+
+  const stageIndex = data ? STAGES.indexOf(data.status) : -1
+  const nextStage = stageIndex >= 0 && stageIndex < STAGES.length - 1 ? STAGES[stageIndex + 1] : null
 
   return (
     <div className="drawer-backdrop" onClick={onClose}>
@@ -128,6 +129,28 @@ function OrderDrawer({ id, onClose, onChanged }) {
               <div><span>Sana</span><strong>{dateTime(data.created_on)}</strong></div>
               <div><span>Promo kod</span><strong>{data.promo_code || '—'}</strong></div>
             </div>
+
+            {data.status !== 'cancelled' && (
+              <>
+                <h3>Bosqich</h3>
+                <ol className="stages">
+                  {STAGES.map((stage, index) => (
+                    <li key={stage} className={`${index <= stageIndex ? 'done' : ''} ${index === stageIndex ? 'now' : ''}`}>
+                      <button
+                        type="button"
+                        className="stage-dot"
+                        disabled={busy || index === stageIndex}
+                        title={`${STATUS_LABELS[stage]} qilish`}
+                        onClick={() => change(stage, `Buyurtma holati "${STATUS_LABELS[stage]}" ga o'zgartirilsinmi?`)}
+                      >
+                        {index < stageIndex ? '✓' : index + 1}
+                      </button>
+                      {STATUS_LABELS[stage]}
+                    </li>
+                  ))}
+                </ol>
+              </>
+            )}
 
             <h3>Kitoblar</h3>
             <ul className="order-items">
@@ -150,12 +173,31 @@ function OrderDrawer({ id, onClose, onChanged }) {
               <div className="grand"><dt>Jami</dt><dd>{money(data.total)}</dd></div>
             </dl>
 
+            <h3>Tarix</h3>
+            <ul className="timeline">
+              {data.events.map((event, index) => (
+                <li key={`${event.status}-${index}`}>
+                  <StatusBadge status={event.status} />
+                  <span>{dateTime(event.created_on)}</span>
+                </li>
+              ))}
+            </ul>
+
             {message && <p className="alert">{message}</p>}
             <div className="drawer-actions">
-              {data.status === 'confirmed' ? (
-                <button type="button" className="btn btn-danger" disabled={busy} onClick={() => change('cancelled')}>Buyurtmani bekor qilish</button>
+              {data.status === 'cancelled' ? (
+                <button type="button" className="btn btn-primary" disabled={busy} onClick={() => change('confirmed', 'Buyurtmani qayta tasdiqlaysizmi?')}>Qayta tasdiqlash</button>
               ) : (
-                <button type="button" className="btn btn-primary" disabled={busy} onClick={() => change('confirmed')}>Qayta tasdiqlash</button>
+                <>
+                  {nextStage && (
+                    <button type="button" className="btn btn-primary" disabled={busy} onClick={() => change(nextStage, `Buyurtma holati "${STATUS_LABELS[nextStage]}" ga o'zgartirilsinmi?`)}>
+                      Keyingi bosqich: {STATUS_LABELS[nextStage]} →
+                    </button>
+                  )}
+                  {data.status !== 'delivered' && (
+                    <button type="button" className="btn btn-danger" disabled={busy} onClick={() => change('cancelled', 'Buyurtmani bekor qilasizmi?')}>Bekor qilish</button>
+                  )}
+                </>
               )}
             </div>
           </div>

@@ -1,5 +1,15 @@
 from django.contrib import admin
-from .models import Category, Author, Book, Order, OrderItem, Profile, PromoCode, Review
+from .models import Category, Author, Book, Order, OrderEvent, OrderItem, Profile, PromoCode, Review
+
+
+class OrderEventInline(admin.TabularInline):
+    model = OrderEvent
+    extra = 0
+    can_delete = False
+    readonly_fields = ('status', 'created_on')
+
+    def has_add_permission(self, request, obj=None):
+        return False
 
 
 class OrderItemInline(admin.TabularInline):
@@ -26,8 +36,8 @@ class Author_Admin(admin.ModelAdmin):
 
 @admin.register(Book)
 class Book_Admin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'author', 'category', 'price', 'language', 'status', 'created_on')
-    list_editable = ('price', 'status')
+    list_display = ('id', 'name', 'author', 'category', 'price', 'stock', 'language', 'status', 'created_on')
+    list_editable = ('price', 'stock', 'status')
     list_filter = ('status', 'category', 'language')
     search_fields = ('name', 'author__full_name')
     ordering = ('-created_on',)
@@ -39,22 +49,40 @@ class Order_Admin(admin.ModelAdmin):
     list_editable = ('status',)
     list_filter = ('status', 'created_on')
     search_fields = ('user__username',)
-    inlines = [OrderItemInline]
+    inlines = [OrderItemInline, OrderEventInline]
     ordering = ('-created_on',)
-    actions = ['mark_confirmed', 'mark_cancelled']
+    actions = ['mark_confirmed', 'mark_processing', 'mark_shipped', 'mark_delivered', 'mark_cancelled']
 
     @admin.display(description="Jami (so'm)")
     def total(self, obj):
-        items = sum((i.book.price or 0) * i.quantity for i in obj.items.all())
+        items = sum(i.unit_price * i.quantity for i in obj.items.all())
         return max(items - obj.discount, 0) + obj.delivery_fee
 
-    @admin.action(description='Tanlanganlarni tasdiqlash')
-    def mark_confirmed(self, request, queryset):
-        queryset.update(status='confirmed')
+    def _set_status(self, queryset, status):
+        # update() signal'larni ishga tushirmaydi, shuning uchun har birini saqlaymiz (tarix yoziladi)
+        for order in queryset.exclude(status='pending'):
+            order.status = status
+            order.save()
 
-    @admin.action(description='Tanlanganlarni bekor qilish')
+    @admin.action(description='Tasdiqlangan qilish')
+    def mark_confirmed(self, request, queryset):
+        self._set_status(queryset, 'confirmed')
+
+    @admin.action(description="Yig'ilmoqda qilish")
+    def mark_processing(self, request, queryset):
+        self._set_status(queryset, 'processing')
+
+    @admin.action(description="Yo'lda qilish")
+    def mark_shipped(self, request, queryset):
+        self._set_status(queryset, 'shipped')
+
+    @admin.action(description='Yetkazildi qilish')
+    def mark_delivered(self, request, queryset):
+        self._set_status(queryset, 'delivered')
+
+    @admin.action(description='Bekor qilish')
     def mark_cancelled(self, request, queryset):
-        queryset.update(status='cancelled')
+        self._set_status(queryset, 'cancelled')
 
 
 @admin.register(PromoCode)

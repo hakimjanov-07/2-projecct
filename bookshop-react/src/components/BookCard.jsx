@@ -29,6 +29,7 @@ export default function BookCard({ book }) {
   return (
     <div className={styles.card} data-reveal onClick={() => navigate(`/books/${book.id}`)}>
       <div className={styles.img}>
+        {book.stock === 0 && <span className={styles.soldOut}>{t('book.outOfStock')}</span>}
         {imgUrl
           ? <img src={imgUrl} alt={book.name} loading="lazy"
               onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex' }} />
@@ -77,7 +78,7 @@ export default function BookCard({ book }) {
           {book.price
             ? <p className={styles.price}>{Number(book.price).toLocaleString(locale)} {t('currency')}</p>
             : <span />}
-          <button className={styles.addBtn} onClick={handleOpenDetails}>
+          <button className={styles.addBtn} onClick={handleOpenDetails} disabled={book.stock === 0}>
             🛒 +
           </button>
         </div>

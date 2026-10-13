@@ -2,8 +2,8 @@
 Admin panel API (/api/panel/...): faqat is_staff foydalanuvchilar uchun.
 Buyurtma summasi: mahsulotlar (joriy narx x soni) - chegirma + yetkazib berish.
 Muhim: "pending" holatidagi yozuvlar savat (checkout qilinmagan), haqiqiy buyurtma emas.
-Buyurtma checkout'da darrov "confirmed" bo'ladi; admin uni "cancelled" qilishi mumkin.
-Tushum faqat "confirmed" buyurtmalardan hisoblanadi.
+Buyurtma checkout'da darrov "confirmed" bo'ladi, keyin processing -> shipped -> delivered
+bosqichlaridan o'tadi yoki "cancelled" qilinadi. Tushum bekor qilinmagan buyurtmalardan hisoblanadi.
 """
 from datetime import timedelta
 
@@ -20,11 +20,12 @@ from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
-from .models import Book, Order, OrderItem
+from .models import Book, Order, OrderEvent, OrderItem
+from .stock import LOW_STOCK
 from .views import tokens_for
 
-ACTIVE = ['confirmed']
-PLACED = ['confirmed', 'cancelled']
+ACTIVE = list(Order.STAGES)  # bekor qilinmagan buyurtmalar
+PLACED = ACTIVE + ['cancelled']
 
 # Bitta qator summasi: buyurtmadagi narx (bo'lmasa kitobning narxi) x soni
 LINE_TOTAL = ExpressionWrapper(
@@ -152,6 +153,16 @@ def panel_summary(request):
         for o in with_totals(Order.objects.select_related('user').filter(status__in=PLACED)).order_by('-created_on')[:8]
     ]
 
+    tracked = Book.objects.filter(stock__isnull=False)
+    low_books = list(tracked.filter(stock__lte=LOW_STOCK).order_by('stock', 'name').values('id', 'name', 'stock')[:10])
+    stock_summary = {
+        'tracked': tracked.count(),
+        'out': tracked.filter(stock=0).count(),
+        'low': tracked.filter(stock__gt=0, stock__lte=LOW_STOCK).count(),
+        'low_books': low_books,
+        'threshold': LOW_STOCK,
+    }
+
     all_active = orders.filter(status__in=ACTIVE).aggregate(revenue=Coalesce(Sum('total'), 0), count=Count('id'))
     return Response({
         'days': days,
@@ -177,6 +188,7 @@ def panel_summary(request):
         ],
         'recent_orders': recent,
         'carts': carts,
+        'stock': stock_summary,
         'totals': {
             'users': User.objects.count(),
             'books': Book.objects.count(),
@@ -225,17 +237,24 @@ class PanelOrderSerializer(serializers.ModelSerializer):
         read_only_fields = [f for f in fields if f != 'status']
 
 
+class PanelOrderEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderEvent
+        fields = ['status', 'created_on']
+
+
 class PanelOrderDetailSerializer(PanelOrderSerializer):
     items = PanelOrderItemSerializer(many=True, read_only=True)
+    events = PanelOrderEventSerializer(many=True, read_only=True)
 
     def validate_status(self, value):
-        # Admin faqat tasdiqlash yoki bekor qilishi mumkin ("pending" - savat)
+        # "pending" - savat, uni buyurtma holatiga qo'yib bo'lmaydi
         if value not in PLACED:
-            raise serializers.ValidationError("Holat 'confirmed' yoki 'cancelled' bo'lishi kerak.")
+            raise serializers.ValidationError(f"Holat quyidagilardan biri bo'lishi kerak: {', '.join(PLACED)}.")
         return value
 
     class Meta(PanelOrderSerializer.Meta):
-        fields = PanelOrderSerializer.Meta.fields + ['items']
+        fields = PanelOrderSerializer.Meta.fields + ['items', 'events']
         read_only_fields = [f for f in fields if f != 'status']
 
 
@@ -266,7 +285,7 @@ class PanelOrderDetail(generics.RetrieveUpdateAPIView):
     http_method_names = ['get', 'patch', 'head', 'options']
 
     def get_queryset(self):
-        return with_totals(Order.objects.select_related('user').prefetch_related('items__book').filter(status__in=PLACED))
+        return with_totals(Order.objects.select_related('user').prefetch_related('items__book', 'events').filter(status__in=PLACED))
 
 
 """ KITOBLAR """
@@ -281,16 +300,16 @@ class PanelBookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = [
-            'id', 'name', 'category_name', 'author_name', 'language', 'price', 'status',
+            'id', 'name', 'category_name', 'author_name', 'language', 'price', 'status', 'stock',
             'created_on', 'sold', 'revenue', 'orders_count',
         ]
-        read_only_fields = [f for f in fields if f not in ('price', 'status')]
+        read_only_fields = [f for f in fields if f not in ('price', 'status', 'stock')]
 
 
 class PanelBookList(generics.ListAPIView):
     permission_classes = [IsAdminUser]
     serializer_class = PanelBookSerializer
-    ORDERING = {'sold', 'revenue', 'name', 'price', 'created_on', 'orders_count'}
+    ORDERING = {'sold', 'revenue', 'name', 'price', 'created_on', 'orders_count', 'stock'}
 
     def get_queryset(self):
         active = Q(orderitem__order__status__in=ACTIVE)
@@ -309,6 +328,13 @@ class PanelBookList(generics.ListAPIView):
             qs = qs.filter(status=params['status'])
         if params.get('category', '').isdigit():
             qs = qs.filter(category_id=int(params['category']))
+        stock_filter = params.get('stock')
+        if stock_filter == 'out':
+            qs = qs.filter(stock=0)
+        elif stock_filter == 'low':
+            qs = qs.filter(stock__isnull=False, stock__lte=LOW_STOCK)
+        elif stock_filter == 'tracked':
+            qs = qs.filter(stock__isnull=False)
         q = params.get('q', '').strip()
         if q:
             qs = qs.filter(Q(name__icontains=q) | Q(author__full_name__icontains=q))

@@ -27,6 +27,12 @@ export const shortDay = (iso) =>
 
 export const STATUS_LABELS = {
   confirmed: 'Tasdiqlangan',
+  processing: "Yig'ilmoqda",
+  shipped: "Yo'lda",
+  delivered: 'Yetkazildi',
   cancelled: 'Bekor qilingan',
   pending: 'Savatda',
 }
+
+// Buyurtma bosqichlari tartibi (bekor qilish alohida)
+export const STAGES = ['confirmed', 'processing', 'shipped', 'delivered']

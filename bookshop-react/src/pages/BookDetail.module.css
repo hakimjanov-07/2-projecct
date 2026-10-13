@@ -536,3 +536,10 @@
     font-size: 24px;
   }
 }
+
+.stockNote {
+  margin: -4px 0 10px;
+  color: #d3354f;
+  font-size: 13px;
+  font-weight: 600;
+}

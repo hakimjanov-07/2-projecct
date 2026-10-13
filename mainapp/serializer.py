@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import Avg
 from rest_framework import serializers
 
-from .models import Category, Book, Author, Order, OrderItem, Review
+from .models import Category, Book, Author, Order, OrderEvent, OrderItem, Review
 
 
 class Category_Serializer(serializers.ModelSerializer):
@@ -36,7 +36,7 @@ class Book_Serializer(serializers.ModelSerializer):
         model = Book
         fields = [
             "id", "name", 'category', 'author', 'language', 'price', 'about', 'publisher',
-            'pages', 'audio_file', 'pdf_file', 'photo', "status", "created_on",
+            'pages', 'audio_file', 'pdf_file', 'photo', "status", "created_on", 'stock',
             'author_name', 'category_name', 'avg_rating', 'reviews_count',
         ]
 
@@ -57,8 +57,15 @@ class OrderItemSerializer(serializers.ModelSerializer):
         fields = ['id', 'book', 'book_name', 'book_photo', 'price', 'quantity']
 
 
+class OrderEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderEvent
+        fields = ['status', 'created_on']
+
+
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
+    events = OrderEventSerializer(many=True, read_only=True)
     total_items = serializers.SerializerMethodField()
     subtotal = serializers.SerializerMethodField()
     total_price = serializers.SerializerMethodField()
@@ -77,7 +84,7 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = [
             'id', 'user', 'status', 'items', 'total_items', 'subtotal',
-            'promo_code', 'discount', 'delivery_fee', 'total_price', 'created_on',
+            'promo_code', 'discount', 'delivery_fee', 'total_price', 'created_on', 'events',
         ]
         read_only_fields = ['user', 'status']
 

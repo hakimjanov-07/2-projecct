@@ -571,3 +571,156 @@ class PanelTests(TestCase):
         book_row = self.client.get('/api/panel/books/').data['results'][0]
         # narxi saqlanmagan 3 dona joriy narx (90000) bilan + checkout'da muzlatilgan 2 dona 45000 dan
         self.assertEqual(book_row['revenue'], 3 * 90000 + 2 * 45000)
+
+    def test_checkout_logs_first_event_and_cart_logs_none(self):
+        self.client.force_authenticate(user=self.user)
+        res = self.client.post('/api/cart/checkout/', {'items': [{'book_id': self.book.id, 'quantity': 1}]}, format='json')
+        self.assertEqual([e['status'] for e in res.data['events']], ['confirmed'])
+        self.assertEqual(self.cart.events.count(), 0)  # savat buyurtma emas
+
+    def test_status_changes_are_logged_once(self):
+        self.o2.status = 'processing'
+        self.o2.save()
+        self.o2.save()  # holat o'zgarmadi: yangi yozuv yo'q
+        self.o2.status = 'shipped'
+        self.o2.save()
+        self.assertEqual(list(self.o2.events.values_list('status', flat=True)), ['confirmed', 'processing', 'shipped'])
+
+    def test_panel_stage_change_is_logged_and_visible_to_customer(self):
+        self.client.force_authenticate(user=self.staff)
+        for status in ('processing', 'shipped', 'delivered'):
+            res = self.client.patch(f'/api/panel/orders/{self.o2.id}/', {'status': status}, format='json')
+            self.assertEqual(res.status_code, 200)
+        detail = self.client.get(f'/api/panel/orders/{self.o2.id}/')
+        self.assertEqual([e['status'] for e in detail.data['events']], ['confirmed', 'processing', 'shipped', 'delivered'])
+        self.client.force_authenticate(user=self.user)
+        mine = self.client.get(f'/api/order/{self.o2.id}/')
+        self.assertEqual(mine.data['status'], 'delivered')
+        self.assertEqual(mine.data['events'][-1]['status'], 'delivered')
+
+    def test_all_stages_count_as_revenue_but_cancelled_does_not(self):
+        self.o2.status = 'delivered'
+        self.o2.save()
+        self.o1.status = 'shipped'
+        self.o1.save()
+        self.client.force_authenticate(user=self.staff)
+        res = self.client.get('/api/panel/summary/?days=30')
+        self.assertEqual(res.data['current']['revenue'], 101000 + 65000)
+        self.assertEqual(res.data['current']['count'], 2)
+        statuses = {s['status']: s['count'] for s in res.data['statuses']}
+        self.assertEqual(statuses['delivered'], 1)
+        self.assertEqual(statuses['shipped'], 1)
+        self.assertEqual(statuses['cancelled'], 1)
+        self.assertEqual(self.client.get('/api/panel/orders/?status=shipped').data['count'], 1)
+
+
+class StockTests(TestCase):
+    """ Ombor qoldig'i: checkout, bekor qilish, savat va panel """
+
+    def setUp(self):
+        BookShopAPITestCase.setUp(self)
+        self.staff = User.objects.create_user(username='boss', email='boss@example.com', password='password123', is_staff=True)
+        self.second = Book.objects.create(
+            name='Ikkinchi kitob', category=self.category, author=self.author, language='uzbek',
+            price=30000, about='x', publisher='y', pages=100, status='active',
+        )
+
+    def checkout(self, *pairs):
+        items = [{'book_id': book.id, 'quantity': qty} for book, qty in pairs]
+        return self.client.post('/api/cart/checkout/', {'items': items}, format='json')
+
+    def test_untracked_book_is_unlimited(self):
+        self.client.force_authenticate(user=self.user)
+        self.assertEqual(self.checkout((self.book, 50)).status_code, 201)
+        self.book.refresh_from_db()
+        self.assertIsNone(self.book.stock)
+
+    def test_checkout_decreases_stock(self):
+        self.book.stock = 5
+        self.book.save()
+        self.client.force_authenticate(user=self.user)
+        self.assertEqual(self.checkout((self.book, 3)).status_code, 201)
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.stock, 2)
+
+    def test_not_enough_stock_blocks_whole_order(self):
+        self.book.stock = 2
+        self.book.save()
+        self.second.stock = 10
+        self.second.save()
+        self.client.force_authenticate(user=self.user)
+        res = self.checkout((self.second, 4), (self.book, 3))
+        self.assertEqual(res.status_code, 409)
+        self.assertEqual(res.data['items'], [{'book_id': self.book.id, 'name': self.book.name, 'available': 2}])
+        self.assertEqual(Order.objects.count(), 0)
+        self.second.refresh_from_db()
+        self.assertEqual(self.second.stock, 10)  # yetarli kitob ham kamaymagan
+
+    def test_sold_out_book_cannot_be_ordered(self):
+        self.book.stock = 0
+        self.book.save()
+        self.client.force_authenticate(user=self.user)
+        self.assertEqual(self.checkout((self.book, 1)).status_code, 409)
+
+    def test_cancel_restocks_and_reconfirm_takes_again(self):
+        self.book.stock = 5
+        self.book.save()
+        self.client.force_authenticate(user=self.user)
+        order = Order.objects.get(pk=self.checkout((self.book, 3)).data['id'])
+        order.status = 'cancelled'
+        order.save()
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.stock, 5)
+        order.status = 'processing'
+        order.save()
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.stock, 2)
+        order.status = 'shipped'  # faol bosqichlar orasida o'tish omborga tegmaydi
+        order.save()
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.stock, 2)
+
+    def test_reconfirm_never_goes_below_zero(self):
+        self.book.stock = 3
+        self.book.save()
+        self.client.force_authenticate(user=self.user)
+        order = Order.objects.get(pk=self.checkout((self.book, 3)).data['id'])
+        order.status = 'cancelled'
+        order.save()
+        Book.objects.filter(pk=self.book.pk).update(stock=1)  # boshqalar sotib yuborgan
+        order.status = 'confirmed'
+        order.save()
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.stock, 0)
+
+    def test_server_cart_respects_stock(self):
+        self.book.stock = 2
+        self.book.save()
+        self.client.force_authenticate(user=self.user)
+        self.client.post('/api/cart/add/', {'book_id': self.book.id, 'quantity': 5}, format='json')
+        self.assertEqual(OrderItem.objects.get(order__status='pending', book=self.book).quantity, 2)
+        self.book.stock = 0
+        self.book.save()
+        self.assertEqual(self.client.post('/api/cart/add/', {'book_id': self.book.id, 'quantity': 1}, format='json').status_code, 409)
+
+    def test_book_api_exposes_stock(self):
+        self.book.stock = 4
+        self.book.save()
+        self.assertEqual(self.client.get(f'/api/book/{self.book.id}/').data['stock'], 4)
+
+    def test_panel_edit_filter_and_summary(self):
+        self.client.force_authenticate(user=self.staff)
+        for book, value in ((self.book, 0), (self.second, 3)):
+            res = self.client.patch(f'/api/panel/books/{book.id}/', {'stock': value}, format='json')
+            self.assertEqual(res.status_code, 200)
+            self.assertEqual(res.data['stock'], value)
+        self.assertEqual(self.client.get('/api/panel/books/?stock=out').data['count'], 1)
+        self.assertEqual(self.client.get('/api/panel/books/?stock=low').data['count'], 2)
+        summary = self.client.get('/api/panel/summary/').data['stock']
+        self.assertEqual((summary['tracked'], summary['out'], summary['low']), (2, 1, 1))
+        self.assertEqual(summary['low_books'][0]['stock'], 0)
+        cleared = self.client.patch(f'/api/panel/books/{self.book.id}/', {'stock': None}, format='json')
+        self.assertIsNone(cleared.data['stock'])
+        self.assertEqual(self.client.get('/api/panel/books/?stock=tracked').data['count'], 1)
+        bad = self.client.patch(f'/api/panel/books/{self.book.id}/', {'stock': -1}, format='json')
+        self.assertEqual(bad.status_code, 400)

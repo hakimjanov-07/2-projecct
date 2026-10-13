@@ -53,6 +53,8 @@ class Book(models.Model):
     audio_file = models.FileField(upload_to='audio_file/', verbose_name='Audio fayl:', null=True, blank=True)
     pdf_file = models.FileField(upload_to='pdf_file/', verbose_name='PDF fayl:', null=True, blank=True)
     photo = models.ImageField(upload_to='photo_book/', verbose_name='Raasmi:')
+    # Ombordagi soni. Bo'sh = qoldiq hisoblanmaydi (cheklanmagan), 0 = tugagan
+    stock = models.PositiveIntegerField(null=True, blank=True, verbose_name='Ombordagi soni:')
 
     status = models.CharField(choices=STATUS, verbose_name='Holati:')
     created_on = models.DateTimeField(auto_now_add=True, verbose_name='Kiritilgan sana:')
@@ -95,11 +97,16 @@ class PasswordResetCode(models.Model):
 
 
 class Order(models.Model):
+    # pending - savat (buyurtma emas). Buyurtma bosqichlari: confirmed -> processing -> shipped -> delivered.
     STATUS = (
-        ('pending', 'Kutilmoqda'),
+        ('pending', 'Savat'),
         ('confirmed', 'Tasdiqlangan'),
+        ('processing', "Yig'ilmoqda"),
+        ('shipped', "Yo'lda"),
+        ('delivered', 'Yetkazildi'),
         ('cancelled', 'Bekor qilingan'),
     )
+    STAGES = ('confirmed', 'processing', 'shipped', 'delivered')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     status = models.CharField(max_length=20, choices=STATUS, default='pending')
     promo_code = models.CharField(max_length=32, blank=True, default='')
@@ -109,6 +116,19 @@ class Order(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.status}"
+
+class OrderEvent(models.Model):
+    """ Buyurtma holati o'zgarishlari tarixi (kuzatuv chizig'i uchun) """
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='events')
+    status = models.CharField(max_length=20, choices=Order.STATUS)
+    created_on = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_on', 'id']
+
+    def __str__(self):
+        return f"#{self.order_id} -> {self.status}"
+
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')

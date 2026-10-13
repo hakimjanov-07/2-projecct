@@ -20,14 +20,17 @@ export function CartProvider({ children }) {
   const addToCart = (book, quantity = 1) => {
     setItems((current) => {
       const existing = current.find((item) => item.id === book.id)
+      const limit = book.stock ?? Infinity // ombordagi soni (bo'sh = cheklanmagan)
 
       if (existing) {
         return current.map((item) =>
           item.id === book.id
-            ? { ...item, quantity: item.quantity + quantity }
+            ? { ...item, quantity: Math.min(item.quantity + quantity, limit), stock: book.stock ?? null }
             : item
         )
       }
+
+      if (limit < 1) return current
 
       return [
         ...current,
@@ -37,7 +40,8 @@ export function CartProvider({ children }) {
           price: Number(book.price || 0),
           photo: book.photo || '',
           category_name: book.category_name || '',
-          quantity,
+          stock: book.stock ?? null,
+          quantity: Math.min(quantity, limit),
         },
       ]
     })
@@ -52,7 +56,7 @@ export function CartProvider({ children }) {
       current
         .map((item) =>
           item.id === id
-            ? { ...item, quantity: Math.max(0, item.quantity + delta) }
+            ? { ...item, quantity: Math.min(Math.max(0, item.quantity + delta), item.stock ?? Infinity) }
             : item
         )
         .filter((item) => item.quantity > 0)

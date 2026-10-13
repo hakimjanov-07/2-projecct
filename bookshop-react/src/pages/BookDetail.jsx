@@ -115,6 +115,10 @@ export default function BookDetail() {
     book.created_on && [t('book.addedOn'), new Date(book.created_on).toLocaleDateString(locale)],
   ].filter(Boolean)
 
+  const soldOut = book.stock === 0
+  const maxQuantity = book.stock ?? 99
+  const lowStock = book.stock != null && book.stock > 0 && book.stock <= 5
+
   const handleAddToCart = () => {
     if (added) {
       navigate('/cart')
@@ -190,6 +194,7 @@ export default function BookDetail() {
 
             <div className={styles.buyCard}>
               {price && <p className={styles.price}>{price}</p>}
+              {lowStock && <p className={styles.stockNote}>{t('book.stockLeft', { n: book.stock })}</p>}
 
               <div className={styles.buyRow}>
                 <div className={styles.quantityControl} aria-label={t('book.quantity')}>
@@ -201,7 +206,7 @@ export default function BookDetail() {
                   <span aria-live="polite">{quantity}</span>
                   <button
                     type="button"
-                    onClick={() => setQuantity((current) => current + 1)}
+                    onClick={() => setQuantity((current) => Math.min(maxQuantity, current + 1))}
                     aria-label={t('book.increase')}
                   >+</button>
                 </div>
@@ -210,9 +215,9 @@ export default function BookDetail() {
                   type="button"
                   className={`${styles.cartBtn} ${added ? styles.cartBtnAdded : ''}`}
                   onClick={handleAddToCart}
-                  disabled={!book.price}
+                  disabled={!book.price || soldOut}
                 >
-                  {!book.price ? t('book.noPrice') : added ? t('book.goToCart') : t('book.addToCart')}
+                  {soldOut ? t('book.outOfStock') : !book.price ? t('book.noPrice') : added ? t('book.goToCart') : t('book.addToCart')}
                 </button>
               </div>
 

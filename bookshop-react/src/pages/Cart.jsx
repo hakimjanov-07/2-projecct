@@ -105,10 +105,16 @@ export default function Cart() {
       setOrderPlaced(true)
       showToast(t('toast.orderPlaced'))
     } catch (error) {
+      const data = error.response?.data
+      const shortages = error.response?.status === 409 && Array.isArray(data?.items)
+        ? data.items.map((item) => item.name + ': ' + item.available + ' ' + t('cart.stockAvailable')).join(', ')
+        : ''
       setOrderError(
         error.response?.status === 401
           ? t('cart.sessionExpired')
-          : error.response?.data?.error || error.response?.data?.promo_code || t('cart.orderFailed')
+          : shortages
+            ? t('cart.stockError') + ' (' + shortages + ')'
+            : data?.error || data?.promo_code || t('cart.orderFailed')
       )
     } finally {
       setSubmitting(false)

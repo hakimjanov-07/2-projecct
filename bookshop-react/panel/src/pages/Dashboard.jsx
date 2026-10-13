@@ -52,6 +52,11 @@ export default function Dashboard() {
         <StatCard title="Savatlarda" value={num(carts.count)} hint={`${money(carts.value)} (sotib olinmagan)`} />
         <StatCard title="Chegirmalar" value={money(cur.discounts)} hint="promo kodlar hisobidan" />
         <StatCard title="Yetkazib berishdan" value={money(cur.delivery)} hint="yetkazib berish to'lovlari" />
+        <StatCard
+          title="Omborda kam / tugagan"
+          value={`${num(data.stock.low)} / ${num(data.stock.out)}`}
+          hint={data.stock.tracked ? `${num(data.stock.tracked)} ta kitob qoldig'i hisoblanadi` : "Qoldiq hali kiritilmagan"}
+        />
       </section>
 
       <section className="grid two">
@@ -135,6 +140,25 @@ export default function Dashboard() {
           </div>
         </div>
       </section>
+
+      {data.stock.low_books.length > 0 && (
+        <section className="card">
+          <div className="card-head">
+            <h2>Omborda kam qolgan kitoblar (≤ {data.stock.threshold})</h2>
+            <Link to="/books?stock=low" className="btn btn-ghost">Hammasi →</Link>
+          </div>
+          <ul className="bars">
+            {data.stock.low_books.map((b) => (
+              <li key={b.id}>
+                <div className="bars-row">
+                  <span>{b.name}</span>
+                  <strong className={b.stock === 0 ? 'stock-out' : 'stock-low'}>{b.stock === 0 ? 'Tugagan' : `${b.stock} ta`}</strong>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="card">
         <div className="card-head">

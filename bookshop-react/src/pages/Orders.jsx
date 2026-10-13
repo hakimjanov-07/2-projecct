@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { getMyOrders } from '../api'
+import OrderProgress from '../components/OrderProgress'
 import { useLang } from '../i18n/LanguageContext'
 import styles from './Profile.module.css'
 
@@ -58,6 +59,8 @@ export default function Orders() {
                     {t(`order.${order.status}`)}
                   </span>
                 </header>
+
+                <OrderProgress order={order} t={t} locale={locale} />
 
                 <ul className={styles.items}>
                   {order.items.map((item) => (

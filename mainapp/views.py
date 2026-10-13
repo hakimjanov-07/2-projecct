@@ -17,6 +17,7 @@ from rest_framework.decorators import throttle_classes
 from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from . import stock
 from .models import Author, Book, Category, Order, OrderItem, Profile, Review
 from .password_reset import check_code, find_user, issue_code
 from .pricing import calculate_totals, find_promo
@@ -36,7 +37,7 @@ class Order_ViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         return (
             Order.objects.filter(user=self.request.user)
-            .prefetch_related('items__book')
+            .prefetch_related('items__book', 'events')
             .order_by('-created_on')
         )
 
@@ -67,13 +68,17 @@ def add_to_cart(request):
     except Book.DoesNotExist:
         return Response({'error': 'Kitob topilmadi'}, status=404)
 
+    if book.stock == 0:
+        return Response({'error': 'Kitob tugagan'}, status=409)
+    limit = 100 if book.stock is None else min(100, book.stock)
+
     with transaction.atomic():
         order = get_cart(request.user)
         item, created = OrderItem.objects.get_or_create(
-            order=order, book=book, defaults={'quantity': quantity}
+            order=order, book=book, defaults={'quantity': min(quantity, limit)}
         )
         if not created:
-            item.quantity = min(item.quantity + quantity, 100)
+            item.quantity = min(item.quantity + quantity, limit)
             item.save(update_fields=['quantity'])
 
     return Response({'message': "Savatga qo'shildi"}, status=200)
@@ -152,21 +157,29 @@ def checkout(request):
     totals = calculate_totals(subtotal, promo)
 
     with transaction.atomic():
-        order = Order.objects.create(
-            user=request.user,
-            status='confirmed',
-            promo_code=promo.code if promo else '',
-            discount=totals['discount'],
-            delivery_fee=totals['delivery_fee'],
+        shortages = stock.reserve(quantities)
+        if not shortages:
+            order = Order.objects.create(
+                user=request.user,
+                status='confirmed',
+                promo_code=promo.code if promo else '',
+                discount=totals['discount'],
+                delivery_fee=totals['delivery_fee'],
+            )
+            OrderItem.objects.bulk_create(
+                OrderItem(order=order, book=books[book_id], quantity=qty, price=books[book_id].price)
+                for book_id, qty in quantities.items()
+            )
+            # Server savatidagi shu kitoblar endi buyurtmaga o'tdi
+            OrderItem.objects.filter(
+                order__user=request.user, order__status='pending', book_id__in=quantities
+            ).delete()
+
+    if shortages:
+        return Response(
+            {'error': "Omborda yetarli kitob yo'q.", 'items': shortages},
+            status=409,
         )
-        OrderItem.objects.bulk_create(
-            OrderItem(order=order, book=books[book_id], quantity=qty, price=books[book_id].price)
-            for book_id, qty in quantities.items()
-        )
-        # Server savatidagi shu kitoblar endi buyurtmaga o'tdi
-        OrderItem.objects.filter(
-            order__user=request.user, order__status='pending', book_id__in=quantities
-        ).delete()
 
     return Response(OrderSerializer(order, context={'request': request}).data, status=201)
 
