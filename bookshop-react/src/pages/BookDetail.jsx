@@ -4,6 +4,7 @@ import { getBook, getBookReviews, getBooks } from '../api'
 import BookCard from '../components/BookCard'
 import ReviewsPanel from '../components/ReviewsPanel'
 import DigitalCopy from '../components/DigitalCopy'
+import ShareButtons from '../components/ShareButtons'
 import { useCart } from '../context/CartContext'
 import { useToast } from '../context/ToastContext'
 import { useFavorites } from '../context/FavoritesContext'
@@ -223,6 +224,7 @@ export default function BookDetail() {
               </div>
 
               <DigitalCopy book={book} />
+              <ShareButtons book={book} />
             </div>
 
             <button

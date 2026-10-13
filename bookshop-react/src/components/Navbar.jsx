@@ -8,6 +8,8 @@ import { LANGUAGES } from '../i18n/translations'
 import { getTheme, setTheme } from '../theme'
 import { useLang } from '../i18n/LanguageContext'
 import CategoryMenu from './CategoryMenu'
+import SearchSuggest from './SearchSuggest'
+import { useSuggestions } from '../useSuggestions'
 import styles from './Navbar.module.css'
 
 const categoryLinks = [
@@ -98,6 +100,10 @@ export default function Navbar() {
   const { pathname } = useLocation()
   const profileRef = useRef(null)
   const searchAreaRef = useRef(null)
+  const searchInputRef = useRef(null)
+  const [searchFocused, setSearchFocused] = useState(false)
+  const [activeIdx, setActiveIdx] = useState(-1)
+  const suggest = useSuggestions(query, searchFocused)
   const langRef = useRef(null)
   const token = localStorage.getItem('access_token')
   const username = localStorage.getItem('username')
@@ -123,6 +129,19 @@ export default function Navbar() {
       document.removeEventListener('keydown', handleKey)
     }
   }, [menuOpen])
+
+  // Qidiruv takliflari: tashqariga bosilganda yopiladi
+  useEffect(() => {
+    if (!searchFocused) return undefined
+    const handlePointer = (event) => {
+      if (!searchAreaRef.current?.contains(event.target)) {
+        setSearchFocused(false)
+        setActiveIdx(-1)
+      }
+    }
+    document.addEventListener('mousedown', handlePointer)
+    return () => document.removeEventListener('mousedown', handlePointer)
+  }, [searchFocused])
 
   // Til menyusi: tashqariga bosilganda yoki Escape bosilganda yopiladi
   useEffect(() => {
@@ -158,10 +177,50 @@ export default function Navbar() {
     }
   }, [profileOpen])
 
-  const submitSearch = (event) => {
-    event.preventDefault()
+  // Takliflar ro'yxati: kitoblar, mualliflar va oxirida "hammasini ko'rish"
+  const suggestItems = suggest.active ? [...suggest.books, ...suggest.authors, { type: 'all' }] : []
+  const showSuggest = searchFocused && suggest.active
+
+  const closeSuggest = () => {
+    setSearchFocused(false)
+    setActiveIdx(-1)
+    searchInputRef.current?.blur()
+  }
+
+  const goSearch = () => {
     const search = query.trim()
     navigate(search ? `/books?search=${encodeURIComponent(search)}` : '/books')
+  }
+
+  const pickSuggestion = (item) => {
+    closeSuggest()
+    if (item.type === 'book') navigate(`/books/${item.id}`)
+    else if (item.type === 'author') navigate(`/books?author=${item.id}`)
+    else goSearch()
+  }
+
+  const onSearchKeyDown = (event) => {
+    if (event.key === 'Escape') {
+      closeSuggest()
+    } else if (showSuggest && suggestItems.length && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
+      event.preventDefault()
+      const last = suggestItems.length - 1
+      setActiveIdx((current) => {
+        if (event.key === 'ArrowDown') return current >= last ? -1 : current + 1
+        return current <= -1 ? last : current - 1
+      })
+    }
+  }
+
+  const submitSearch = (event) => {
+    event.preventDefault()
+    // Klaviatura bilan taklif tanlangan bo'lsa, o'shanga o'tadi
+    if (showSuggest && activeIdx >= 0 && suggestItems[activeIdx]) {
+      pickSuggestion(suggestItems[activeIdx])
+      return
+    }
+    closeSuggest()
+    goSearch()
   }
 
   const logout = () => {
@@ -236,7 +295,7 @@ export default function Navbar() {
               type="button"
               className={styles.categorySelect}
               aria-expanded={menuOpen}
-              onClick={() => setMenuOpen((open) => !open)}
+              onClick={() => { setSearchFocused(false); setMenuOpen((open) => !open) }}
             >
               <span className={styles.menuLines} aria-hidden="true"><span /><span /><span /></span>
               {t('nav.allGenres')}
@@ -249,12 +308,32 @@ export default function Navbar() {
               aria-label={t('nav.searchAria')}
               placeholder={t('nav.searchPlaceholder')}
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              ref={searchInputRef}
+              autoComplete="off"
+              role="combobox"
+              aria-expanded={showSuggest}
+              onFocus={() => setSearchFocused(true)}
+              onKeyDown={onSearchKeyDown}
+              onChange={(event) => {
+                setQuery(event.target.value)
+                setActiveIdx(-1)
+                setSearchFocused(true)
+              }}
             />
             <button className={styles.searchBtn} type="submit" aria-label={t('nav.search')}>
               <SearchIcon />
             </button>
           </form>
+          {showSuggest && !menuOpen && (
+            <SearchSuggest
+              query={query}
+              loading={suggest.loading}
+              items={suggestItems}
+              activeIndex={activeIdx}
+              onPick={pickSuggestion}
+              onHover={setActiveIdx}
+            />
+          )}
           <CategoryMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
           </div>
 

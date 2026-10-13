@@ -41,9 +41,9 @@ export default function Books() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (urlSearch) setSearch(urlSearch)
-    if (urlCategory) setSelectedCat(Number(urlCategory))
-    if (urlAuthor) setSelectedAuthor(Number(urlAuthor))
+    setSearch(urlSearch)
+    setSelectedCat(urlCategory ? Number(urlCategory) : null)
+    setSelectedAuthor(urlAuthor ? Number(urlAuthor) : null)
   }, [urlSearch, urlCategory, urlAuthor])
 
   const loadData = () => {

@@ -184,3 +184,16 @@ export const updateProfile = (data) => api.patch('/profile/', data)
 
 // Audio/PDF havolalari: faqat sotib olgan foydalanuvchiga beriladi (aks holda 403)
 export const getBookDigital = (id) => api.get(`/book/${id}/digital/`)
+
+// Qidiruv takliflari: kitoblar va mualliflar (keshsiz, har so'rov yangi)
+export const searchSuggestions = async (text) => {
+  const [books, authors] = await Promise.all([
+    api.get('/book/', { params: { search: text, status: 'active', page_size: 5 } }),
+    api.get('/author/', { params: { search: text, status: 'active', page_size: 3 } }),
+  ])
+  const list = (response) => (Array.isArray(response.data) ? response.data : response.data.results || [])
+  return {
+    books: list(books).map((b) => ({ type: 'book', id: b.id, name: b.name, author: b.author_name, price: b.price, photo: b.photo })),
+    authors: list(authors).map((a) => ({ type: 'author', id: a.id, name: a.full_name, photo: a.photo })),
+  }
+}
