@@ -32,7 +32,7 @@ export default function Footer() {
   const { t } = useLang()
   const [showTop, setShowTop] = useState(false)
   const isLoggedIn = Boolean(localStorage.getItem('access_token'))
-  const socials = Object.entries(SITE.social).filter(([, url]) => url)
+  const socials = Object.entries(SITE.social) // havolasi yo'qlari ham ko'rinadi (bosilmaydi), havola yozilsa ishlaydi
 
   useEffect(() => {
     const onScroll = () => setShowTop(window.scrollY > 500)
@@ -55,11 +55,14 @@ export default function Footer() {
             <>
               <h3 className={styles.followTitle}>{t('footer.follow')}</h3>
               <div className={styles.socials}>
-                {socials.map(([name, url]) => (
-                  <a key={name} href={url} target="_blank" rel="noreferrer" aria-label={name} title={name}>
-                    <svg viewBox="0 0 24 24" aria-hidden="true">{SOCIAL_ICONS[name]}</svg>
-                  </a>
-                ))}
+                {socials.map(([name, url]) => {
+                  const icon = <svg viewBox="0 0 24 24" aria-hidden="true">{SOCIAL_ICONS[name]}</svg>
+                  return url ? (
+                    <a key={name} href={url} target="_blank" rel="noreferrer" aria-label={name} title={name}>{icon}</a>
+                  ) : (
+                    <span key={name} className={styles.soon} aria-label={name} title={`${name}: ${t('footer.soon')}`}>{icon}</span>
+                  )
+                })}
               </div>
             </>
           )}

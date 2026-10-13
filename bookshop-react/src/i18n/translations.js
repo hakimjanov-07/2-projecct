@@ -116,6 +116,7 @@ const dict = {
     ru: 'Лучшие произведения узбекской и мировой литературы в одном месте. Читайте, слушайте, открывайте.',
     en: 'The finest works of Uzbek and world literature in one place. Read, listen, discover.',
   },
+  'footer.soon': { uz: 'tez orada', ru: 'скоро', en: 'coming soon' },
   'footer.follow': { uz: 'Bizni kuzating', ru: 'Следите за нами', en: 'Follow us' },
   'footer.platform': { uz: 'Platforma', ru: 'Платформа', en: 'Platform' },
   'footer.account': { uz: 'Hisobim', ru: 'Мой аккаунт', en: 'My account' },

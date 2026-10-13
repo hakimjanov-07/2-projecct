@@ -4,7 +4,8 @@ export const SITE = {
   phoneLink: '+998712300050',
   workingHours: '09:00 - 22:00',
 
-  // Ijtimoiy tarmoq havolalari. Bo'sh qoldirilgan tarmoq footer'da ko'rsatilmaydi.
+  // Ijtimoiy tarmoq havolalari. Footer'da to'rtala ikonka ko'rinadi:
+  // havola yozilsa bosiladigan bo'ladi, bo'sh qoldirilsa "tez orada" holatida turadi.
   // Masalan: instagram: 'https://instagram.com/sizning_sahifangiz'
   social: {
     instagram: '',

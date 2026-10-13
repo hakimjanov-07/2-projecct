@@ -64,6 +64,17 @@
   transition: background 0.2s, border-color 0.2s;
 }
 
+.socials .soon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  opacity: 0.55;
+  cursor: default;
+}
+
 .socials a:hover {
   border-color: var(--brown);
   background: rgba(200, 149, 108, 0.25);
