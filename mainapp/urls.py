@@ -1,6 +1,7 @@
 from django.urls import include, path
 from rest_framework import routers
 
+from .digital import book_digital, book_file
 from .panel import (
     PanelBookDetail, PanelBookList, PanelOrderDetail, PanelOrderList, PanelUserList,
     panel_login, panel_summary,
@@ -19,6 +20,8 @@ router.register(r"review", Review_ViewSet, basename='review')
 router.register(r"order", Order_ViewSet, basename='order')
 
 urlpatterns = [
+    path('book/<int:pk>/digital/', book_digital),
+    path('files/<str:token>/', book_file),
     path("", include(router.urls)),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     path('profile/', my_profile),

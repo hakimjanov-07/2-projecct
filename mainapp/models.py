@@ -2,6 +2,8 @@ from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
+from .storage import PrivateStorage
+
 STATUS = (
     ('active', 'Faol'),
     ('deactive', 'Faol emas')
@@ -50,8 +52,8 @@ class Book(models.Model):
     about = models.TextField(verbose_name='Batafsil:')
     publisher = models.CharField(max_length=100, verbose_name='Nashriyotchi:')
     pages = models.PositiveIntegerField(verbose_name='Sahifalar soni:')
-    audio_file = models.FileField(upload_to='audio_file/', verbose_name='Audio fayl:', null=True, blank=True)
-    pdf_file = models.FileField(upload_to='pdf_file/', verbose_name='PDF fayl:', null=True, blank=True)
+    audio_file = models.FileField(upload_to='audio_file/', storage=PrivateStorage(), verbose_name='Audio fayl:', null=True, blank=True)
+    pdf_file = models.FileField(upload_to='pdf_file/', storage=PrivateStorage(), verbose_name='PDF fayl:', null=True, blank=True)
     photo = models.ImageField(upload_to='photo_book/', verbose_name='Raasmi:')
     # Ombordagi soni. Bo'sh = qoldiq hisoblanmaydi (cheklanmagan), 0 = tugagan
     stock = models.PositiveIntegerField(null=True, blank=True, verbose_name='Ombordagi soni:')

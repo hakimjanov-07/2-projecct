@@ -24,6 +24,14 @@ class Book_Serializer(serializers.ModelSerializer):
     author_name = serializers.CharField(source='author.full_name', read_only=True)
     avg_rating = serializers.SerializerMethodField()
     reviews_count = serializers.SerializerMethodField()
+    has_audio = serializers.SerializerMethodField()
+    has_pdf = serializers.SerializerMethodField()
+
+    def get_has_audio(self, obj):
+        return bool(obj.audio_file)
+
+    def get_has_pdf(self, obj):
+        return bool(obj.pdf_file)
 
     def get_avg_rating(self, obj):
         avg = obj.reviews.aggregate(avg=Avg('rating'))['avg']
@@ -37,8 +45,10 @@ class Book_Serializer(serializers.ModelSerializer):
         fields = [
             "id", "name", 'category', 'author', 'language', 'price', 'about', 'publisher',
             'pages', 'audio_file', 'pdf_file', 'photo', "status", "created_on", 'stock',
-            'author_name', 'category_name', 'avg_rating', 'reviews_count',
+            'author_name', 'category_name', 'avg_rating', 'reviews_count', 'has_audio', 'has_pdf',
         ]
+        # Fayllar ommaga ochiq emas: ularni faqat admin yuklaydi, o'qish /api/book/<id>/digital/ orqali
+        extra_kwargs = {'audio_file': {'write_only': True}, 'pdf_file': {'write_only': True}}
 
 
 class OrderItemSerializer(serializers.ModelSerializer):

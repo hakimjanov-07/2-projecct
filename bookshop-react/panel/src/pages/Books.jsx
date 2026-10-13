@@ -113,6 +113,7 @@ export default function Books() {
                     <th>Janr</th>
                     <SortTh field="price" align="right" {...sortProps}>Narx</SortTh>
                     <SortTh field="stock" align="right" {...sortProps}>Ombor</SortTh>
+                    <th>Fayllar</th>
                     <th>Holat</th>
                     <SortTh field="sold" align="right" {...sortProps}>Sotilgan</SortTh>
                     <SortTh field="revenue" align="right" {...sortProps}>Tushum</SortTh>
@@ -144,6 +145,7 @@ export default function Books() {
                           </button>
                         )}
                       </td>
+                      <td title="Audio va PDF Django adminda yuklanadi">{b.has_audio ? '🎧' : '·'} {b.has_pdf ? '📄' : '·'}</td>
                       <td>
                         <button
                           type="button"

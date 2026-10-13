@@ -724,3 +724,106 @@ class StockTests(TestCase):
         self.assertEqual(self.client.get('/api/panel/books/?stock=tracked').data['count'], 1)
         bad = self.client.patch(f'/api/panel/books/{self.book.id}/', {'stock': -1}, format='json')
         self.assertEqual(bad.status_code, 400)
+
+
+class DigitalBookTests(TestCase):
+    """ Audio/PDF: faqat xarid qilganlar uchun, imzolangan havola va Range """
+
+    def setUp(self):
+        import shutil
+        import tempfile
+        from django.core.files.base import ContentFile
+        from django.test import override_settings
+
+        self.tmp = tempfile.mkdtemp()
+        override = override_settings(PRIVATE_MEDIA_ROOT=self.tmp)
+        override.enable()
+        self.addCleanup(override.disable)
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+
+        BookShopAPITestCase.setUp(self)
+        self.staff = User.objects.create_user(username='boss', email='boss@example.com', password='password123', is_staff=True)
+        self.audio_bytes = bytes(range(256)) * 8  # 2048 bayt
+        self.book.audio_file.save('demo.mp3', ContentFile(self.audio_bytes))
+        self.book.pdf_file.save('demo.pdf', ContentFile(b'%PDF-1.4 demo'))
+        self.url = f'/api/book/{self.book.id}/digital/'
+
+    def buy(self, status='confirmed'):
+        order = Order.objects.create(user=self.user, status=status)
+        OrderItem.objects.create(order=order, book=self.book, quantity=1)
+        return order
+
+    def test_public_api_hides_file_urls(self):
+        data = self.client.get(f'/api/book/{self.book.id}/').data
+        self.assertTrue(data['has_audio'] and data['has_pdf'])
+        self.assertNotIn('audio_file', data)
+        self.assertNotIn('pdf_file', data)
+
+    def test_files_are_stored_outside_public_media(self):
+        self.assertTrue(self.book.audio_file.path.startswith(self.tmp))
+
+    def test_access_rules(self):
+        self.assertEqual(self.client.get(self.url).status_code, 401)
+        self.client.force_authenticate(user=self.user)
+        self.assertEqual(self.client.get(self.url).status_code, 403)  # sotib olmagan
+        self.buy('pending')  # savatdagi kitob hisobga kirmaydi
+        self.assertEqual(self.client.get(self.url).status_code, 403)
+        order = self.buy('cancelled')
+        self.assertEqual(self.client.get(self.url).status_code, 403)
+        order.status = 'delivered'
+        order.save()
+        res = self.client.get(self.url)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn('/api/files/', res.data['audio'])
+        self.assertIn('/api/files/', res.data['pdf'])
+
+    def test_staff_has_access_and_missing_file_gives_none(self):
+        self.client.force_authenticate(user=self.staff)
+        other = Book.objects.create(
+            name='Fayli yo\'q', category=self.category, author=self.author, language='uzbek',
+            price=1000, about='x', publisher='y', pages=1, status='active',
+        )
+        res = self.client.get(f'/api/book/{other.id}/digital/')
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data, {'audio': None, 'pdf': None})
+        self.assertEqual(self.client.get(self.url).status_code, 200)
+
+    def links(self):
+        self.client.force_authenticate(user=self.staff)
+        data = self.client.get(self.url).data
+        self.client.force_authenticate(user=None)  # havola uchun login kerak emas
+        return data
+
+    def test_signed_link_serves_file_without_login(self):
+        links = self.links()
+        res = self.client.get(links['audio'])
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(b''.join(res.streaming_content), self.audio_bytes)
+        self.assertEqual(res['Accept-Ranges'], 'bytes')
+        pdf = self.client.get(links['pdf'])
+        self.assertEqual(pdf['Content-Type'], 'application/pdf')
+        self.assertTrue(b''.join(pdf.streaming_content).startswith(b'%PDF'))
+
+    def test_range_requests(self):
+        audio = self.links()['audio']
+        part = self.client.get(audio, HTTP_RANGE='bytes=100-199')
+        self.assertEqual(part.status_code, 206)
+        self.assertEqual(part['Content-Range'], 'bytes 100-199/2048')
+        self.assertEqual(b''.join(part.streaming_content), self.audio_bytes[100:200])
+        tail = self.client.get(audio, HTTP_RANGE='bytes=-50')
+        self.assertEqual(b''.join(tail.streaming_content), self.audio_bytes[-50:])
+        open_end = self.client.get(audio, HTTP_RANGE='bytes=2000-')
+        self.assertEqual(b''.join(open_end.streaming_content), self.audio_bytes[2000:])
+        self.assertEqual(self.client.get(audio, HTTP_RANGE='bytes=5000-6000').status_code, 416)
+
+    def test_bad_or_expired_token_is_not_found(self):
+        self.assertEqual(self.client.get('/api/files/yaroqsiz-token/').status_code, 404)
+        from unittest import mock
+        audio = self.links()['audio']
+        with mock.patch('mainapp.digital.LINK_MAX_AGE', -1):
+            self.assertEqual(self.client.get(audio).status_code, 404)
+
+    def test_panel_shows_which_files_exist(self):
+        self.client.force_authenticate(user=self.staff)
+        row = self.client.get('/api/panel/books/').data['results'][0]
+        self.assertTrue(row['has_audio'] and row['has_pdf'])

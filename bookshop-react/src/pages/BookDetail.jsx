@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate, useLocation, useSearchParams } from 'reac
 import { getBook, getBookReviews, getBooks } from '../api'
 import BookCard from '../components/BookCard'
 import ReviewsPanel from '../components/ReviewsPanel'
+import DigitalCopy from '../components/DigitalCopy'
 import { useCart } from '../context/CartContext'
 import { useToast } from '../context/ToastContext'
 import { useFavorites } from '../context/FavoritesContext'
@@ -221,12 +222,7 @@ export default function BookDetail() {
                 </button>
               </div>
 
-              {(book.pdf_file || book.audio_file) && (
-                <div className={styles.fileLinks}>
-                  {book.pdf_file && <a href={book.pdf_file} target="_blank" rel="noreferrer">{t('book.pdf')}</a>}
-                  {book.audio_file && <a href={book.audio_file} target="_blank" rel="noreferrer">{t('book.audio')}</a>}
-                </div>
-              )}
+              <DigitalCopy book={book} />
             </div>
 
             <button

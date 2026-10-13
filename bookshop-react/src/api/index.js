@@ -181,3 +181,6 @@ export const getMyOrders = () =>
 export const getProfile = () => api.get('/profile/')
 
 export const updateProfile = (data) => api.patch('/profile/', data)
+
+// Audio/PDF havolalari: faqat sotib olgan foydalanuvchiga beriladi (aks holda 403)
+export const getBookDigital = (id) => api.get(`/book/${id}/digital/`)

@@ -296,12 +296,20 @@ class PanelBookSerializer(serializers.ModelSerializer):
     sold = serializers.IntegerField(read_only=True)
     revenue = serializers.IntegerField(read_only=True)
     orders_count = serializers.IntegerField(read_only=True)
+    has_audio = serializers.SerializerMethodField()
+    has_pdf = serializers.SerializerMethodField()
+
+    def get_has_audio(self, obj):
+        return bool(obj.audio_file)
+
+    def get_has_pdf(self, obj):
+        return bool(obj.pdf_file)
 
     class Meta:
         model = Book
         fields = [
             'id', 'name', 'category_name', 'author_name', 'language', 'price', 'status', 'stock',
-            'created_on', 'sold', 'revenue', 'orders_count',
+            'created_on', 'sold', 'revenue', 'orders_count', 'has_audio', 'has_pdf',
         ]
         read_only_fields = [f for f in fields if f not in ('price', 'status', 'stock')]
 

@@ -130,6 +130,8 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+# Audio/PDF kitoblar: ochiq media/ dan tashqarida, faqat himoyalangan manzil orqali beriladi
+PRIVATE_MEDIA_ROOT = BASE_DIR / 'private_media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

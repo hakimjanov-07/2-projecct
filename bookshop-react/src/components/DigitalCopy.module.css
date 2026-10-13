@@ -1,0 +1,63 @@
+.box {
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid var(--gray-200);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+}
+
+.box h3 {
+  margin: 0 0 10px;
+  color: var(--brown-dark);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.note {
+  margin: 0;
+  color: var(--gray-600);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.note a {
+  color: var(--brown-dark);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.files {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.audio {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.audio audio {
+  width: 100%;
+}
+
+.pdf {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 16px;
+  border-radius: 12px;
+  background: var(--brown-dark);
+  color: var(--on-accent);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.pdf:hover {
+  opacity: 0.88;
+}
