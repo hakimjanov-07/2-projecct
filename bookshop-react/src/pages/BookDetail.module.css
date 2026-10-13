@@ -13,7 +13,7 @@
   padding: 10px 18px;
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-md);
-  background: var(--white);
+  background: var(--surface);
   cursor: pointer;
 }
 
@@ -38,7 +38,7 @@
 }
 
 .current {
-  color: var(--black);
+  color: var(--text);
   font-weight: 600;
 }
 
@@ -58,7 +58,7 @@
   place-items: center;
   padding: 24px;
   border-radius: 18px;
-  background: var(--white);
+  background: var(--surface);
   box-shadow: var(--shadow-sm);
 }
 
@@ -165,7 +165,7 @@
   padding: 20px;
   border: 1px solid rgba(160, 112, 74, 0.35);
   border-radius: 18px;
-  background: var(--white);
+  background: var(--surface);
 }
 
 .price {
@@ -250,7 +250,7 @@
   padding: 8px 14px;
   border: 1px solid var(--gray-200);
   border-radius: 12px;
-  color: var(--black);
+  color: var(--text);
   font-size: 14px;
   text-decoration: none;
 }
@@ -269,7 +269,7 @@
   height: 48px;
   border: 1px solid var(--gray-200);
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.85);
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
@@ -308,7 +308,7 @@
   gap: 8px;
   padding: 8px;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.85);
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
 }
 
 .tabBtn {
@@ -336,7 +336,7 @@
   margin-top: 14px;
   padding: 24px;
   border-radius: 22px;
-  background: var(--white);
+  background: var(--surface);
 }
 
 .tabPanel h2 {
@@ -425,7 +425,7 @@
   height: 40px;
   border: 1px solid var(--gray-200);
   border-radius: 50%;
-  background: var(--white);
+  background: var(--surface);
   font-size: 22px;
   line-height: 1;
   cursor: pointer;

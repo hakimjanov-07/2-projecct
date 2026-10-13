@@ -23,6 +23,8 @@ const dict = {
   'nav.delivery': { uz: 'Yetkazib berish', ru: 'Доставка', en: 'Delivery' },
   'nav.services': { uz: 'Xizmatlar', ru: 'Услуги', en: 'Services' },
   'nav.mainSections': { uz: "Asosiy bo'limlar", ru: 'Основные разделы', en: 'Main sections' },
+  'nav.themeDark': { uz: "Qorong'i rejim", ru: 'Тёмная тема', en: 'Dark mode' },
+  'nav.themeLight': { uz: "Yorug' rejim", ru: 'Светлая тема', en: 'Light mode' },
   'nav.theme': { uz: 'Tema', ru: 'Тема', en: 'Theme' },
   'nav.language': { uz: 'Til', ru: 'Язык', en: 'Language' },
   'nav.allGenres': { uz: 'Barcha janrlar', ru: 'Все жанры', en: 'All genres' },
@@ -348,6 +350,8 @@ const dict = {
   // Profil
   'profile.tabInfo': { uz: "Ma'lumotlarim", ru: 'Мои данные', en: 'My details' },
   'profile.tabOrders': { uz: 'Xaridlarim', ru: 'Мои покупки', en: 'My orders' },
+  'favorites.title': { uz: 'Siz yoqtirgan kitoblar', ru: 'Книги, которые вам понравились', en: 'Books you love' },
+  'favorites.lead': { uz: "Yurakcha bilan belgilagan kitoblaringiz bir joyda", ru: 'Все книги, отмеченные сердечком, в одном месте', en: 'All the books you marked with a heart, in one place' },
   'profile.tabFavorites': { uz: 'Sevimli kitoblar', ru: 'Избранные книги', en: 'Favorite books' },
   'profile.statOrders': { uz: 'Buyurtmalar', ru: 'Заказы', en: 'Orders' },
   'profile.statBooks': { uz: 'Sotib olingan kitoblar', ru: 'Купленные книги', en: 'Books bought' },

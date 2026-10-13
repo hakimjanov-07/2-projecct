@@ -21,11 +21,45 @@
   --radius-lg: 14px;
   --shadow-sm: 0 2px 12px rgba(0,0,0,0.06);
   --shadow-md: 0 8px 32px rgba(0,0,0,0.12);
+
+  /* Tema ranglari: fon (--surface), matn (--text, --text-soft), maydon va chiziqlar */
+  --surface:   #ffffff;
+  --text:      #1a1a1a;
+  --text-soft: #64748b;
+  --line-soft: #eef0f3;
+  --field:     #f7f7f8;
+  --ring:      #e6d3c2;
+  --on-accent: #ffffff;
+}
+
+/* Qorong'i tema: oy tugmasi bilan yoqiladi (html[data-theme='dark']) */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --cream:      #1b1410;
+  --cream-2:    #241b15;
+  --surface:    #2a2018;
+  --text:       #f2e8de;
+  --text-soft:  #b5a699;
+  --line-soft:  #3a2d23;
+  --field:      #231a14;
+  --ring:       #5c4535;
+  --on-accent:  #1b1410;
+  --brown:      #c8956c;
+  --brown-2:    #d9a67d;
+  --brown-dark: #d1a47c;
+  --nav-dark:   #3a2616;
+  --nav-soft:   #33261c;
+  --gray-100:   #2f241b;
+  --gray-200:   #3f3126;
+  --gray-400:   #8c7e72;
+  --gray-600:   #b5a699;
+  --shadow-sm:  0 2px 12px rgba(0,0,0,0.35);
+  --shadow-md:  0 8px 32px rgba(0,0,0,0.5);
 }
 
 body {
   font-family: 'Inter', system-ui, sans-serif;
-  color: var(--black);
+  color: var(--text);
   background: var(--cream);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;

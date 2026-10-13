@@ -17,7 +17,7 @@
 }
 
 .text {
-  color: #64748b;
+  color: var(--text-soft);
   font-size: 15px;
   font-weight: 500;
 }

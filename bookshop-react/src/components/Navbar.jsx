@@ -5,6 +5,7 @@ import { useFavorites } from '../context/FavoritesContext'
 import { clearSession } from '../api'
 import { SITE } from '../config/site'
 import { LANGUAGES } from '../i18n/translations'
+import { getTheme, setTheme } from '../theme'
 import { useLang } from '../i18n/LanguageContext'
 import CategoryMenu from './CategoryMenu'
 import styles from './Navbar.module.css'
@@ -74,6 +75,14 @@ function MoonIcon() {
   )
 }
 
+function SunIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 7.5a4.5 4.5 0 1 1 0 9a4.5 4.5 0 0 1 0-9Zm-.9-5h1.8v2.6h-1.8V2.5Zm0 16.9h1.8v2.6h-1.8v-2.6ZM2.5 11.1h2.6v1.8H2.5v-1.8Zm16.4 0h2.6v1.8h-2.6v-1.8ZM5.2 4l1.3-1.3 1.9 1.9-1.3 1.3L5.2 4Zm11.4 11.4 1.3-1.3 1.9 1.9-1.3 1.3-1.9-1.9ZM4 18.8l1.9-1.9 1.3 1.3-1.9 1.9L4 18.8ZM15.4 7.4l1.9-1.9L18.6 7l-1.9 1.9-1.3-1.5Z" />
+    </svg>
+  )
+}
+
 export default function Navbar() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -83,6 +92,7 @@ export default function Navbar() {
   const [query, setQuery] = useState(activeSearch)
   const { lang, setLang, t } = useLang()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [theme, setThemeState] = useState(getTheme)
   const [langOpen, setLangOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const { pathname } = useLocation()
@@ -194,8 +204,18 @@ export default function Navbar() {
                 </ul>
               )}
             </div>
-            <button type="button" className={styles.themeBtn} aria-label={t('nav.theme')}>
-              <MoonIcon />
+            <button
+              type="button"
+              className={styles.themeBtn}
+              aria-label={theme === 'dark' ? t('nav.themeLight') : t('nav.themeDark')}
+              title={theme === 'dark' ? t('nav.themeLight') : t('nav.themeDark')}
+              onClick={() => {
+                const next = theme === 'dark' ? 'light' : 'dark'
+                setTheme(next)
+                setThemeState(next)
+              }}
+            >
+              {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
             </button>
           </div>
         </div>

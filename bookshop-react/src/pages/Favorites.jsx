@@ -3,11 +3,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import { getBooks } from '../api'
 import { useFavorites } from '../context/FavoritesContext'
 import { useLang } from '../i18n/LanguageContext'
-import styles from './Profile.module.css'
+import styles from './Static.module.css'
 
-// Sevimli kitoblar: foydalanuvchi yurakcha bilan belgilagan kitoblar
+// Sevimli kitoblar: maqolalar sahifasi uslubida (bosh qism + rasmli kartalar)
 export default function Favorites() {
-  const { t } = useLang()
+  const { t, locale } = useLang()
   const navigate = useNavigate()
   const { favoriteIds, toggleFavorite } = useFavorites()
   const [books, setBooks] = useState([])
@@ -33,40 +33,55 @@ export default function Favorites() {
   )
 
   return (
-    <main className={styles.page}>
-      <div className={styles.single}>
-        <div className={styles.panel} data-reveal>
-          <h2>{t('profile.tabFavorites')}</h2>
+    <main className={styles.wrap}>
+      <div className={`${styles.hero} ${styles.helpHero} ${styles.favoritesHero}`}>
+        <p className={styles.eyebrow}>{t('profile.tabFavorites')}</p>
+        <h1>{t('favorites.title')}</h1>
+        <p>{t('favorites.lead')}</p>
+      </div>
 
-          {!loading && favoriteBooks.length === 0 ? (
-            <div className={styles.empty}>
-              <p className={styles.emptyIcon} aria-hidden="true">♡</p>
-              <p>{t('profile.noFavorites')}</p>
-              <Link to="/books" className={styles.primaryLink}>{t('profile.toCatalog')}</Link>
-            </div>
-          ) : (
-            <div className={styles.shelf}>
-              {favoriteBooks.map((book) => (
-                <div key={book.id} className={styles.shelfItem}>
-                  <Link to={`/books/${book.id}`} className={styles.cover}>
-                    {book.photo ? <img src={book.photo} alt={book.name} loading="lazy" /> : <span>📗</span>}
-                  </Link>
-                  <button
-                    type="button"
-                    className={styles.unfav}
-                    aria-label={t('book.removeFavorite')}
-                    title={t('book.removeFavorite')}
-                    onClick={() => toggleFavorite(book.id)}
-                  >
-                    ♥
-                  </button>
-                  <Link to={`/books/${book.id}`} className={styles.shelfTitle}>{book.name}</Link>
-                  {book.author_name && <span className={styles.shelfAuthor}>{book.author_name}</span>}
+      <div className={styles.content}>
+        {!loading && favoriteBooks.length === 0 ? (
+          <div className={styles.favEmpty}>
+            <p aria-hidden="true">♡</p>
+            <p>{t('profile.noFavorites')}</p>
+            <Link to="/books" className={styles.favEmptyLink}>{t('profile.toCatalog')}</Link>
+          </div>
+        ) : (
+          <div className={styles.favGrid}>
+            {favoriteBooks.map((book) => (
+              <div
+                key={book.id}
+                className={`${styles.articleCard} ${styles.favCard}`}
+                data-reveal
+                onClick={() => navigate(`/books/${book.id}`)}
+              >
+                <div className={styles.articleImg}>
+                  {book.photo ? <img src={book.photo} alt={book.name} loading="lazy" /> : null}
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+                <button
+                  type="button"
+                  className={styles.favRemove}
+                  aria-label={t('book.removeFavorite')}
+                  title={t('book.removeFavorite')}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    toggleFavorite(book.id)
+                  }}
+                >
+                  ♥
+                </button>
+                <div className={styles.articleBody}>
+                  <p className={styles.articleTitle}>{book.name}</p>
+                  {book.author_name && <p className={styles.articleExcerpt}>{book.author_name}</p>}
+                  {book.price ? (
+                    <p className={styles.favPrice}>{Number(book.price).toLocaleString(locale)} {t('currency')}</p>
+                  ) : null}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </main>
   )

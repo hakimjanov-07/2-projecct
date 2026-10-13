@@ -211,8 +211,8 @@
   height: 52px;
   border: none;
   border-radius: 50%;
-  background: var(--white);
-  color: var(--black);
+  background: var(--surface);
+  color: var(--text);
   font-size: 22px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
   cursor: pointer;

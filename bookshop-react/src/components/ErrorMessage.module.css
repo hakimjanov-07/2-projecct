@@ -4,7 +4,7 @@
   align-items: center;
   justify-content: center;
   padding: 40px 20px;
-  background: #fef2f2;
+  background: color-mix(in srgb, #d3354f 12%, var(--surface));
   border: 1px solid #fee2e2;
   border-radius: 12px;
   margin: 24px auto;

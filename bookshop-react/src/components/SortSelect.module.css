@@ -57,7 +57,7 @@
   padding: 8px;
   border: 1px solid var(--gray-200);
   border-radius: 16px;
-  background: var(--white);
+  background: var(--surface);
   box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
 }
 
@@ -68,7 +68,7 @@
   border: none;
   border-radius: 12px;
   background: transparent;
-  color: var(--black);
+  color: var(--text);
   font-family: inherit;
   font-size: 14px;
   text-align: left;
@@ -81,7 +81,7 @@
   background: var(--nav-soft);
   color: var(--brown-dark);
   font-weight: 600;
-  box-shadow: 0 0 0 1px #e6d3c2;
+  box-shadow: 0 0 0 1px var(--ring);
 }
 
 @media (max-width: 640px) {

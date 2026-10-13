@@ -36,7 +36,7 @@
   padding: 20px;
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-md);
-  background: var(--white);
+  background: var(--surface);
 }
 
 .formHeader {
@@ -49,7 +49,7 @@
 .form h2, .sectionHeading h2 { font-size: 18px; }
 .cancelEdit {
   border: 1px solid var(--gray-200);
-  background: var(--white);
+  background: var(--surface);
   color: var(--gray-600);
   border-radius: 999px;
   padding: 6px 10px;
@@ -63,8 +63,8 @@
   padding: 10px 12px;
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-sm);
-  color: var(--black);
-  background: var(--white);
+  color: var(--text);
+  background: var(--surface);
   font: inherit;
 }
 .form textarea { resize: vertical; }
@@ -117,7 +117,7 @@
   cursor: pointer;
 }
 .editBtn:hover { background: rgba(201, 157, 104, 0.2); }
-.review > p { color: var(--black); font-size: 14px; line-height: 1.7; white-space: pre-wrap; }
+.review > p { color: var(--text); font-size: 14px; line-height: 1.7; white-space: pre-wrap; }
 .reviewPhoto { width: min(100%, 320px); height: auto; max-height: 360px; margin-top: 14px; border-radius: var(--radius-sm); object-fit: contain; }
 
 @media (max-width: 560px) {

@@ -9,7 +9,7 @@
 .card {
   width: min(100%, 440px);
   padding: 40px;
-  background: var(--white);
+  background: var(--surface);
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
@@ -42,4 +42,4 @@
 
 .forgot { justify-self: end; margin-top: -6px; color: var(--brown-2); font-size: 13px; font-weight: 600; text-decoration: none; }
 .forgot:hover { text-decoration: underline; }
-.success { margin: 0; padding: 10px 14px; border-radius: 12px; background: #eef7ec; color: #3f6b38; font-size: 13px; }
+.success { margin: 0; padding: 10px 14px; border-radius: 12px; background: color-mix(in srgb, #2f8f5b 14%, var(--surface)); color: #3f6b38; font-size: 13px; }

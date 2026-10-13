@@ -97,6 +97,10 @@
   background-image: url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1800&q=85');
 }
 
+.favoritesHero::before {
+  background-image: url('https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=1800&q=85');
+}
+
 .hero > * {
   position: relative;
   z-index: 1;
@@ -133,7 +137,7 @@
 .block {
   margin-bottom: 32px;
   padding: 36px;
-  background: var(--white);
+  background: var(--surface);
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-lg);
   box-shadow: 0 2px 12px rgba(0,0,0,0.05);
@@ -184,7 +188,7 @@
 
 .feature {
   min-height: 290px;
-  background: var(--white);
+  background: var(--surface);
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -265,7 +269,7 @@
 }
 
 .articleCard {
-  background: var(--white);
+  background: var(--surface);
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -320,8 +324,8 @@
   overflow: hidden;
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-lg);
-  background: var(--white);
-  color: var(--black);
+  background: var(--surface);
+  color: var(--text);
   text-decoration: none;
   cursor: pointer;
   transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
@@ -382,7 +386,7 @@
   padding: 10px 22px;
   border-radius: 999px;
   background: var(--brown-dark);
-  color: var(--white);
+  color: var(--on-accent);
   font-size: 14px;
   font-weight: 600;
   transition: background-color 0.3s ease, color 0.3s ease;
@@ -394,7 +398,7 @@
 }
 
 .serviceCard:hover .serviceBtn {
-  background: var(--white);
+  background: var(--surface);
   color: var(--brown-dark);
 }
 
@@ -402,4 +406,85 @@
   .servicesGrid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Sevimli kitoblar: maqola kartalari uslubida */
+.favCard {
+  position: relative;
+}
+
+.favGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 20px;
+}
+
+.favCard .articleImg {
+  height: 240px;
+}
+
+.favCard .articleBody {
+  padding: 16px;
+}
+
+.favRemove {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  color: var(--brown);
+  font-size: 16px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2);
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.favRemove:hover {
+  color: var(--brown-dark);
+  transform: scale(1.1);
+}
+
+.favPrice {
+  margin: 0;
+  color: var(--brown-dark);
+  font-size: 14px;
+  font-weight: 700;
+  transition: color 0.3s ease;
+}
+
+.articleCard:hover .favPrice {
+  color: var(--white);
+}
+
+.favEmpty {
+  padding: 56px 24px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  text-align: center;
+  color: var(--gray-600);
+}
+
+.favEmpty p:first-child {
+  margin: 0 0 8px;
+  color: var(--brown);
+  font-size: 40px;
+}
+
+.favEmptyLink {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 10px 24px;
+  border-radius: 999px;
+  background: var(--brown-dark);
+  color: var(--on-accent);
+  font-weight: 600;
+  text-decoration: none;
 }

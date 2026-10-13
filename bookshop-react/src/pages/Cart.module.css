@@ -36,7 +36,7 @@
   padding: 14px 24px;
   border: 1px solid var(--gray-200);
   border-radius: 20px;
-  background: var(--white);
+  background: var(--surface);
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
   font-size: 16px;
   font-weight: 700;
@@ -60,7 +60,7 @@
   padding: 16px 20px;
   border: 1px solid #cfe3c9;
   border-radius: 18px;
-  background: #eef7ec;
+  background: color-mix(in srgb, #2f8f5b 14%, var(--surface));
   color: #3f6b38;
 }
 
@@ -88,7 +88,7 @@
   padding: 16px 18px;
   border: 1px solid var(--gray-200);
   border-radius: 18px;
-  background: var(--white);
+  background: var(--surface);
 }
 
 .continueBtn,
@@ -111,12 +111,12 @@
 .continueBtn {
   border: 1px solid var(--gray-200);
   background: var(--cream);
-  color: var(--black);
+  color: var(--text);
 }
 
 .clearBtn,
 .removeBtn {
-  background: #fdecef;
+  background: color-mix(in srgb, #d3354f 12%, var(--surface));
   color: #d3354f;
 }
 
@@ -143,7 +143,7 @@
   padding: 18px;
   border: 1px solid var(--gray-200);
   border-radius: 18px;
-  background: var(--white);
+  background: var(--surface);
 }
 
 .cover {
@@ -200,7 +200,7 @@
 }
 
 .titleBox h2 a {
-  color: var(--black);
+  color: var(--text);
   text-decoration: none;
 }
 
@@ -268,7 +268,7 @@
 
 .qty span {
   width: 60px;
-  background: var(--white);
+  background: var(--surface);
   font-size: 16px;
   font-weight: 700;
 }
@@ -286,7 +286,7 @@
   padding: 56px 24px;
   border: 1px solid var(--gray-200);
   border-radius: 18px;
-  background: var(--white);
+  background: var(--surface);
   text-align: center;
 }
 
@@ -311,7 +311,7 @@
   padding: 26px;
   border: 1px solid var(--gray-200);
   border-radius: 28px;
-  background: var(--white);
+  background: var(--surface);
   box-shadow: 0 6px 24px rgba(15, 23, 42, 0.08);
 }
 
@@ -338,7 +338,7 @@
 }
 
 .row strong {
-  color: var(--black);
+  color: var(--text);
   font-weight: 700;
 }
 
@@ -415,7 +415,7 @@
   padding: 0 16px;
   border: 1px solid var(--gray-200);
   border-radius: 16px;
-  background: var(--white);
+  background: var(--surface);
   font-size: 15px;
   outline: none;
 }
@@ -479,7 +479,7 @@
   margin: 0 0 12px;
   padding: 10px 14px;
   border-radius: 12px;
-  background: #fdecef;
+  background: color-mix(in srgb, #d3354f 12%, var(--surface));
   color: #d3354f;
   font-size: 14px;
 }

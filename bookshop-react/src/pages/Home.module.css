@@ -145,7 +145,7 @@
 
 /* KATEGORIYALAR (1 QATORDA SCROLL) */
 .catSection {
-  background: var(--white);
+  background: var(--surface);
   border-top: 1px solid var(--gray-200);
   border-bottom: 1px solid var(--gray-200);
   padding: 12px 0;
@@ -230,7 +230,7 @@
   border-radius: 99px;
   font-size: 13px;
   border: 1px solid var(--gray-200);
-  color: var(--black);
+  color: var(--text);
   background: var(--cream);
   font-weight: 500;
   white-space: nowrap;
@@ -259,7 +259,7 @@
 
 .sectionWhite {
   padding: 36px 0;
-  background: var(--white);
+  background: var(--surface);
 }
 
 .sectionHeader {
@@ -449,7 +449,7 @@
 .authorName {
   font-size: 13px;
   font-weight: 600;
-  color: var(--black);
+  color: var(--text);
   margin-top: 10px;
 }
 
@@ -457,7 +457,7 @@
 .aboutSection {
   position: relative;
   padding: 56px 0;
-  background: var(--white);
+  background: var(--surface);
   border-top: 1px solid var(--gray-200);
   margin-top: 44px;
 }
@@ -541,7 +541,7 @@
 }
 
 .aboutButton:hover {
-  background: var(--white);
+  background: var(--surface);
   color: var(--brown-dark);
   border-color: var(--brown-2);
   transform: translateY(-2px) scale(1.02);
@@ -631,7 +631,7 @@
 }
 
 .articleCard {
-  background: var(--white);
+  background: var(--surface);
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-sm);

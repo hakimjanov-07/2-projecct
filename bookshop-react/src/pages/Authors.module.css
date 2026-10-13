@@ -36,7 +36,7 @@
   padding: 12px 18px;
   border: 1px solid var(--gray-200);
   border-radius: 999px;
-  background: var(--white);
+  background: var(--surface);
   font-size: 15px;
   outline: none;
 }
@@ -59,7 +59,7 @@
   padding: 28px 22px 22px;
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-lg);
-  background: var(--white);
+  background: var(--surface);
   text-align: center;
   transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -146,7 +146,7 @@
   padding: 32px;
   overflow-y: auto;
   border-radius: 22px;
-  background: var(--white);
+  background: var(--surface);
   box-shadow: 0 30px 80px rgba(15, 23, 42, 0.35);
 }
 
@@ -164,7 +164,7 @@
   border: none;
   border-radius: 50%;
   background: var(--gray-100);
-  color: var(--black);
+  color: var(--text);
   font-size: 16px;
   cursor: pointer;
 }
@@ -225,7 +225,7 @@
   padding: 12px 16px;
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-md);
-  color: var(--black);
+  color: var(--text);
   font-weight: 600;
   text-decoration: none;
 }
@@ -307,7 +307,7 @@
   padding: 30px 34px;
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-lg);
-  background: var(--white);
+  background: var(--surface);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
   transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
 }
@@ -348,7 +348,7 @@
 }
 
 .infoBlock:hover .bookList a:hover {
-  background: var(--white);
+  background: var(--surface);
   color: var(--brown-dark);
 }
 

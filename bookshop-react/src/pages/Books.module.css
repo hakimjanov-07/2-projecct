@@ -33,7 +33,7 @@
   padding: 22px 20px 8px;
   border: 1px solid var(--gray-200);
   border-radius: 24px;
-  background: var(--white);
+  background: var(--surface);
   box-shadow: var(--shadow-sm);
 }
 
@@ -97,7 +97,7 @@
   border: none;
   border-radius: 999px;
   background: var(--gray-100);
-  color: var(--black);
+  color: var(--text);
   font-size: 13px;
   cursor: pointer;
   transition: background 0.15s;
@@ -118,7 +118,7 @@
   padding: 14px;
   border: 1px solid var(--gray-200);
   border-radius: 18px;
-  background: var(--white);
+  background: var(--surface);
   box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
 }
 
@@ -152,10 +152,10 @@
   padding: 10px 14px;
   border-radius: 999px;
   border: 1px solid var(--gray-200);
-  background: rgba(255, 255, 255, 0.55);
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
   font-size: 14px;
   line-height: 1.4;
-  color: var(--black);
+  color: var(--text);
   cursor: pointer;
   margin-bottom: 8px;
   transition: all 0.2s ease;
@@ -193,7 +193,7 @@
 }
 
 .priceInput:focus {
-  border-color: var(--black);
+  border-color: var(--text);
 }
 
 .priceSep {
@@ -208,7 +208,7 @@
   border-radius: 999px;
   padding: 10px 16px;
   font-size: 14px;
-  color: var(--black);
+  color: var(--text);
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -245,8 +245,8 @@
 }
 
 .searchBox:focus-within {
-  border-color: var(--black);
-  background: var(--white);
+  border-color: var(--text);
+  background: var(--surface);
 }
 
 .searchBox input {
@@ -254,7 +254,7 @@
   background: transparent;
   outline: none;
   font-size: 14px;
-  color: var(--black);
+  color: var(--text);
   width: 100%;
   font-family: inherit;
 }
@@ -266,7 +266,7 @@
 .clearSearchBtn {
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: var(--text-soft);
   cursor: pointer;
   font-size: 14px;
   padding: 2px 6px;
@@ -275,7 +275,7 @@
 }
 
 .clearSearchBtn:hover {
-  color: #1e293b;
+  color: var(--text);
   background: rgba(0, 0, 0, 0.05);
 }
 
@@ -298,7 +298,7 @@
   align-items: center;
   justify-content: center;
   padding: 60px 20px;
-  background: #f8fafc;
+  background: var(--field);
   border-radius: 16px;
   text-align: center;
   gap: 12px;
@@ -312,13 +312,13 @@
 .emptyTitle {
   font-size: 18px;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text);
   margin: 0;
 }
 
 .emptyDesc {
   font-size: 14px;
-  color: #64748b;
+  color: var(--text-soft);
   margin: 0 0 12px 0;
 }
 
