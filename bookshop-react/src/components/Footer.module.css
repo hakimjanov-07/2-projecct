@@ -61,7 +61,7 @@
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.06);
-  transition: background 0.2s, border-color 0.2s;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, background 0.2s, border-color 0.2s;
 }
 
 .socials .soon {
@@ -73,11 +73,49 @@
   border-radius: 12px;
   opacity: 0.55;
   cursor: default;
+  transition: opacity 0.2s ease;
 }
 
-.socials a:hover {
+/* Ikonka ustiga borganda: yuqoriga ko'tariladi, jigarrang to'ladi, belgi chayqaladi */
+.socials a:hover,
+.socials a:focus-visible {
+  transform: translateY(-6px) scale(1.08);
   border-color: var(--brown);
-  background: rgba(200, 149, 108, 0.25);
+  background: var(--brown);
+  box-shadow: 0 12px 24px rgba(200, 149, 108, 0.45);
+}
+
+.socials a:hover svg,
+.socials a:focus-visible svg {
+  animation: iconWiggle 0.6s ease both;
+}
+
+/* Havolasiz ikonka: yengil titraydi */
+.socials .soon:hover {
+  opacity: 0.85;
+  animation: iconShake 0.45s ease;
+}
+
+@keyframes iconWiggle {
+  0% { transform: rotate(0) scale(1); }
+  30% { transform: rotate(-16deg) scale(1.25); }
+  60% { transform: rotate(12deg) scale(1.25); }
+  100% { transform: rotate(0) scale(1.15); }
+}
+
+@keyframes iconShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .socials a,
+  .socials a:hover svg,
+  .socials .soon:hover {
+    animation: none;
+    transition: none;
+  }
 }
 
 .socials svg {
