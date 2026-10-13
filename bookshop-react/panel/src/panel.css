@@ -343,3 +343,10 @@ h3 { font-size: 14px; font-weight: 600; margin: 20px 0 8px; }
 
 .stock-low { color: #c97a14 !important; }
 .stock-out { color: var(--red) !important; }
+
+.csv-error { color: var(--red); font-size: 13px; font-weight: 600; }
+.code-tag { display: inline-block; padding: 3px 10px; border-radius: 8px; background: var(--surface-2); color: var(--accent-dark); letter-spacing: 0.5px; }
+.filters .percent-input { flex: 0 0 150px; min-width: 120px; }
+.filters .date-input { flex: 0 0 auto; min-width: 0; }
+.filters label.date-field { display: inline-flex; align-items: center; gap: 6px; color: var(--text-soft); font-size: 13px; }
+.filters .grow-space { flex: 1; }

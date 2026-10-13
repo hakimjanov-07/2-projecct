@@ -4,6 +4,7 @@ import { getOrder, getOrders, setOrderStatus } from '../api'
 import { useFetch } from '../useFetch'
 import { dateTime, money, num, STAGES, STATUS_LABELS } from '../format'
 import { Loading, Pagination, StatusBadge } from '../components/Bits'
+import CsvButton from '../components/CsvButton'
 
 const PAGE_SIZE = 20
 
@@ -13,12 +14,15 @@ export default function Orders() {
   const status = params.get('status') || ''
   const q = params.get('q') || ''
   const user = params.get('user') || ''
+  const from = params.get('from') || ''
+  const to = params.get('to') || ''
   const orderId = params.get('order') || ''
   const [search, setSearch] = useState(q)
 
-  const key = `${page}|${status}|${q}|${user}`
+  const key = `${page}|${status}|${q}|${user}|${from}|${to}`
+  const filters = { status: status || undefined, q: q || undefined, user: user || undefined, from: from || undefined, to: to || undefined }
   const { data, error, loading, reload } = useFetch(
-    () => getOrders({ page, page_size: PAGE_SIZE, status: status || undefined, q: q || undefined, user: user || undefined }),
+    () => getOrders({ page, page_size: PAGE_SIZE, ...filters }),
     key,
   )
 
@@ -49,10 +53,13 @@ export default function Orders() {
           <option value="">Barcha holatlar</option>
           {[...STAGES, 'cancelled'].map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
         </select>
+        <label className="date-field">Dan <input className="date-input" type="date" value={from} max={to || undefined} onChange={(e) => update({ from: e.target.value })} /></label>
+        <label className="date-field">Gacha <input className="date-input" type="date" value={to} min={from || undefined} onChange={(e) => update({ to: e.target.value })} /></label>
         <button type="submit" className="btn btn-primary">Qidirish</button>
-        {(q || status || user) && (
+        {(q || status || user || from || to) && (
           <button type="button" className="btn btn-ghost" onClick={() => { setSearch(''); setParams({}, { replace: true }) }}>Tozalash</button>
         )}
+        <CsvButton kind="orders" params={filters} />
         {user && <span className="chip">Foydalanuvchi #{user} <button type="button" onClick={() => update({ user: '' })} aria-label="Olib tashlash">✕</button></span>}
       </form>
 

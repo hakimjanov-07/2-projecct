@@ -5,13 +5,17 @@ Muhim: "pending" holatidagi yozuvlar savat (checkout qilinmagan), haqiqiy buyurt
 Buyurtma checkout'da darrov "confirmed" bo'ladi, keyin processing -> shipped -> delivered
 bosqichlaridan o'tadi yoki "cancelled" qilinadi. Tushum bekor qilinmagan buyurtmalardan hisoblanadi.
 """
-from datetime import timedelta
+import csv
+import re
+from datetime import datetime, time, timedelta
+from zoneinfo import ZoneInfo
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User, update_last_login
 from django.db.models import (
     Count, ExpressionWrapper, F, IntegerField, Max, OuterRef, Q, Subquery, Sum,
 )
+from django.http import HttpResponse
 from django.db.models.functions import Coalesce, TruncDate
 from django.utils import timezone
 from rest_framework import generics, serializers
@@ -20,7 +24,7 @@ from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
-from .models import Book, Order, OrderEvent, OrderItem
+from .models import Book, Order, OrderEvent, OrderItem, PromoCode
 from .stock import LOW_STOCK
 from .views import tokens_for
 
@@ -28,6 +32,8 @@ ACTIVE = list(Order.STAGES)  # bekor qilinmagan buyurtmalar
 PLACED = ACTIVE + ['cancelled']
 
 # Bitta qator summasi: buyurtmadagi narx (bo'lmasa kitobning narxi) x soni
+TASHKENT = ZoneInfo('Asia/Tashkent')  # CSV va sana filtrlari O'zbekiston vaqti bilan
+
 LINE_TOTAL = ExpressionWrapper(
     Coalesce(F('price'), F('book__price'), 0) * F('quantity'), output_field=IntegerField(),
 )
@@ -49,6 +55,20 @@ def with_totals(qs):
     ).annotate(
         total=ExpressionWrapper(F('goods_total') - F('discount') + F('delivery_fee'), output_field=IntegerField()),
     )
+
+
+def day_bounds(date_from, date_to):
+    """ 'YYYY-MM-DD' sanalaridan Toshkent vaqti bo'yicha [boshi, oxiri) oralig'i (xato sana e'tiborsiz) """
+    def parse(value):
+        try:
+            return datetime.strptime(value or '', '%Y-%m-%d').date()
+        except ValueError:
+            return None
+
+    first, last = parse(date_from), parse(date_to)
+    start = datetime.combine(first, time.min, tzinfo=TASHKENT) if first else None
+    end = datetime.combine(last + timedelta(days=1), time.min, tzinfo=TASHKENT) if last else None
+    return start, end
 
 
 def growth(current, previous):
@@ -269,6 +289,11 @@ class PanelOrderList(generics.ListAPIView):
             qs = qs.filter(status=params['status'])
         if params.get('user', '').isdigit():
             qs = qs.filter(user_id=int(params['user']))
+        start, end = day_bounds(params.get('from'), params.get('to'))
+        if start:
+            qs = qs.filter(created_on__gte=start)
+        if end:
+            qs = qs.filter(created_on__lt=end)
         q = params.get('q', '').strip()
         if q:
             cond = Q(user__username__icontains=q) | Q(user__email__icontains=q) | Q(promo_code__icontains=q)

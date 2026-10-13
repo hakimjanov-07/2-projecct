@@ -4,6 +4,7 @@ import { getUsers } from '../api'
 import { useFetch } from '../useFetch'
 import { date, dateTime, money, num } from '../format'
 import { Loading, Pagination, SortTh } from '../components/Bits'
+import CsvButton from '../components/CsvButton'
 
 const PAGE_SIZE = 20
 
@@ -48,6 +49,7 @@ export default function Users() {
         </select>
         <button type="submit" className="btn btn-primary">Qidirish</button>
         {(q || staff) && <button type="button" className="btn btn-ghost" onClick={() => { setSearch(''); setParams({}, { replace: true }) }}>Tozalash</button>}
+        <CsvButton kind="users" params={{ q: q || undefined, staff: staff || undefined, ordering }} />
       </form>
 
       {!data ? <Loading error={error} /> : (

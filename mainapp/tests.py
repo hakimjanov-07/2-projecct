@@ -827,3 +827,147 @@ class DigitalBookTests(TestCase):
         self.client.force_authenticate(user=self.staff)
         row = self.client.get('/api/panel/books/').data['results'][0]
         self.assertTrue(row['has_audio'] and row['has_pdf'])
+
+
+class PanelExportAndPromoTests(TestCase):
+    """ CSV yuklash va promo kodlarni boshqarish """
+
+    def setUp(self):
+        BookShopAPITestCase.setUp(self)
+        self.staff = User.objects.create_user(username='boss', email='boss@example.com', password='password123', is_staff=True)
+        PromoCode.objects.create(code='AKSIYA7', discount_percent=10)
+        o1 = Order.objects.create(user=self.user, status='confirmed', promo_code='AKSIYA7', discount=9000, delivery_fee=20000)
+        OrderItem.objects.create(order=o1, book=self.book, quantity=2)
+        o2 = Order.objects.create(user=self.user, status='cancelled', promo_code='AKSIYA7', discount=4500, delivery_fee=20000)
+        OrderItem.objects.create(order=o2, book=self.book, quantity=1)
+        self.o1, self.o2 = o1, o2
+
+    def read_csv(self, url):
+        import csv
+        import io
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(res['Content-Type'].startswith('text/csv'))
+        self.assertIn('attachment; filename=', res['Content-Disposition'])
+        text = res.content.decode('utf-8')
+        self.assertTrue(text.startswith('﻿'))  # Excel uchun BOM
+        return list(csv.reader(io.StringIO(text.lstrip('﻿')), delimiter=';'))
+
+    # --- CSV
+    def test_export_requires_staff(self):
+        for kind in ('orders', 'books', 'users'):
+            self.assertEqual(self.client.get(f'/api/panel/export/{kind}/').status_code, 401)
+        self.client.force_authenticate(user=self.user)
+        self.assertEqual(self.client.get('/api/panel/export/orders/').status_code, 403)
+        self.client.force_authenticate(user=self.staff)
+        self.assertEqual(self.client.get('/api/panel/export/nomalum/').status_code, 404)
+
+    def test_orders_csv_content_and_filters(self):
+        self.client.force_authenticate(user=self.staff)
+        rows = self.read_csv('/api/panel/export/orders/')
+        self.assertEqual(rows[0][0], '№')
+        by_id = {int(r[0]): r for r in rows[1:]}
+        self.assertEqual(set(by_id), {self.o1.id, self.o2.id})
+        row = by_id[self.o1.id]
+        self.assertEqual(row[2:6], ['testuser', 'test@example.com', 'Tasdiqlangan', 'AKSIYA7'])
+        self.assertIn("O'tkan kunlar x2 (45000)", row[6])
+        self.assertEqual(row[7:], ['2', '90000', '9000', '20000', '101000'])
+        self.assertEqual(len(self.read_csv('/api/panel/export/orders/?status=cancelled')), 2)  # sarlavha + 1
+        self.assertEqual(len(self.read_csv('/api/panel/export/orders/?q=AKSIYA7')), 3)
+
+    def test_orders_date_filter_uses_tashkent_days(self):
+        from datetime import timedelta
+        from django.utils import timezone
+        self.client.force_authenticate(user=self.staff)
+        tomorrow = (timezone.now() + timedelta(days=2)).strftime('%Y-%m-%d')
+        yesterday = (timezone.now() - timedelta(days=2)).strftime('%Y-%m-%d')
+        self.assertEqual(len(self.read_csv(f'/api/panel/export/orders/?from={tomorrow}')), 1)  # faqat sarlavha
+        self.assertEqual(len(self.read_csv(f'/api/panel/export/orders/?to={yesterday}')), 1)
+        self.assertEqual(len(self.read_csv(f'/api/panel/export/orders/?from={yesterday}&to={tomorrow}')), 3)
+        self.assertEqual(len(self.read_csv('/api/panel/export/orders/?from=xato&to=xato')), 3)  # noto'g'ri sana e'tiborsiz
+        self.assertEqual(self.client.get(f'/api/panel/orders/?from={tomorrow}').data['count'], 0)  # ro'yxatda ham ishlaydi
+
+    def test_csv_cells_cannot_become_formulas(self):
+        evil = User.objects.create_user(username='=HYPERLINK("x")', email='e@example.com', password='password123')
+        order = Order.objects.create(user=evil, status='confirmed')
+        OrderItem.objects.create(order=order, book=self.book, quantity=1)
+        self.client.force_authenticate(user=self.staff)
+        rows = self.read_csv('/api/panel/export/orders/')
+        names = [r[2] for r in rows[1:]]
+        self.assertIn("'=HYPERLINK(\"x\")", names)
+        self.assertNotIn('=HYPERLINK("x")', names)
+
+    def test_books_and_users_csv(self):
+        self.client.force_authenticate(user=self.staff)
+        books = self.read_csv('/api/panel/export/books/')
+        self.assertEqual(books[0][1], 'Nomi')
+        row = next(r for r in books[1:] if r[1] == "O'tkan kunlar")
+        self.assertEqual((row[10], row[11], row[12]), ('2', '90000', '1'))  # bekor qilingani hisobga kirmaydi
+        users = self.read_csv('/api/panel/export/users/?ordering=-spent')
+        top = users[1]
+        self.assertEqual((top[1], top[7], top[8]), ('testuser', '1', '101000'))
+
+    # --- Promo kodlar
+    URL = '/api/panel/promos/'
+
+    def test_promos_require_staff(self):
+        self.assertEqual(self.client.get(self.URL).status_code, 401)
+        self.client.force_authenticate(user=self.user)
+        self.assertEqual(self.client.get(self.URL).status_code, 403)
+        self.assertEqual(self.client.post(self.URL, {'code': 'XYZ', 'discount_percent': 5}, format='json').status_code, 403)
+
+    def test_promo_usage_stats_skip_cancelled_orders(self):
+        self.client.force_authenticate(user=self.staff)
+        row = self.client.get(self.URL).data['results'][0]
+        self.assertEqual(row['code'], 'AKSIYA7')
+        self.assertEqual((row['orders_count'], row['discount_given'], row['revenue']), (1, 9000, 101000))
+
+    def test_create_promo_normalizes_and_validates(self):
+        self.client.force_authenticate(user=self.staff)
+        ok = self.client.post(self.URL, {'code': ' yangi10 ', 'discount_percent': 10}, format='json')
+        self.assertEqual(ok.status_code, 201)
+        self.assertEqual(ok.data['code'], 'YANGI10')
+        self.assertTrue(ok.data['is_active'])
+        self.assertEqual(ok.data['orders_count'], 0)
+        self.assertEqual(self.client.post(self.URL, {'code': 'aksiya7', 'discount_percent': 5}, format='json').status_code, 400)  # takror
+        for bad in ({'code': 'a b', 'discount_percent': 5}, {'code': 'XY', 'discount_percent': 5}, {'code': 'OK123', 'discount_percent': 0}, {'code': 'OK123', 'discount_percent': 101}):
+            self.assertEqual(self.client.post(self.URL, bad, format='json').status_code, 400, bad)
+        self.assertEqual(PromoCode.objects.count(), 2)
+
+    def test_new_promo_works_in_checkout(self):
+        self.client.force_authenticate(user=self.staff)
+        self.client.post(self.URL, {'code': 'yoz20', 'discount_percent': 20}, format='json')
+        self.client.force_authenticate(user=self.user)
+        res = self.client.post('/api/cart/quote/', {'items': [{'book_id': self.book.id, 'quantity': 1}], 'promo_code': 'YOZ20'}, format='json')
+        self.assertEqual(res.data['discount'], 9000)
+
+    def test_update_promo(self):
+        self.client.force_authenticate(user=self.staff)
+        promo = PromoCode.objects.get(code='AKSIYA7')
+        url = f'{self.URL}{promo.id}/'
+        res = self.client.patch(url, {'discount_percent': 25, 'is_active': False}, format='json')
+        self.assertEqual(res.status_code, 200)
+        promo.refresh_from_db()
+        self.assertEqual((promo.discount_percent, promo.is_active), (25, False))
+        self.assertEqual(self.client.patch(url, {'code': 'BOSHQA'}, format='json').status_code, 400)  # kod o'zgarmaydi
+        self.assertEqual(self.client.patch(url, {'code': 'aksiya7'}, format='json').status_code, 200)  # o'sha kod: muammo yo'q
+        self.assertEqual(self.client.patch(url, {'discount_percent': 500}, format='json').status_code, 400)
+
+    def test_delete_only_unused_promo(self):
+        self.client.force_authenticate(user=self.staff)
+        used = PromoCode.objects.get(code='AKSIYA7')
+        blocked = self.client.delete(f'{self.URL}{used.id}/')
+        self.assertEqual(blocked.status_code, 400)
+        self.assertTrue(PromoCode.objects.filter(pk=used.pk).exists())
+        fresh = PromoCode.objects.create(code='YANGI', discount_percent=5)
+        self.assertEqual(self.client.delete(f'{self.URL}{fresh.id}/').status_code, 204)
+        self.assertFalse(PromoCode.objects.filter(pk=fresh.pk).exists())
+
+    def test_promo_list_filters_and_ordering(self):
+        PromoCode.objects.create(code='OFF1', discount_percent=5, is_active=False)
+        self.client.force_authenticate(user=self.staff)
+        self.assertEqual(self.client.get(f'{self.URL}?active=1').data['count'], 1)
+        self.assertEqual(self.client.get(f'{self.URL}?active=0').data['count'], 1)
+        self.assertEqual(self.client.get(f'{self.URL}?q=off').data['count'], 1)
+        self.assertEqual(self.client.get(f'{self.URL}?ordering=-orders_count').data['results'][0]['code'], 'AKSIYA7')
+        self.assertEqual(self.client.get(f'{self.URL}?ordering=hack').status_code, 200)

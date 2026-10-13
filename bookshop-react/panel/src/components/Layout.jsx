@@ -8,6 +8,7 @@ const NAV = [
   { to: '/orders', label: 'Buyurtmalar', icon: '🧾' },
   { to: '/books', label: 'Kitoblar', icon: '📚' },
   { to: '/users', label: 'Foydalanuvchilar', icon: '👥' },
+  { to: '/promos', label: 'Promo kodlar', icon: '🏷' },
 ]
 
 // Katalogni (kitob, muallif, janr) to'liq tahrirlash Django adminda qoladi

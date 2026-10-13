@@ -4,6 +4,7 @@ import { getBooks, updateBook } from '../api'
 import { useFetch } from '../useFetch'
 import { date, money, num } from '../format'
 import { Loading, Pagination, SortTh } from '../components/Bits'
+import CsvButton from '../components/CsvButton'
 
 const PAGE_SIZE = 20
 const LOW = 5
@@ -98,6 +99,7 @@ export default function Books() {
         </select>
         <button type="submit" className="btn btn-primary">Qidirish</button>
         {(q || status || stock) && <button type="button" className="btn btn-ghost" onClick={() => { setSearch(''); setParams({}, { replace: true }) }}>Tozalash</button>}
+        <CsvButton kind="books" params={{ q: q || undefined, status: status || undefined, stock: stock || undefined, ordering }} />
       </form>
 
       {message && <p className="alert">{message}</p>}
