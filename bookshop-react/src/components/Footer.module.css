@@ -53,7 +53,8 @@
   gap: 10px;
 }
 
-.socials a {
+.socials a,
+.socials .soon {
   display: grid;
   place-items: center;
   width: 44px;
@@ -64,21 +65,10 @@
   transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
 }
 
-.socials .soon {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border: 1px dashed rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  opacity: 0.55;
-  cursor: default;
-  transition: opacity 0.2s ease;
-}
-
 /* Maqola kartalaridagi kabi: yumshoq ko'tariladi, jigarrang fonga o'tadi */
 .socials a:hover,
-.socials a:focus-visible {
+.socials a:focus-visible,
+.socials .soon:hover {
   transform: translateY(-6px);
   border-color: var(--brown-2);
   background: var(--brown);
@@ -86,12 +76,13 @@
 }
 
 .socials a:hover svg,
-.socials a:focus-visible svg {
+.socials a:focus-visible svg,
+.socials .soon:hover svg {
   transform: scale(1.12);
 }
 
-.socials .soon:hover {
-  opacity: 0.8;
+.socials .soon {
+  cursor: default; /* havola hali yo'q: bosilmaydi, lekin ko'rinishi va animatsiyasi bir xil */
 }
 
 .socials svg {
@@ -107,6 +98,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .socials a,
+  .socials .soon,
   .socials svg {
     transition: none;
   }
