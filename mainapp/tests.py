@@ -426,3 +426,148 @@ class ProfileTests(BookShopAPITestCase):
         self.client.patch(self.url, {'phone': '111'}, format='json')
         self.client.force_authenticate(user=other)
         self.assertEqual(self.client.get(self.url).data['phone'], '')
+
+
+class PanelTests(TestCase):
+    """ Admin panel API: ruxsatlar va hisob-kitoblar """
+
+    def setUp(self):
+        BookShopAPITestCase.setUp(self)
+        self.staff = User.objects.create_user(username='boss', email='boss@example.com', password='password123', is_staff=True)
+        # 1) tasdiqlangan: 2 x 45000 = 90000, chegirma 9000, yetkazib berish 20000 -> 101000
+        o1 = Order.objects.create(user=self.user, status='confirmed', promo_code='AKSIYA7', discount=9000, delivery_fee=20000)
+        OrderItem.objects.create(order=o1, book=self.book, quantity=2)
+        # 2) tasdiqlangan: 1 x 45000 + 20000 = 65000
+        o2 = Order.objects.create(user=self.user, status='confirmed', delivery_fee=20000)
+        OrderItem.objects.create(order=o2, book=self.book, quantity=1)
+        # 3) bekor qilingan: hisobga kirmaydi
+        o3 = Order.objects.create(user=self.user, status='cancelled', delivery_fee=20000)
+        OrderItem.objects.create(order=o3, book=self.book, quantity=5)
+        # 4) savat (pending): buyurtma emas, tushumga kirmaydi
+        cart = Order.objects.create(user=self.user, status='pending')
+        OrderItem.objects.create(order=cart, book=self.book, quantity=4)
+        self.o1, self.o2, self.o3, self.cart = o1, o2, o3, cart
+
+    URLS = ['/api/panel/summary/', '/api/panel/orders/', '/api/panel/books/', '/api/panel/users/']
+
+    def test_endpoints_require_staff(self):
+        for url in self.URLS:
+            self.assertEqual(self.client.get(url).status_code, 401, url)
+        self.client.force_authenticate(user=self.user)
+        for url in self.URLS:
+            self.assertEqual(self.client.get(url).status_code, 403, url)
+        self.assertEqual(self.client.patch(f'/api/panel/orders/{self.o1.id}/', {'status': 'confirmed'}, format='json').status_code, 403)
+
+    def test_login_only_for_staff(self):
+        ok = self.client.post('/api/panel/login/', {'username': 'boss', 'password': 'password123'}, format='json')
+        self.assertEqual(ok.status_code, 200)
+        self.assertIn('access', ok.data)
+        regular = self.client.post('/api/panel/login/', {'username': 'testuser', 'password': 'password123'}, format='json')
+        self.assertEqual(regular.status_code, 401)
+        wrong = self.client.post('/api/panel/login/', {'username': 'boss', 'password': 'xato'}, format='json')
+        self.assertEqual(wrong.status_code, 401)
+        self.assertEqual(regular.data, wrong.data)
+
+    def test_summary_numbers(self):
+        self.client.force_authenticate(user=self.staff)
+        res = self.client.get('/api/panel/summary/?days=30')
+        self.assertEqual(res.status_code, 200)
+        cur = res.data['current']
+        self.assertEqual(cur['count'], 2)
+        self.assertEqual(cur['revenue'], 101000 + 65000)
+        self.assertEqual(cur['cancelled'], 1)
+        self.assertEqual(res.data['carts'], {'count': 1, 'value': 180000})
+        self.assertEqual(cur['avg_order'], 83000)
+        self.assertEqual(cur['discounts'], 9000)
+        self.assertEqual(cur['books'], 3)
+        self.assertEqual(res.data['top_books'][0]['qty'], 3)
+        self.assertEqual(res.data['top_books'][0]['revenue'], 135000)
+        self.assertEqual(sum(d['revenue'] for d in res.data['series']), 166000)
+        self.assertEqual(len(res.data['series']), 31)
+        statuses = {s['status']: s for s in res.data['statuses']}
+        self.assertEqual(statuses['cancelled']['count'], 1)
+        self.assertEqual(res.data['totals']['revenue'], 166000)
+        self.assertEqual(res.data['top_customers'][0]['spent'], 166000)
+
+    def test_summary_days_is_clamped(self):
+        self.client.force_authenticate(user=self.staff)
+        self.assertEqual(self.client.get('/api/panel/summary/?days=99999').data['days'], 365)
+        self.assertEqual(self.client.get('/api/panel/summary/?days=abc').data['days'], 30)
+
+    def test_orders_list_filter_and_search(self):
+        self.client.force_authenticate(user=self.staff)
+        res = self.client.get('/api/panel/orders/')
+        self.assertEqual(res.data['count'], 3)  # savat (pending) ro'yxatda yo'q
+        by_id = {o['id']: o for o in res.data['results']}
+        self.assertEqual(by_id[self.o1.id]['total'], 101000)
+        self.assertEqual(by_id[self.o1.id]['items_count'], 2)
+        self.assertEqual(by_id[self.o2.id]['total'], 65000)
+        self.assertEqual(self.client.get('/api/panel/orders/?status=cancelled').data['count'], 1)
+        self.assertEqual(self.client.get('/api/panel/orders/?q=AKSIYA7').data['count'], 1)
+        self.assertEqual(self.client.get(f'/api/panel/orders/?q=%23{self.o2.id}').data['count'], 1)
+        self.assertEqual(self.client.get(f'/api/panel/orders/?user={self.staff.id}').data['count'], 0)
+        self.assertEqual(self.client.get('/api/panel/orders/?status=pending').data['count'], 3)
+        self.assertEqual(self.client.get(f'/api/panel/orders/{self.cart.id}/').status_code, 404)
+
+    def test_order_detail_and_status_change(self):
+        self.client.force_authenticate(user=self.staff)
+        res = self.client.get(f'/api/panel/orders/{self.o1.id}/')
+        self.assertEqual(res.data['items'][0]['line_total'], 90000)
+        self.assertEqual(res.data['items'][0]['book_name'], self.book.name)
+        patch = self.client.patch(f'/api/panel/orders/{self.o1.id}/', {'status': 'cancelled', 'discount': 1}, format='json')
+        self.assertEqual(patch.status_code, 200)
+        self.o1.refresh_from_db()
+        self.assertEqual(self.o1.status, 'cancelled')
+        self.assertEqual(self.o1.discount, 9000)  # boshqa maydonlar o'zgarmaydi
+        bad = self.client.patch(f'/api/panel/orders/{self.o1.id}/', {'status': 'nomalum'}, format='json')
+        self.assertEqual(bad.status_code, 400)
+        as_cart = self.client.patch(f'/api/panel/orders/{self.o1.id}/', {'status': 'pending'}, format='json')
+        self.assertEqual(as_cart.status_code, 400)
+
+    def test_books_stats_and_edit(self):
+        self.client.force_authenticate(user=self.staff)
+        res = self.client.get('/api/panel/books/')
+        row = res.data['results'][0]
+        self.assertEqual((row['sold'], row['revenue'], row['orders_count']), (3, 135000, 2))
+        patch = self.client.patch(f'/api/panel/books/{self.book.id}/', {'price': 50000, 'name': 'Boshqa'}, format='json')
+        self.assertEqual(patch.status_code, 200)
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.price, 50000)
+        self.assertEqual(self.book.name, "O'tkan kunlar")
+        self.assertEqual(self.client.get('/api/panel/books/?ordering=-sold').status_code, 200)
+        self.assertEqual(self.client.get('/api/panel/books/?ordering=hack').status_code, 200)
+
+    def test_users_stats(self):
+        self.client.force_authenticate(user=self.staff)
+        res = self.client.get('/api/panel/users/?ordering=-spent')
+        rows = {u['username']: u for u in res.data['results']}
+        self.assertEqual(rows['testuser']['spent'], 166000)
+        self.assertEqual(rows['testuser']['orders_count'], 2)
+        self.assertEqual(rows['boss']['spent'], 0)
+        self.assertEqual(res.data['results'][0]['username'], 'testuser')
+        self.assertEqual(self.client.get('/api/panel/users/?staff=1').data['count'], 1)
+        self.assertEqual(self.client.get('/api/panel/users/?q=boss').data['count'], 1)
+
+    def test_price_is_frozen_at_checkout(self):
+        """ Kitob narxi keyin o'zgarsa ham, eski buyurtma summasi va tushum o'zgarmaydi """
+        self.client.force_authenticate(user=self.user)
+        res = self.client.post('/api/cart/checkout/', {'items': [{'book_id': self.book.id, 'quantity': 2}]}, format='json')
+        self.assertEqual(res.status_code, 201)
+        order_id = res.data['id']
+        self.assertEqual(OrderItem.objects.get(order_id=order_id).price, 45000)
+        total_before = res.data['total_price']
+
+        self.book.price = 90000
+        self.book.save()
+
+        site = self.client.get(f'/api/order/{order_id}/')
+        self.assertEqual(site.data['total_price'], total_before)
+        self.assertEqual(site.data['items'][0]['price'], 45000)
+
+        self.client.force_authenticate(user=self.staff)
+        detail = self.client.get(f'/api/panel/orders/{order_id}/')
+        self.assertEqual(detail.data['total'], total_before)
+        self.assertEqual(detail.data['items'][0]['line_total'], 90000)
+        book_row = self.client.get('/api/panel/books/').data['results'][0]
+        # narxi saqlanmagan 3 dona joriy narx (90000) bilan + checkout'da muzlatilgan 2 dona 45000 dan
+        self.assertEqual(book_row['revenue'], 3 * 90000 + 2 * 45000)

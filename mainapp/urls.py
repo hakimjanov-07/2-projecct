@@ -1,6 +1,10 @@
 from django.urls import include, path
 from rest_framework import routers
 
+from .panel import (
+    PanelBookDetail, PanelBookList, PanelOrderDetail, PanelOrderList, PanelUserList,
+    panel_login, panel_summary,
+)
 from .views import (
     Author_ViewSet, Book_ViewSet, Category_ViewSet, Order_ViewSet, Review_ViewSet,
     add_to_cart, cart_detail, checkout, my_profile, quote, remove_from_cart,
@@ -18,6 +22,13 @@ urlpatterns = [
     path("", include(router.urls)),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     path('profile/', my_profile),
+    path('panel/login/', panel_login),
+    path('panel/summary/', panel_summary),
+    path('panel/orders/', PanelOrderList.as_view()),
+    path('panel/orders/<int:pk>/', PanelOrderDetail.as_view()),
+    path('panel/books/', PanelBookList.as_view()),
+    path('panel/books/<int:pk>/', PanelBookDetail.as_view()),
+    path('panel/users/', PanelUserList.as_view()),
     path('cart/', cart_detail),
     path('cart/add/', add_to_cart),
     path('cart/checkout/', checkout),

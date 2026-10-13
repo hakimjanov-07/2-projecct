@@ -114,11 +114,18 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
+    # Buyurtma berilgan paytdagi narx (savatdagi qatorlarda bo'sh: joriy narx olinadi)
+    price = models.PositiveIntegerField(null=True, blank=True, verbose_name='Sotuv narxi:')
 
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['order', 'book'], name='unique_book_per_order'),
         ]
+
+    @property
+    def unit_price(self):
+        """ Buyurtmadagi narx; saqlanmagan bo'lsa kitobning joriy narxi """
+        return self.price if self.price is not None else (self.book.price or 0)
 
     def __str__(self):
         return f"{self.book.name} x {self.quantity}"

@@ -1,0 +1,166 @@
+import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { getOrder, getOrders, setOrderStatus } from '../api'
+import { useFetch } from '../useFetch'
+import { dateTime, money, num } from '../format'
+import { Loading, Pagination, StatusBadge } from '../components/Bits'
+
+const PAGE_SIZE = 20
+
+export default function Orders() {
+  const [params, setParams] = useSearchParams()
+  const page = Number(params.get('page')) || 1
+  const status = params.get('status') || ''
+  const q = params.get('q') || ''
+  const user = params.get('user') || ''
+  const orderId = params.get('order') || ''
+  const [search, setSearch] = useState(q)
+
+  const key = `${page}|${status}|${q}|${user}`
+  const { data, error, loading, reload } = useFetch(
+    () => getOrders({ page, page_size: PAGE_SIZE, status: status || undefined, q: q || undefined, user: user || undefined }),
+    key,
+  )
+
+  const update = (changes) => {
+    const next = new URLSearchParams(params)
+    Object.entries(changes).forEach(([k, v]) => (v ? next.set(k, v) : next.delete(k)))
+    if (!('page' in changes) && !('order' in changes)) next.delete('page')
+    setParams(next, { replace: true })
+  }
+
+  const submit = (event) => {
+    event.preventDefault()
+    update({ q: search.trim() })
+  }
+
+  return (
+    <div className={loading ? 'is-loading' : ''}>
+      <div className="page-head">
+        <div>
+          <h1>Buyurtmalar</h1>
+          <p className="muted">{data ? `${num(data.count)} ta buyurtma` : ' '}</p>
+        </div>
+      </div>
+
+      <form className="filters card" onSubmit={submit}>
+        <input placeholder="Qidirish: foydalanuvchi, email, promo kod yoki №" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <select value={status} onChange={(e) => update({ status: e.target.value })}>
+          <option value="">Barcha holatlar</option>
+          <option value="confirmed">Tasdiqlangan</option>
+          <option value="cancelled">Bekor qilingan</option>
+        </select>
+        <button type="submit" className="btn btn-primary">Qidirish</button>
+        {(q || status || user) && (
+          <button type="button" className="btn btn-ghost" onClick={() => { setSearch(''); setParams({}, { replace: true }) }}>Tozalash</button>
+        )}
+        {user && <span className="chip">Foydalanuvchi #{user} <button type="button" onClick={() => update({ user: '' })} aria-label="Olib tashlash">✕</button></span>}
+      </form>
+
+      {!data ? <Loading error={error} /> : (
+        <div className="card">
+          {data.results.length === 0 ? <p className="muted">Buyurtma topilmadi.</p> : (
+            <div className="table-wrap">
+              <table className="table clickable">
+                <thead>
+                  <tr><th>№</th><th>Mijoz</th><th>Sana</th><th className="right">Kitoblar</th><th className="right">Chegirma</th><th className="right">Summa</th><th>Holat</th></tr>
+                </thead>
+                <tbody>
+                  {data.results.map((o) => (
+                    <tr key={o.id} onClick={() => update({ order: String(o.id) })}>
+                      <td><strong>#{o.id}</strong></td>
+                      <td>{o.username}<small className="sub">{o.email}</small></td>
+                      <td>{dateTime(o.created_on)}</td>
+                      <td className="right">{num(o.items_count)}</td>
+                      <td className="right">{o.discount ? `−${money(o.discount)}` : '—'}</td>
+                      <td className="right"><strong>{money(o.total)}</strong></td>
+                      <td><StatusBadge status={o.status} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <Pagination page={page} count={data.count} pageSize={PAGE_SIZE} onChange={(p) => update({ page: String(p) })} />
+        </div>
+      )}
+
+      {orderId && <OrderDrawer id={orderId} onClose={() => update({ order: '' })} onChanged={reload} />}
+    </div>
+  )
+}
+
+function OrderDrawer({ id, onClose, onChanged }) {
+  const { data, error, reload } = useFetch(() => getOrder(id), id)
+  const [busy, setBusy] = useState(false)
+  const [message, setMessage] = useState('')
+
+  const change = async (next) => {
+    const text = next === 'cancelled' ? 'Buyurtmani bekor qilasizmi?' : 'Buyurtmani qayta tasdiqlaysizmi?'
+    if (!window.confirm(text)) return
+    setBusy(true)
+    setMessage('')
+    try {
+      await setOrderStatus(id, next)
+      reload()
+      onChanged()
+    } catch {
+      setMessage("Holatni o'zgartirib bo'lmadi.")
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="drawer-backdrop" onClick={onClose}>
+      <aside className="drawer" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={`Buyurtma #${id}`}>
+        <header className="drawer-head">
+          <h2>Buyurtma #{id}</h2>
+          <button type="button" className="btn btn-ghost" onClick={onClose} aria-label="Yopish">✕</button>
+        </header>
+
+        {!data ? <Loading error={error} /> : (
+          <div className="drawer-body">
+            <div className="kv">
+              <div><span>Holat</span><StatusBadge status={data.status} /></div>
+              <div><span>Mijoz</span><strong>{data.username}</strong></div>
+              <div><span>Email</span><strong>{data.email || '—'}</strong></div>
+              <div><span>Sana</span><strong>{dateTime(data.created_on)}</strong></div>
+              <div><span>Promo kod</span><strong>{data.promo_code || '—'}</strong></div>
+            </div>
+
+            <h3>Kitoblar</h3>
+            <ul className="order-items">
+              {data.items.map((item) => (
+                <li key={item.id}>
+                  <div className="thumb">{item.book_photo ? <img src={item.book_photo} alt="" /> : '📗'}</div>
+                  <div className="grow">
+                    <strong>{item.book_name}</strong>
+                    <small className="sub">{money(item.price)} × {item.quantity}</small>
+                  </div>
+                  <strong>{money(item.line_total)}</strong>
+                </li>
+              ))}
+            </ul>
+
+            <dl className="sums">
+              <div><dt>Mahsulotlar</dt><dd>{money(data.goods_total)}</dd></div>
+              {data.discount > 0 && <div className="green"><dt>Chegirma</dt><dd>−{money(data.discount)}</dd></div>}
+              <div><dt>Yetkazib berish</dt><dd>{data.delivery_fee > 0 ? money(data.delivery_fee) : 'Bepul'}</dd></div>
+              <div className="grand"><dt>Jami</dt><dd>{money(data.total)}</dd></div>
+            </dl>
+
+            {message && <p className="alert">{message}</p>}
+            <div className="drawer-actions">
+              {data.status === 'confirmed' ? (
+                <button type="button" className="btn btn-danger" disabled={busy} onClick={() => change('cancelled')}>Buyurtmani bekor qilish</button>
+              ) : (
+                <button type="button" className="btn btn-primary" disabled={busy} onClick={() => change('confirmed')}>Qayta tasdiqlash</button>
+              )}
+            </div>
+          </div>
+        )}
+      </aside>
+    </div>
+  )
+}

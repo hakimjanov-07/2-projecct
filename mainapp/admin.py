@@ -5,6 +5,7 @@ from .models import Category, Author, Book, Order, OrderItem, Profile, PromoCode
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
+    fields = ('book', 'quantity', 'price')
 
 
 @admin.register(Category)

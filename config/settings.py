@@ -188,6 +188,7 @@ REST_FRAMEWORK = {
         'user': '1000/minute',
         'catalog': '100/minute',
         'password': '10/hour',
+        'panel_login': '10/minute',
     },
 
     'DEFAULT_AUTHENTICATION_CLASSES': (

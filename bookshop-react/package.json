@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "panel": "vite --config vite.panel.config.js",
+    "build:panel": "vite build --config vite.panel.config.js",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"

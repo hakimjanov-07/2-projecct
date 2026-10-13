@@ -44,7 +44,7 @@ class Book_Serializer(serializers.ModelSerializer):
 class OrderItemSerializer(serializers.ModelSerializer):
     book_name = serializers.CharField(source='book.name', read_only=True)
     book_photo = serializers.SerializerMethodField()
-    price = serializers.IntegerField(source='book.price', read_only=True)
+    price = serializers.IntegerField(source='unit_price', read_only=True)
 
     def get_book_photo(self, obj):
         request = self.context.get('request')
@@ -67,7 +67,7 @@ class OrderSerializer(serializers.ModelSerializer):
         return sum(item.quantity for item in obj.items.all())
 
     def get_subtotal(self, obj):
-        return sum((item.book.price or 0) * item.quantity for item in obj.items.all())
+        return sum(item.unit_price * item.quantity for item in obj.items.all())
 
     def get_total_price(self, obj):
         # To'lov summasi: mahsulotlar - chegirma + yetkazib berish

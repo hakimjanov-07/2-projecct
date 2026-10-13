@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate
+from django.contrib.auth.models import update_last_login
 from django.contrib.auth.models import User
 from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
@@ -159,7 +160,7 @@ def checkout(request):
             delivery_fee=totals['delivery_fee'],
         )
         OrderItem.objects.bulk_create(
-            OrderItem(order=order, book=books[book_id], quantity=qty)
+            OrderItem(order=order, book=books[book_id], quantity=qty, price=books[book_id].price)
             for book_id, qty in quantities.items()
         )
         # Server savatidagi shu kitoblar endi buyurtmaga o'tdi
@@ -197,6 +198,7 @@ def login(request):
             {'detail': "Username/email yoki parol noto'g'ri."},
             status=401,
         )
+    update_last_login(None, authenticated_user)
     return Response(tokens_for(authenticated_user))
 
 
