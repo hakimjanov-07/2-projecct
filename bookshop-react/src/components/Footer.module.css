@@ -27,11 +27,10 @@
 }
 
 .logoMark {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, var(--brown) 0%, var(--brown) 50%, #f3d3b3 50%, #f3d3b3 100%);
-  transform: rotate(45deg);
+  display: block;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
 }
 
 .tagline {

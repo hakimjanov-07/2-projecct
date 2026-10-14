@@ -292,7 +292,7 @@ export default function Navbar() {
         <div className={styles.mainBarInner}>
           <div className={styles.brandWrap}>
             <NavLink to="/" className={styles.logo}>
-              <span className={styles.logoMark} aria-hidden="true" />
+              <img src="/logo.svg" alt="" className={styles.logoMark} />
               <span className={styles.logoText}>BOOK.UZ</span>
             </NavLink>
           </div>

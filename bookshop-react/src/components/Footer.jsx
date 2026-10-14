@@ -46,7 +46,7 @@ export default function Footer() {
       <div className={styles.inner}>
         <div className={styles.brandCol} data-reveal>
           <Link to="/" className={styles.logo}>
-            <span className={styles.logoMark} aria-hidden="true" />
+            <img src="/logo.svg" alt="" className={styles.logoMark} />
             BOOK.UZ
           </Link>
           <p className={styles.tagline}>{t('footer.tagline')}</p>

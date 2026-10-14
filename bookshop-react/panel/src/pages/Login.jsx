@@ -29,7 +29,7 @@ export default function Login({ onLogin }) {
     <div className="login-page">
       <form className="login-card" onSubmit={submit}>
         <div className="brand brand-login">
-          <span className="brand-mark" aria-hidden="true" />
+          <img src="/logo.svg" alt="" className="brand-mark" />
           <div>
             <strong>BOOK.UZ</strong>
             <small>Admin panel</small>

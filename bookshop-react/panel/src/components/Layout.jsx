@@ -33,7 +33,7 @@ export default function Layout({ onLogout }) {
     <div className="shell">
       <aside className={`sidebar ${open ? 'is-open' : ''}`}>
         <div className="brand">
-          <span className="brand-mark" aria-hidden="true" />
+          <img src="/logo.svg" alt="" className="brand-mark" />
           <div>
             <strong>BOOK.UZ</strong>
             <small>Admin panel</small>

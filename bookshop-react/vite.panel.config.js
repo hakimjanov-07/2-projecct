@@ -9,6 +9,8 @@ const outDir = fileURLToPath(new URL('./dist-panel', import.meta.url))
 
 export default defineConfig({
   root: panelRoot,
+  // Logo va favicon sayt bilan umumiy (public/)
+  publicDir: fileURLToPath(new URL('./public', import.meta.url)),
   plugins: [react()],
   server: {
     port: 5174,
