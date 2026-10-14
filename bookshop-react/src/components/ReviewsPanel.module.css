@@ -101,6 +101,122 @@
   box-shadow: 0 0 0 3px rgba(200, 149, 108, 0.2);
 }
 
+.fileRow {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Yashirin, lekin klaviatura bilan fokus oladi */
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.fileBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 18px;
+  border: 1.5px dashed var(--brown);
+  border-radius: 14px;
+  background: var(--nav-soft);
+  color: var(--brown-2);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+.fileBtn svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.25s;
+}
+
+.fileBtn:hover {
+  background: var(--brown);
+  border-style: solid;
+  color: var(--white);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(200, 149, 108, 0.3);
+}
+
+.fileBtn:hover svg {
+  transform: scale(1.15) rotate(-6deg);
+}
+
+.fileInput:focus-visible + .fileBtn {
+  outline: 2px solid var(--brown);
+  outline-offset: 2px;
+}
+
+.fileEmpty {
+  color: var(--gray-600);
+  font-size: 13px;
+}
+
+.fileChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 6px 6px 6px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.fileName {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fileRemove {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--nav-soft);
+  color: var(--brown-2);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+
+.fileRemove svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+.fileRemove:hover {
+  background: var(--brown);
+  color: var(--white);
+  transform: rotate(90deg);
+}
+
 .submit {
   justify-self: start;
   height: 46px;

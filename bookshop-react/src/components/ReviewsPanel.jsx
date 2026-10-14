@@ -63,7 +63,13 @@ export default function ReviewsPanel({ bookId, onCountChange }) {
     setError('')
   }
 
-  const showForm = isLoggedIn && (!mine || editing)
+  // Tanlangan rasmni olib tashlash
+  const clearPhoto = () => {
+    setForm((current) => ({ ...current, photo: null }))
+    if (photoRef.current) photoRef.current.value = ''
+  }
+
+  const showForm =isLoggedIn && (!mine || editing)
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -146,15 +152,39 @@ export default function ReviewsPanel({ bookId, onCountChange }) {
             />
           </label>
 
-          <label className={styles.field}>
-            {t('reviews.photo')}
-            <input
-              ref={photoRef}
-              type="file"
-              accept="image/*"
-              onChange={(event) => setForm({ ...form, photo: event.target.files?.[0] || null })}
-            />
-          </label>
+          <div className={styles.field}>
+            <span id="review-photo-label">{t('reviews.photo')}</span>
+            <div className={styles.fileRow}>
+              {/* Standart input yashirin, label tugma vazifasini bajaradi */}
+              <input
+                ref={photoRef}
+                id="review-photo"
+                className={styles.fileInput}
+                type="file"
+                accept="image/*"
+                aria-labelledby="review-photo-label"
+                onChange={(event) => setForm({ ...form, photo: event.target.files?.[0] || null })}
+              />
+              <label htmlFor="review-photo" className={styles.fileBtn}>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="16" rx="3" />
+                  <circle cx="9" cy="10" r="1.6" />
+                  <path d="m21 16-5-5-9 9" />
+                </svg>
+                {form.photo ? t('reviews.photoChange') : t('reviews.photoChoose')}
+              </label>
+              {form.photo ? (
+                <span className={styles.fileChip}>
+                  <span className={styles.fileName} title={form.photo.name}>{form.photo.name}</span>
+                  <button type="button" className={styles.fileRemove} aria-label={t('reviews.photoRemove')} title={t('reviews.photoRemove')} onClick={clearPhoto}>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+                  </button>
+                </span>
+              ) : (
+                <span className={styles.fileEmpty}>{t('reviews.photoNone')}</span>
+              )}
+            </div>
+          </div>
 
           <button className={styles.submit} type="submit" disabled={submitting}>
             {submitting ? t('reviews.sending') : editing ? t('reviews.update') : t('reviews.submit')}
