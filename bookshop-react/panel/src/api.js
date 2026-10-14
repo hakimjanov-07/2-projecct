@@ -53,6 +53,7 @@ export const setOrderStatus = (id, status) => api.patch(`/panel/orders/${id}/`, 
 export const getBooks = (params) => api.get('/panel/books/', { params }).then((r) => r.data)
 export const updateBook = (id, data) => api.patch(`/panel/books/${id}/`, data).then((r) => r.data)
 export const getUsers = (params) => api.get('/panel/users/', { params }).then((r) => r.data)
+export const getUser = (id) => api.get(`/panel/users/${id}/`).then((r) => r.data)
 
 export const getPromos = (params) => api.get('/panel/promos/', { params }).then((r) => r.data)
 export const createPromo = (data) => api.post('/panel/promos/', data).then((r) => r.data)

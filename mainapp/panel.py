@@ -16,6 +16,7 @@ from django.db.models import (
     Count, ExpressionWrapper, F, IntegerField, Max, OuterRef, Q, Subquery, Sum,
 )
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django.db.models.functions import Coalesce, TruncDate
 from django.utils import timezone
 from rest_framework import generics, serializers
@@ -457,3 +458,86 @@ class PanelUserList(generics.ListAPIView):
         if ordering.lstrip('-') not in self.ORDERING:
             ordering = '-date_joined'
         return qs.order_by(ordering, '-id')
+
+
+class PanelUserOrderSerializer(serializers.ModelSerializer):
+    items_count = serializers.IntegerField(read_only=True)
+    goods_total = serializers.IntegerField(read_only=True)
+    total = serializers.IntegerField(read_only=True)
+    items = PanelOrderItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Order
+        fields = [
+            'id', 'status', 'items_count', 'goods_total', 'promo_code', 'discount',
+            'delivery_fee', 'total', 'created_on', 'items',
+        ]
+        read_only_fields = fields
+
+
+class PanelUserReviewSerializer(serializers.ModelSerializer):
+    book_name = serializers.CharField(source='book.name', read_only=True)
+    photo = serializers.SerializerMethodField()
+
+    def get_photo(self, obj):
+        if not obj.photo:
+            return None
+        request = self.context.get('request')
+        return request.build_absolute_uri(obj.photo.url) if request else obj.photo.url
+
+    class Meta:
+        model = Review
+        fields = ['id', 'book', 'book_name', 'rating', 'comment', 'photo', 'created_on']
+        read_only_fields = fields
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def panel_user_detail(request, pk):
+    """ Foydalanuvchi tafsiloti: profil, statistika, buyurtmalar, sharhlar, savat.
+    Parol hash'i va boshqa maxfiy maydonlar qaytarilmaydi. """
+    user = get_object_or_404(User.objects.select_related('profile'), pk=pk)
+    profile = getattr(user, 'profile', None)
+    context = {'request': request}
+
+    orders = list(
+        with_totals(Order.objects.filter(user=user, status__in=PLACED))
+        .prefetch_related('items__book').order_by('-created_on', '-id')
+    )
+    active = [o for o in orders if o.status in ACTIVE]
+    spent = sum(o.total for o in active)
+    promos = sorted({o.promo_code for o in active if o.promo_code})
+
+    cart = (
+        with_totals(Order.objects.filter(user=user, status='pending'))
+        .prefetch_related('items__book').order_by('-created_on', '-id').first()
+    )
+    reviews = Review.objects.filter(user=user).select_related('book').order_by('-created_on')
+
+    return Response({
+        'profile': {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'full_name': profile.full_name if profile else '',
+            'phone': profile.phone if profile else '',
+            'address': profile.address if profile else '',
+            'bio': profile.bio if profile else '',
+            'date_joined': user.date_joined,
+            'last_login': user.last_login,
+            'is_staff': user.is_staff,
+            'is_active': user.is_active,
+        },
+        'stats': {
+            'orders_count': len(active),
+            'spent': spent,
+            'average': round(spent / len(active)) if active else 0,
+            'last_order': active[0].created_on if active else None,
+            'cancelled_count': sum(1 for o in orders if o.status == 'cancelled'),
+            'promo_codes': promos,
+            'reviews_count': len(reviews),
+        },
+        'orders': PanelUserOrderSerializer(orders, many=True, context=context).data,
+        'reviews': PanelUserReviewSerializer(reviews, many=True, context=context).data,
+        'cart': PanelUserOrderSerializer(cart, context=context).data if cart else None,
+    })

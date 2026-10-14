@@ -37,7 +37,7 @@ export default function Users() {
       <div className="page-head">
         <div>
           <h1>Foydalanuvchilar</h1>
-          <p className="muted">{data ? `${num(data.count)} ta foydalanuvchi` : ' '}. Qatorni bossangiz, uning buyurtmalari ochiladi.</p>
+          <p className="muted">{data ? `${num(data.count)} ta foydalanuvchi` : ' '}. Qatorni bossangiz, uning to'liq ma'lumoti va buyurtmalari ochiladi.</p>
         </div>
       </div>
 
@@ -69,7 +69,12 @@ export default function Users() {
                 </thead>
                 <tbody>
                   {data.results.map((u) => (
-                    <tr key={u.id} onClick={() => navigate(`/orders?user=${u.id}`)}>
+                    <tr
+                      key={u.id}
+                      tabIndex={0}
+                      onClick={() => navigate(`/users/${u.id}`)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/users/${u.id}`) }}
+                    >
                       <td>
                         <strong>{u.username}</strong>
                         {u.is_staff && <span className="badge badge-staff">Admin</span>}

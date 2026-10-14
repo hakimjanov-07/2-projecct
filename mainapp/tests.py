@@ -450,6 +450,42 @@ class PanelTests(TestCase):
 
     URLS = ['/api/panel/summary/', '/api/panel/orders/', '/api/panel/books/', '/api/panel/users/']
 
+    def test_user_detail_requires_staff(self):
+        url = f'/api/panel/users/{self.user.id}/'
+        self.assertEqual(self.client.get(url).status_code, 401)
+        self.client.force_authenticate(user=self.user)
+        self.assertEqual(self.client.get(url).status_code, 403)
+
+    def test_user_detail_content(self):
+        other = User.objects.create_user(username='other', email='o@example.com', password='password123')
+        oo = Order.objects.create(user=other, status='confirmed')
+        OrderItem.objects.create(order=oo, book=self.book, quantity=3)
+        Review.objects.create(user=self.user, book=self.book, rating=4, comment='Yaxshi kitob')
+        self.client.force_authenticate(user=self.staff)
+        res = self.client.get(f'/api/panel/users/{self.user.id}/')
+        self.assertEqual(res.status_code, 200)
+        self.assertNotIn('password', str(res.data).lower())
+        self.assertEqual(res.data['profile']['username'], 'testuser')
+        stats = res.data['stats']
+        self.assertEqual((stats['orders_count'], stats['spent'], stats['average']), (2, 166000, 83000))
+        self.assertEqual(stats['cancelled_count'], 1)
+        self.assertEqual(stats['promo_codes'], ['AKSIYA7'])
+        ids = [o['id'] for o in res.data['orders']]
+        self.assertEqual(ids, [self.o3.id, self.o2.id, self.o1.id])  # yangidan eskiga, savatsiz
+        self.assertNotIn(oo.id, ids)
+        self.assertEqual(res.data['orders'][2]['items'][0]['quantity'], 2)
+        self.assertEqual(len(res.data['reviews']), 1)
+        self.assertEqual(res.data['cart']['id'], self.cart.id)
+        self.assertEqual(res.data['cart']['items'][0]['quantity'], 4)
+        # bo'sh foydalanuvchi: savat yo'q, ro'yxatlar bo'sh
+        empty = self.client.get(f'/api/panel/users/{self.staff.id}/')
+        self.assertEqual((empty.data['orders'], empty.data['reviews'], empty.data['cart']), ([], [], None))
+        self.assertEqual(empty.data['stats']['average'], 0)
+
+    def test_user_detail_not_found(self):
+        self.client.force_authenticate(user=self.staff)
+        self.assertEqual(self.client.get('/api/panel/users/999999/').status_code, 404)
+
     def test_endpoints_require_staff(self):
         for url in self.URLS:
             self.assertEqual(self.client.get(url).status_code, 401, url)

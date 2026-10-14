@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard'
 import Orders from './pages/Orders'
 import Books from './pages/Books'
 import Users from './pages/Users'
+import UserDetail from './pages/UserDetail'
 import Promos from './pages/Promos'
 import './panel.css'
 
@@ -30,6 +31,7 @@ export default function App() {
             <Route path="orders" element={<Orders />} />
             <Route path="books" element={<Books />} />
             <Route path="users" element={<Users />} />
+            <Route path="users/:id" element={<UserDetail />} />
             <Route path="promos" element={<Promos />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

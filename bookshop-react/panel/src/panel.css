@@ -350,3 +350,26 @@ h3 { font-size: 14px; font-weight: 600; margin: 20px 0 8px; }
 .filters .date-input { flex: 0 0 auto; min-width: 0; }
 .filters label.date-field { display: inline-flex; align-items: center; gap: 6px; color: var(--text-soft); font-size: 13px; }
 .filters .grow-space { flex: 1; }
+
+/* Foydalanuvchi tafsiloti */
+.table.clickable tbody tr:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.profile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px 24px; margin: 0; }
+.profile-grid dt { color: var(--text-soft); font-size: 12px; }
+.profile-grid dd { margin: 2px 0 0; font-weight: 600; overflow-wrap: anywhere; }
+.line-list { list-style: none; margin: 0; padding: 0; font-size: 13px; }
+.line-list li { padding: 2px 0; }
+.review-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.review-list li { padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.review-list li:last-child { border-bottom: none; padding-bottom: 0; }
+.review-list p { margin: 6px 0 0; }
+.stars { color: var(--accent-dark); letter-spacing: 2px; }
+
+/* Menyu ikonkasi: hover'da yengil siljib biroz buriladi */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .nav-icon { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  .nav-link:hover .nav-icon,
+  .nav-link:focus-visible .nav-icon {
+    transform: translateX(2px) rotate(-8deg) scale(1.12);
+  }
+}
