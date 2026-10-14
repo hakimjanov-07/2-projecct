@@ -94,7 +94,7 @@ h3 { font-size: 14px; font-weight: 600; margin: 20px 0 8px; }
   font-weight: 500;
   transition: background-color 0.15s, color 0.15s;
 }
-.nav-link span { width: 20px; text-align: center; }
+.nav-icon { width: 20px; height: 20px; flex: none; }
 .nav-link:hover { background: rgba(255, 255, 255, 0.07); color: #fff; }
 .nav-link.active { background: var(--accent); color: #1b1410; font-weight: 600; }
 .nav-extra { margin-top: auto; border: 1px dashed rgba(255, 255, 255, 0.18); }

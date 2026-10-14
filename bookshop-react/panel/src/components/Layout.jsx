@@ -2,13 +2,14 @@ import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { clearSession, getUsername } from '../auth'
 import { getTheme, setTheme } from '../theme'
+import NavIcon from './NavIcons'
 
 const NAV = [
-  { to: '/', label: 'Boshqaruv', icon: '▦', end: true },
-  { to: '/orders', label: 'Buyurtmalar', icon: '🧾' },
-  { to: '/books', label: 'Kitoblar', icon: '📚' },
-  { to: '/users', label: 'Foydalanuvchilar', icon: '👥' },
-  { to: '/promos', label: 'Promo kodlar', icon: '🏷' },
+  { to: '/', label: 'Boshqaruv', icon: 'dashboard', end: true },
+  { to: '/orders', label: 'Buyurtmalar', icon: 'orders' },
+  { to: '/books', label: 'Kitoblar', icon: 'books' },
+  { to: '/users', label: 'Foydalanuvchilar', icon: 'users' },
+  { to: '/promos', label: 'Promo kodlar', icon: 'promos' },
 ]
 
 // Katalogni (kitob, muallif, janr) to'liq tahrirlash Django adminda qoladi
@@ -43,14 +44,14 @@ export default function Layout({ onLogout }) {
         <nav>
           {NAV.map((item) => (
             <NavLink key={item.to} to={item.to} end={item.end} onClick={() => setOpen(false)} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-              <span aria-hidden="true">{item.icon}</span>
+              <NavIcon name={item.icon} />
               {item.label}
             </NavLink>
           ))}
         </nav>
 
         <a className="nav-link nav-extra" href={DJANGO_ADMIN} target="_blank" rel="noreferrer">
-          <span aria-hidden="true">⚙</span>
+          <NavIcon name="settings" />
           Katalogni tahrirlash
         </a>
       </aside>
