@@ -102,3 +102,59 @@ html.reveal-ready [data-reveal][data-revealed] {
 [data-reveal]:nth-child(4n + 2) { --reveal-delay: 100ms; }
 [data-reveal]:nth-child(4n + 3) { --reveal-delay: 200ms; }
 [data-reveal]:nth-child(4n + 4) { --reveal-delay: 300ms; }
+
+/* Ikonka animatsiyalari. CSS modules animatsiya nomini lokallashtirgani uchun modullarda
+   nom o'zgaruvchi orqali olinadi: `animation: 0.5s ease var(--kf-wiggle)`.
+   Hover effektlari `@media (hover: hover) and (prefers-reduced-motion: no-preference)` ichida. */
+:root {
+  --kf-wiggle: iconWiggle;
+  --kf-beat: iconBeat;
+  --kf-pop: iconPop;
+  --kf-spin: iconSpin;
+  --kf-hop: iconHop;
+  --kf-blink: iconBlink;
+  --kf-item-in: itemIn;
+}
+
+@keyframes iconWiggle {
+  0%, 100% { transform: rotate(0); }
+  20% { transform: rotate(-14deg); }
+  45% { transform: rotate(11deg); }
+  70% { transform: rotate(-6deg); }
+}
+
+@keyframes iconBeat {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.22); }
+  50% { transform: scale(1); }
+  70% { transform: scale(1.14); }
+}
+
+@keyframes iconPop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.35); }
+  70% { transform: scale(0.92); }
+  100% { transform: scale(1); }
+}
+
+@keyframes iconSpin {
+  from { transform: rotate(0) scale(1); }
+  50% { transform: rotate(180deg) scale(1.12); }
+  to { transform: rotate(360deg) scale(1); }
+}
+
+@keyframes iconHop {
+  0%, 100% { transform: translateY(0) rotate(0) scale(1); }
+  40% { transform: translateY(-3px) rotate(-8deg) scale(1.15); }
+  70% { transform: translateY(0) rotate(5deg) scale(1.1); }
+}
+
+@keyframes iconBlink {
+  0%, 100% { transform: scaleY(1); opacity: 1; }
+  45% { transform: scaleY(0.1); opacity: 0.4; }
+}
+
+@keyframes itemIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}

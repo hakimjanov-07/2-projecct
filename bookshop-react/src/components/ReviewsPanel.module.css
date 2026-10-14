@@ -66,7 +66,7 @@
   color: var(--gray-200);
   font-size: 32px;
   line-height: 1;
-  transition: color 0.15s, transform 0.15s;
+  transition: color 0.2s ease, transform 0.15s;
 }
 
 .starOption:hover span {
@@ -462,4 +462,17 @@
 .editBtn:hover {
   border-color: var(--brown);
   background: var(--nav-soft);
+}
+
+/* Yulduz tanlanganda kichik "pop"; hover'da yulduzlar birin-ketin yonadi (inline transition-delay) */
+@media (prefers-reduced-motion: no-preference) {
+  .starPop {
+    animation: 0.4s cubic-bezier(0.4, 0, 0.2, 1) var(--kf-pop);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .starOption span {
+    transition: none !important;
+  }
 }

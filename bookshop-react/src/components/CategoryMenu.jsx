@@ -80,8 +80,8 @@ export default function CategoryMenu({ open, onClose }) {
       {categories.length > 0 && (
         <div className={styles.body}>
           <ul className={styles.list}>
-            {categories.map((category) => (
-              <li key={category.id}>
+            {categories.map((category, index) => (
+              <li key={category.id} style={{ '--i': Math.min(index, 10) }}>
                 <Link
                   to={`/books?category=${category.id}`}
                   className={`${styles.item} ${category.id === activeId ? styles.itemActive : ''}`}

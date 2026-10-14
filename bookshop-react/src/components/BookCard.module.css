@@ -144,6 +144,43 @@
 
 .addedBtn:hover { background: #5e7d58; }
 
+/* Savat belgisi tebranadi, bosilganda "pop" (faqat transform) */
+.addIcon {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transform-origin: 50% 20%;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .addBtn:not(:disabled):hover .addIcon,
+  .addBtn:not(:disabled):focus-visible .addIcon {
+    animation: 0.5s ease var(--kf-wiggle);
+  }
+
+  .heart:hover svg,
+  .heart:focus-visible svg {
+    animation: 0.6s cubic-bezier(0.4, 0, 0.2, 1) var(--kf-beat);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .addBtn:not(:disabled):active .addIcon {
+    animation: 0.3s ease var(--kf-pop);
+  }
+
+  /* Sevimlilarga qo'shilganda yurak to'lib "pop" qiladi */
+  .heartPop svg {
+    animation: 0.45s cubic-bezier(0.4, 0, 0.2, 1) var(--kf-pop);
+  }
+}
+
 @media (max-width: 768px) {
   .img { height: 230px; }
   .body { padding: 12px; }
@@ -172,10 +209,6 @@
   background: none;
   cursor: pointer;
   transition: transform 0.15s;
-}
-
-.heart:hover {
-  transform: scale(1.15);
 }
 
 .heart svg {

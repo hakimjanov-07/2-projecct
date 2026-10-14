@@ -74,10 +74,13 @@
   box-shadow: 0 18px 34px rgba(96, 63, 39, 0.28);
 }
 
-.socials a:hover svg,
-.socials a:focus-visible svg,
-.socials .soon:hover svg {
-  transform: scale(1.12);
+/* Ikonka hover'da sakrab biroz aylanadi (ulashish menyusidagi kabi) */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .socials a:hover svg,
+  .socials a:focus-visible svg,
+  .socials .soon:hover svg {
+    animation: 0.5s cubic-bezier(0.4, 0, 0.2, 1) var(--kf-hop);
+  }
 }
 
 .socials .soon {
@@ -92,13 +95,11 @@
   stroke-width: 1.7;
   stroke-linecap: round;
   stroke-linejoin: round;
-  transition: transform 0.3s ease;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .socials a,
-  .socials .soon,
-  .socials svg {
+  .socials .soon {
     transition: none;
   }
 }

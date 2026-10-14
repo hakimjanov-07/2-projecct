@@ -248,7 +248,7 @@ const dict = {
   'book.about': { uz: 'Kitob haqida', ru: 'О книге', en: 'About the book' },
   'book.noPrice': { uz: 'Narxi belgilanmagan', ru: 'Цена не указана', en: 'Price not set' },
   'book.goToCart': { uz: "Savatga o'tish →", ru: 'Перейти в корзину →', en: 'Go to cart →' },
-  'book.addToCart': { uz: "🛒 Savatga qo'shish", ru: '🛒 В корзину', en: '🛒 Add to cart' },
+  'book.addToCart': { uz: "Savatga qo'shish", ru: 'В корзину', en: 'Add to cart' },
   'book.quantity': { uz: 'Kitoblar soni', ru: 'Количество', en: 'Quantity' },
   'book.decrease': { uz: 'Kitob sonini kamaytirish', ru: 'Уменьшить количество', en: 'Decrease quantity' },
   'book.increase': { uz: 'Kitob sonini oshirish', ru: 'Увеличить количество', en: 'Increase quantity' },

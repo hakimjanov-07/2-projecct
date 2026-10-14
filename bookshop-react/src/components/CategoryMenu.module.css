@@ -220,3 +220,11 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Ro'yxat elementlari birin-ketin yumshoq paydo bo'ladi (ko'pi bilan 10 ta kechikish) */
+@media (prefers-reduced-motion: no-preference) {
+  .list > li {
+    animation: 0.3s ease backwards var(--kf-item-in);
+    animation-delay: calc(var(--i, 0) * 35ms);
+  }
+}

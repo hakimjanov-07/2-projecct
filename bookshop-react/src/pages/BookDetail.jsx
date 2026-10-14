@@ -26,6 +26,7 @@ export default function BookDetail() {
   const [book, setBook] = useState(location.state?.book || null)
   const [quantity, setQuantity] = useState(1)
   const [added, setAdded] = useState(false)
+  const [heartPop, setHeartPop] = useState(false) // sevimlilarga qo'shilganda bir marta "pop"
   const [reviewCount, setReviewCount] = useState(0)
   const [similar, setSimilar] = useState([])
   const [tab, setTab] = useState(initialTab)
@@ -219,6 +220,11 @@ export default function BookDetail() {
                   onClick={handleAddToCart}
                   disabled={!book.price || soldOut}
                 >
+                  {!soldOut && book.price && (
+                    <svg className={styles.cartIcon} viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M3 4.5h2l2.2 9.1a1.5 1.5 0 0 0 1.46 1.2h8.7a1.5 1.5 0 0 0 1.46-1.2L20 7H6.4M9 18.5a1.25 1.25 0 1 1 0 2.5a1.25 1.25 0 0 1 0-2.5Zm8 0a1.25 1.25 0 1 1 0 2.5a1.25 1.25 0 0 1 0-2.5Z" />
+                    </svg>
+                  )}
                   {soldOut ? t('book.outOfStock') : !book.price ? t('book.noPrice') : added ? t('book.goToCart') : t('book.addToCart')}
                 </button>
               </div>
@@ -229,9 +235,9 @@ export default function BookDetail() {
 
             <button
               type="button"
-              className={`${styles.favBtn} ${favorite ? styles.favBtnActive : ''}`}
+              className={`${styles.favBtn} ${favorite ? styles.favBtnActive : ''} ${heartPop ? styles.heartPop : ''}`}
               aria-pressed={favorite}
-              onClick={() => toggleFavorite(book.id)}
+              onClick={() => { setHeartPop(!favorite); toggleFavorite(book.id) }}
             >
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M12 20.5s-7.5-4.6-9.2-9.4C1.6 7.7 3.6 4.5 6.9 4.5c2 0 3.7 1.1 5.1 3c1.4-1.9 3.1-3 5.1-3c3.3 0 5.3 3.2 4.1 6.6c-1.7 4.8-9.2 9.4-9.2 9.4Z" />

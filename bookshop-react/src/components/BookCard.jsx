@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useFavorites } from '../context/FavoritesContext'
 import { useLang } from '../i18n/LanguageContext'
@@ -15,6 +16,7 @@ export default function BookCard({ book }) {
   const { locale, t } = useLang()
   const { isFavorite, toggleFavorite } = useFavorites()
   const favorite = isFavorite(book.id)
+  const [heartPop, setHeartPop] = useState(false) // sevimlilarga qo'shilganda bir marta "pop"
   const navigate = useNavigate()
   const ratingData = { avg: Number(book.avg_rating || 0), count: book.reviews_count || 0 }
   const imgUrl = getImgUrl(book.photo)
@@ -42,12 +44,13 @@ export default function BookCard({ book }) {
           <p className={styles.title}>{book.name}</p>
           <button
             type="button"
-            className={`${styles.heart} ${favorite ? styles.heartActive : ''}`}
+            className={`${styles.heart} ${favorite ? styles.heartActive : ''} ${heartPop ? styles.heartPop : ''}`}
             aria-pressed={favorite}
             aria-label={favorite ? t('book.removeFavorite') : t('book.addFavorite')}
             title={favorite ? t('book.removeFavorite') : t('book.addFavorite')}
             onClick={(event) => {
               event.stopPropagation()
+              setHeartPop(!favorite)
               toggleFavorite(book.id)
             }}
           >
@@ -79,7 +82,10 @@ export default function BookCard({ book }) {
             ? <p className={styles.price}>{Number(book.price).toLocaleString(locale)} {t('currency')}</p>
             : <span />}
           <button className={styles.addBtn} onClick={handleOpenDetails} disabled={book.stock === 0}>
-            🛒 +
+            <svg className={styles.addIcon} viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 4.5h2l2.2 9.1a1.5 1.5 0 0 0 1.46 1.2h8.7a1.5 1.5 0 0 0 1.46-1.2L20 7H6.4M9 18.5a1.25 1.25 0 1 1 0 2.5a1.25 1.25 0 0 1 0-2.5Zm8 0a1.25 1.25 0 1 1 0 2.5a1.25 1.25 0 0 1 0-2.5Z" />
+            </svg>
+            +
           </button>
         </div>
       </div>

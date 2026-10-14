@@ -253,7 +253,7 @@ export default function Navbar() {
                 aria-expanded={langOpen}
                 onClick={() => setLangOpen((open) => !open)}
               >
-                {lang.toUpperCase()} <span aria-hidden="true">▾</span>
+                {lang.toUpperCase()} <span className={`${styles.langArrow} ${langOpen ? styles.langArrowOpen : ''}`} aria-hidden="true">▾</span>
               </button>
               {langOpen && (
                 <ul className={styles.langMenu} role="listbox" aria-label={t('nav.language')}>
@@ -347,13 +347,13 @@ export default function Navbar() {
 
           <div className={styles.iconBar}>
             <button className={styles.iconButton} type="button" onClick={() => navigate('/cart')}>
-              <span className={styles.iconWrap}><CartIcon /></span>
+              <span className={`${styles.iconWrap} ${styles.iconCart}`}><CartIcon /></span>
               <span className={styles.iconLabel}>{t('nav.cart')}</span>
               {totalItems > 0 && <span className={styles.cartCount}>{totalItems}</span>}
             </button>
 
             <button className={styles.iconButton} type="button" onClick={() => navigate('/my-books')}>
-              <span className={styles.iconWrap}><BookIcon /></span>
+              <span className={`${styles.iconWrap} ${styles.iconBooks}`}><BookIcon /></span>
               <span className={styles.iconLabel}>{t('nav.myBooks')}</span>
               {favoritesCount > 0 && <span className={styles.cartCount}>{favoritesCount}</span>}
             </button>
@@ -367,7 +367,7 @@ export default function Navbar() {
                   aria-expanded={profileOpen}
                   onClick={() => setProfileOpen((open) => !open)}
                 >
-                  <span className={styles.iconWrap}><UserIcon /></span>
+                  <span className={`${styles.iconWrap} ${styles.iconUser}`}><UserIcon /></span>
                   <span className={styles.iconLabel}>{username || t('nav.profile')}</span>
                 </button>
                 {profileOpen && (

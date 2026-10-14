@@ -1,16 +1,7 @@
 .row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
+  position: relative;
+  display: inline-block;
   margin-top: 14px;
-}
-
-.label {
-  margin-right: 4px;
-  color: var(--gray-600);
-  font-size: 13px;
-  font-weight: 600;
 }
 
 .btn {
@@ -34,8 +25,96 @@
   height: 16px;
 }
 
-.btn:hover {
+.btn:hover,
+.btnOpen {
   background: var(--nav-soft);
   border-color: var(--ring);
   color: var(--brown-dark);
+}
+
+.btn:focus-visible,
+.item:focus-visible {
+  outline: 2px solid var(--brown);
+  outline-offset: 2px;
+}
+
+/* Ochiladigan menyu: yopiq holatda ko'rinmaydi va fokus olmaydi (visibility) */
+.menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 30;
+  min-width: 210px;
+  max-width: calc(100vw - 32px);
+  padding: 6px;
+  border: 1px solid var(--gray-200);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 18px 40px rgba(96, 63, 39, 0.18);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px) scale(0.97);
+  transform-origin: top left;
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0.2s;
+}
+
+.menuRight {
+  left: auto;
+  right: 0;
+  transform-origin: top right;
+}
+
+.menuOpen {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.item svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.item:hover,
+.item:focus-visible {
+  background: var(--nav-soft);
+  color: var(--brown-dark);
+}
+
+/* Ikonka hover'da sakrab biroz aylanadi (footer ikonkalariga o'xshash) */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .btn:hover svg,
+  .btn:focus-visible svg,
+  .item:hover svg,
+  .item:focus-visible svg {
+    animation: 0.5s cubic-bezier(0.4, 0, 0.2, 1) var(--kf-hop);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu,
+  .menuOpen {
+    transform: none;
+    transition: none;
+  }
 }

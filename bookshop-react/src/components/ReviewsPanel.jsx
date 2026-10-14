@@ -15,6 +15,8 @@ export default function ReviewsPanel({ bookId, onCountChange }) {
   const [reviews, setReviews] = useState([])
   const [mine, setMine] = useState(null)
   const [form, setForm] = useState(emptyForm)
+  const [hoverStar, setHoverStar] = useState(0) // sichqoncha ustidagi yulduz (faqat mouse)
+  const [popStar, setPopStar] = useState(0) // tanlangan yulduz: bir marta "pop"
   const [editing, setEditing] = useState(false)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -123,18 +125,27 @@ export default function ReviewsPanel({ bookId, onCountChange }) {
 
           <fieldset className={styles.ratingSet}>
             <legend>{t('reviews.rating')}</legend>
-            <div className={styles.starPicker} role="radiogroup" aria-label={t('reviews.rateAria')}>
+            <div className={styles.starPicker} role="radiogroup" aria-label={t('reviews.rateAria')} onPointerLeave={() => setHoverStar(0)}>
               {[1, 2, 3, 4, 5].map((rating) => (
-                <label key={rating} className={styles.starOption}>
+                <label
+                  key={rating}
+                  className={styles.starOption}
+                  onPointerEnter={(event) => { if (event.pointerType === 'mouse') setHoverStar(rating) }}
+                >
                   <input
                     type="radio"
                     name="rating"
                     value={rating}
                     checked={Number(form.rating) === rating}
-                    onChange={(event) => setForm({ ...form, rating: event.target.value })}
+                    onChange={(event) => { setForm({ ...form, rating: event.target.value }); setPopStar(rating); setHoverStar(0) }}
                     aria-label={t('reviews.stars', { n: rating })}
                   />
-                  <span className={Number(form.rating) >= rating ? styles.starOn : ''} aria-hidden="true">★</span>
+                  <span
+                    className={`${(hoverStar || Number(form.rating)) >= rating ? styles.starOn : ''} ${popStar === rating ? styles.starPop : ''}`}
+                    style={hoverStar ? { transitionDelay: `${(rating - 1) * 40}ms` } : undefined}
+                    onAnimationEnd={() => setPopStar(0)}
+                    aria-hidden="true"
+                  >★</span>
                 </label>
               ))}
             </div>

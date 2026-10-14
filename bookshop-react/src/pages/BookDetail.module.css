@@ -42,6 +42,12 @@
   font-weight: 600;
 }
 
+/* Ulashish menyusi ochiq bo'lganda hero keyingi bo'limlar (data-reveal) ustida turadi */
+.hero:has([aria-expanded='true']) {
+  position: relative;
+  z-index: 5;
+}
+
 /* Asosiy kartochka */
 .hero {
   display: grid;
@@ -209,6 +215,10 @@
 }
 
 .cartBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   flex: 1;
   height: 48px;
   border: none;
@@ -542,4 +552,43 @@
   color: #d3354f;
   font-size: 13px;
   font-weight: 600;
+}
+
+/* Savat va yurak ikonkalari (BookCard bilan bir xil umumiy keyframes) */
+.cartIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transform-origin: 50% 15%;
+}
+
+.favBtn svg {
+  transition: fill 0.15s;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .cartBtn:not(:disabled):hover .cartIcon,
+  .cartBtn:not(:disabled):focus-visible .cartIcon {
+    animation: 0.5s ease var(--kf-wiggle);
+  }
+
+  .favBtn:hover svg,
+  .favBtn:focus-visible svg {
+    animation: 0.6s cubic-bezier(0.4, 0, 0.2, 1) var(--kf-beat);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .cartBtn:not(:disabled):active .cartIcon {
+    animation: 0.3s ease var(--kf-pop);
+  }
+
+  .heartPop svg {
+    animation: 0.45s cubic-bezier(0.4, 0, 0.2, 1) var(--kf-pop);
+  }
 }

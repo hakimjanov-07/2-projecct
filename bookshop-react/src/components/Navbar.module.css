@@ -172,7 +172,7 @@
 
 .chevron {
   font-size: 12px;
-  transition: transform 0.2s;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .chevronOpen {
@@ -612,4 +612,77 @@
 .iconButton:hover .iconWrap,
 .iconButton:focus-visible .iconWrap {
   transform: translateY(-2px);
+}
+
+/* Ikonka animatsiyalari: har bir tugmada bitta qisqa effekt (ikonka ichidagi svg'da,
+   shuning uchun .iconWrap dagi mavjud ko'tarilish bilan to'qnashmaydi) */
+.langArrow {
+  display: inline-block;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.langArrowOpen {
+  transform: rotate(180deg);
+}
+
+.searchBtn svg,
+.menuLines span,
+.iconUser svg {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.iconCart svg {
+  transform-origin: 50% 15%;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .iconButton:hover .iconCart svg,
+  .iconButton:focus-visible .iconCart svg {
+    animation: 0.55s ease var(--kf-wiggle);
+  }
+
+  .iconButton:hover .iconBooks svg,
+  .iconButton:focus-visible .iconBooks svg {
+    animation: 0.5s cubic-bezier(0.4, 0, 0.2, 1) var(--kf-hop);
+  }
+
+  .iconButton:hover .iconUser svg,
+  .iconButton:focus-visible .iconUser svg {
+    transform: scale(1.14);
+  }
+
+  .searchBtn:hover svg,
+  .searchBtn:focus-visible svg {
+    transform: rotate(-14deg) scale(1.2);
+  }
+
+  .themeBtn:hover svg,
+  .themeBtn:focus-visible svg {
+    animation: 0.6s cubic-bezier(0.4, 0, 0.2, 1) var(--kf-spin);
+  }
+
+  .langBtn:hover .langArrow:not(.langArrowOpen),
+  .langBtn:focus-visible .langArrow:not(.langArrowOpen) {
+    transform: translateY(2px);
+  }
+
+  .categorySelect:hover .menuLines span:nth-child(odd),
+  .categorySelect:focus-visible .menuLines span:nth-child(odd) {
+    transform: translateX(3px);
+  }
+
+  .categorySelect:hover .menuLines span:nth-child(even),
+  .categorySelect:focus-visible .menuLines span:nth-child(even) {
+    transform: translateX(-3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .langArrow,
+  .chevron,
+  .searchBtn svg,
+  .menuLines span,
+  .iconUser svg {
+    transition: none;
+  }
 }
