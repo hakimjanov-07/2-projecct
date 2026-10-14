@@ -167,7 +167,8 @@ def checkout(request):
                 delivery_fee=totals['delivery_fee'],
             )
             OrderItem.objects.bulk_create(
-                OrderItem(order=order, book=books[book_id], quantity=qty, price=books[book_id].price)
+                OrderItem(order=order, book=books[book_id], quantity=qty,
+                          price=books[book_id].price, cost_price=books[book_id].cost_price)
                 for book_id, qty in quantities.items()
             )
             # Server savatidagi shu kitoblar endi buyurtmaga o'tdi

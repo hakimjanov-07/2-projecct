@@ -41,7 +41,7 @@ export default function Books() {
       reload()
     } catch (err) {
       const data = err.response?.data
-      setMessage(data?.price?.[0] || data?.stock?.[0] || "Saqlab bo'lmadi.")
+      setMessage(data?.price?.[0] || data?.cost_price?.[0] || data?.stock?.[0] || "Saqlab bo'lmadi.")
     }
   }
 
@@ -49,6 +49,9 @@ export default function Books() {
     if (editing.field === 'stock') {
       // bo'sh qoldirilsa, qoldiq hisoblanmaydi (cheklanmagan)
       save(book, { stock: editing.value === '' ? null : Number(editing.value) })
+    } else if (editing.field === 'cost_price') {
+      // bo'sh qoldirilsa, tannarx noma'lum bo'ladi
+      save(book, { cost_price: editing.value === '' ? null : Number(editing.value) })
     } else {
       save(book, { price: Number(editing.value) })
     }
@@ -62,7 +65,7 @@ export default function Books() {
       type="number"
       min="0"
       autoFocus
-      placeholder={field === 'stock' ? 'cheklanmagan' : ''}
+      placeholder={field === 'stock' ? 'cheklanmagan' : field === 'cost_price' ? "noma'lum" : ''}
       value={editing.value}
       onChange={(e) => setEditing({ id: book.id, field, value: e.target.value })}
       onKeyDown={(e) => {
@@ -80,7 +83,7 @@ export default function Books() {
       <div className="page-head">
         <div>
           <h1>Kitoblar</h1>
-          <p className="muted">Sotuv statistikasi. Narx, ombor qoldig'i va holatni shu yerda o'zgartirish mumkin; boshqa maydonlar Django adminda. Ombor bo'sh bo'lsa, qoldiq hisoblanmaydi.</p>
+          <p className="muted">Sotuv statistikasi. Narx, tannarx, ombor qoldig'i va holatni shu yerda o'zgartirish mumkin; boshqa maydonlar Django adminda. Ombor bo'sh bo'lsa, qoldiq hisoblanmaydi.</p>
         </div>
       </div>
 
@@ -114,6 +117,8 @@ export default function Books() {
                     <SortTh field="name" {...sortProps}>Kitob</SortTh>
                     <th>Janr</th>
                     <SortTh field="price" align="right" {...sortProps}>Narx</SortTh>
+                    <th className="right" title="Sotib olingan narx">Tannarx</th>
+                    <th className="right" title="Ustama = narx − tannarx">Ustama</th>
                     <SortTh field="stock" align="right" {...sortProps}>Ombor</SortTh>
                     <th>Fayllar</th>
                     <th>Holat</th>
@@ -133,6 +138,21 @@ export default function Books() {
                           <button type="button" className="link-btn" title="Narxni o'zgartirish" onClick={() => setEditing({ id: b.id, field: 'price', value: b.price ?? '' })}>
                             {b.price ? money(b.price) : "Narx yo'q"} ✎
                           </button>
+                        )}
+                      </td>
+                      <td className="right">
+                        {isEditing(b, 'cost_price') ? editor(b, 'cost_price') : (
+                          <button type="button" className="link-btn" title="Tannarxni o'zgartirish" onClick={() => setEditing({ id: b.id, field: 'cost_price', value: b.cost_price ?? '' })}>
+                            {b.cost_price === null ? "Kiritilmagan" : money(b.cost_price)} ✎
+                          </button>
+                        )}
+                      </td>
+                      <td className="right">
+                        {b.markup === null ? '—' : (
+                          <>
+                            {money(b.markup)}
+                            {b.cost_price > 0 && <small className="sub">{Math.round((b.markup / b.cost_price) * 100)}%</small>}
+                          </>
                         )}
                       </td>
                       <td className="right">

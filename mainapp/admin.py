@@ -36,8 +36,8 @@ class Author_Admin(admin.ModelAdmin):
 
 @admin.register(Book)
 class Book_Admin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'author', 'category', 'price', 'stock', 'language', 'status', 'created_on')
-    list_editable = ('price', 'stock', 'status')
+    list_display = ('id', 'name', 'author', 'category', 'price', 'cost_price', 'stock', 'language', 'status', 'created_on')
+    list_editable = ('price', 'cost_price', 'stock', 'status')
     list_filter = ('status', 'category', 'language')
     search_fields = ('name', 'author__full_name')
     ordering = ('-created_on',)

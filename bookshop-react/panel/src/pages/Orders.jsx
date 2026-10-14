@@ -166,7 +166,8 @@ function OrderDrawer({ id, onClose, onChanged }) {
                   <div className="thumb">{item.book_photo ? <img src={item.book_photo} alt="" /> : '📗'}</div>
                   <div className="grow">
                     <strong>{item.book_name}</strong>
-                    <small className="sub">{money(item.price)} × {item.quantity}</small>
+                    <small className="sub">{money(item.price)} × {item.quantity}
+                      {item.profit !== null && <> · foyda {money(item.profit)}</>}</small>
                   </div>
                   <strong>{money(item.line_total)}</strong>
                 </li>
@@ -178,6 +179,9 @@ function OrderDrawer({ id, onClose, onChanged }) {
               {data.discount > 0 && <div className="green"><dt>Chegirma</dt><dd>−{money(data.discount)}</dd></div>}
               <div><dt>Yetkazib berish</dt><dd>{data.delivery_fee > 0 ? money(data.delivery_fee) : 'Bepul'}</dd></div>
               <div className="grand"><dt>Jami</dt><dd>{money(data.total)}</dd></div>
+              {data.status !== 'cancelled' && (
+                <div><dt>Sof tushum{data.missing_cost_count > 0 ? ' (tannarxsiz qatorlarsiz)' : ''}</dt><dd>{money(data.net_revenue)}</dd></div>
+              )}
             </dl>
 
             <h3>Tarix</h3>

@@ -24,7 +24,8 @@ from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
-from .models import Book, Order, OrderEvent, OrderItem, PromoCode
+from .models import Book, Order, OrderEvent, OrderItem, PromoCode, Review
+from .profit import line_cost, net_revenue_stats, order_net
 from .stock import LOW_STOCK
 from .views import tokens_for
 
@@ -124,6 +125,9 @@ def panel_summary(request):
         )
         agg['avg_order'] = round(agg['revenue'] / agg['count']) if agg['count'] else 0
         agg['cancelled'] = window.filter(status='cancelled').count()
+        agg.update(net_revenue_stats(OrderItem.objects.filter(
+            order__status__in=ACTIVE, order__created_on__gte=a, order__created_on__lt=b,
+        )))
         return agg
 
     current = period_stats(start, now + timedelta(seconds=1))
@@ -190,6 +194,7 @@ def panel_summary(request):
         'previous': previous,
         'growth': {
             'revenue': growth(current['revenue'], previous['revenue']),
+            'net_revenue': growth(current['net_revenue'], previous['net_revenue']),
             'orders': growth(current['count'], previous['count']),
         },
         'new_users': User.objects.filter(date_joined__gte=start).count(),
@@ -215,6 +220,7 @@ def panel_summary(request):
             'orders': Order.objects.filter(status__in=PLACED).count(),
             'revenue': all_active['revenue'],
             'active_orders': all_active['count'],
+            **{f'all_{k}': v for k, v in net_revenue_stats(OrderItem.objects.filter(order__status__in=ACTIVE)).items()},
         },
     })
 
@@ -226,6 +232,15 @@ class PanelOrderItemSerializer(serializers.ModelSerializer):
     book_photo = serializers.SerializerMethodField()
     price = serializers.IntegerField(source='unit_price', read_only=True)
     line_total = serializers.SerializerMethodField()
+    cost_price = serializers.SerializerMethodField()
+    profit = serializers.SerializerMethodField()
+
+    def get_cost_price(self, obj):
+        return line_cost(obj.cost_price, obj.book.cost_price)
+
+    def get_profit(self, obj):
+        cost = self.get_cost_price(obj)
+        return None if cost is None else (obj.unit_price - cost) * obj.quantity
 
     def get_book_photo(self, obj):
         if not obj.book.photo:
@@ -238,7 +253,7 @@ class PanelOrderItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderItem
-        fields = ['id', 'book', 'book_name', 'book_photo', 'price', 'quantity', 'line_total']
+        fields = ['id', 'book', 'book_name', 'book_photo', 'price', 'cost_price', 'quantity', 'line_total', 'profit']
 
 
 class PanelOrderSerializer(serializers.ModelSerializer):
@@ -266,6 +281,18 @@ class PanelOrderEventSerializer(serializers.ModelSerializer):
 class PanelOrderDetailSerializer(PanelOrderSerializer):
     items = PanelOrderItemSerializer(many=True, read_only=True)
     events = PanelOrderEventSerializer(many=True, read_only=True)
+    net_revenue = serializers.SerializerMethodField()
+    missing_cost_count = serializers.SerializerMethodField()
+
+    def _net(self, obj):
+        lines = [(i.unit_price, i.quantity, line_cost(i.cost_price, i.book.cost_price)) for i in obj.items.all()]
+        return order_net(obj.discount, lines)
+
+    def get_net_revenue(self, obj):
+        return round(self._net(obj)[0])
+
+    def get_missing_cost_count(self, obj):
+        return self._net(obj)[2]
 
     def validate_status(self, value):
         # "pending" - savat, uni buyurtma holatiga qo'yib bo'lmaydi
@@ -274,7 +301,7 @@ class PanelOrderDetailSerializer(PanelOrderSerializer):
         return value
 
     class Meta(PanelOrderSerializer.Meta):
-        fields = PanelOrderSerializer.Meta.fields + ['items', 'events']
+        fields = PanelOrderSerializer.Meta.fields + ['items', 'events', 'net_revenue', 'missing_cost_count']
         read_only_fields = [f for f in fields if f != 'status']
 
 
@@ -323,6 +350,13 @@ class PanelBookSerializer(serializers.ModelSerializer):
     orders_count = serializers.IntegerField(read_only=True)
     has_audio = serializers.SerializerMethodField()
     has_pdf = serializers.SerializerMethodField()
+    markup = serializers.SerializerMethodField()
+
+    def get_markup(self, obj):
+        """ Ustama = narx - tannarx (ikkalasi ham bo'lsa) """
+        if obj.price is None or obj.cost_price is None:
+            return None
+        return obj.price - obj.cost_price
 
     def get_has_audio(self, obj):
         return bool(obj.audio_file)
@@ -333,10 +367,10 @@ class PanelBookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = [
-            'id', 'name', 'category_name', 'author_name', 'language', 'price', 'status', 'stock',
+            'id', 'name', 'category_name', 'author_name', 'language', 'price', 'cost_price', 'markup', 'status', 'stock',
             'created_on', 'sold', 'revenue', 'orders_count', 'has_audio', 'has_pdf',
         ]
-        read_only_fields = [f for f in fields if f not in ('price', 'status', 'stock')]
+        read_only_fields = [f for f in fields if f not in ('price', 'cost_price', 'status', 'stock')]
 
 
 class PanelBookList(generics.ListAPIView):
@@ -378,7 +412,7 @@ class PanelBookList(generics.ListAPIView):
 
 
 class PanelBookDetail(generics.UpdateAPIView):
-    """ PATCH: faqat narx va holat (qolgan tahrir Django adminda) """
+    """ PATCH: faqat narx, tannarx, ombor va holat (qolgan tahrir Django adminda) """
     permission_classes = [IsAdminUser]
     serializer_class = PanelBookSerializer
     http_method_names = ['patch', 'options']

@@ -39,10 +39,21 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {cur.missing_cost_count > 0 && (
+        <p className="alert">
+          {num(cur.missing_cost_count)} ta kitobda tannarx kiritilmagan: ular sof tushumga kirmaydi, shuning uchun sof tushum aslidan kam ko'rinishi mumkin.{' '}
+          <Link to="/books">Kitoblarda tannarxni kiriting →</Link>
+        </p>
+      )}
+
       <section className="grid stats">
         <StatCard title="Tushum" value={money(cur.revenue)}>
           <Growth value={growth.revenue} />
         </StatCard>
+        <StatCard title="Sof tushum" value={money(cur.net_revenue)} hint="sotuv − tannarx − chegirma (yetkazib berishsiz)">
+          <Growth value={growth.net_revenue} />
+        </StatCard>
+        <StatCard title="Tannarx jami" value={money(cur.cost_total)} hint="sotilgan kitoblarning sotib olingan narxi" />
         <StatCard title="Buyurtmalar" value={num(cur.count)} hint={`${num(cur.cancelled)} tasi bekor qilingan`}>
           <Growth value={growth.orders} />
         </StatCard>
@@ -135,6 +146,7 @@ export default function Dashboard() {
           </ul>
           <div className="totals">
             <div><span>Jami tushum</span><strong>{money(totals.revenue)}</strong></div>
+            <div><span>Jami sof tushum</span><strong>{money(totals.all_net_revenue)}</strong></div>
             <div><span>Jami buyurtma</span><strong>{num(totals.orders)}</strong></div>
             <div><span>Kitoblar</span><strong>{num(totals.books)}</strong></div>
           </div>

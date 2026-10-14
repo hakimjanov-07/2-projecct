@@ -49,6 +49,8 @@ class Book(models.Model):
     author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='book')
     language = models.CharField(choices=LANGUAGE, verbose_name='Tili:')
     price = models.PositiveIntegerField(verbose_name='Narxi:', null=True, blank=True)
+    # Sotib olingan narx (tannarx). Bo'sh = noma'lum; ustama = price - cost_price (saqlanmaydi, hisoblanadi)
+    cost_price = models.PositiveIntegerField(verbose_name='Tannarx (sotib olingan narx):', null=True, blank=True)
     about = models.TextField(verbose_name='Batafsil:')
     publisher = models.CharField(max_length=100, verbose_name='Nashriyotchi:')
     pages = models.PositiveIntegerField(verbose_name='Sahifalar soni:')
@@ -138,6 +140,8 @@ class OrderItem(models.Model):
     quantity = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
     # Buyurtma berilgan paytdagi narx (savatdagi qatorlarda bo'sh: joriy narx olinadi)
     price = models.PositiveIntegerField(null=True, blank=True, verbose_name='Sotuv narxi:')
+    # Buyurtma paytidagi tannarx (snapshot): keyin kitob tannarxi o'zgarsa eski foyda o'zgarmaydi
+    cost_price = models.PositiveIntegerField(null=True, blank=True, verbose_name='Tannarx:')
 
     class Meta:
         constraints = [

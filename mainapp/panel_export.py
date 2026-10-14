@@ -10,6 +10,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser
 
 from .models import Order
+from .profit import line_cost, order_net
 from .panel import TASHKENT, PanelBookList, PanelOrderList, PanelUserList
 
 STATUS = dict(Order.STATUS)
@@ -48,6 +49,13 @@ def _response(name, header, rows):
     return response
 
 
+def _net(order):
+    """ Buyurtma sof tushumi; tannarxsiz qator bo'lsa '' (to'liq emas) """
+    lines = [(i.unit_price, i.quantity, line_cost(i.cost_price, i.book.cost_price)) for i in order.items.all()]
+    net, _, missing = order_net(order.discount, lines)
+    return '' if missing or not lines else round(net)
+
+
 def _orders(request):
     qs = _queryset(PanelOrderList, request).prefetch_related('items__book')
     header = [
@@ -68,12 +76,14 @@ def _orders(request):
 def _books(request):
     qs = _queryset(PanelBookList, request)
     header = [
-        'ID', 'Nomi', 'Muallif', 'Janr', 'Til', "Narx (so'm)", 'Ombor', 'Holat', 'Audio', 'PDF',
+        'ID', 'Nomi', 'Muallif', 'Janr', 'Til', "Narx (so'm)", "Tannarx (so'm)", "Ustama (so'm)", 'Ombor', 'Holat', 'Audio', 'PDF',
         'Sotilgan (dona)', "Tushum (so'm)", 'Buyurtmalar', "Qo'shilgan",
     ]
     rows = (
         [
             b.id, b.name, b.author.full_name, b.category.name, b.get_language_display(), b.price or '',
+            '' if b.cost_price is None else b.cost_price,
+            '' if b.price is None or b.cost_price is None else b.price - b.cost_price,
             'cheklanmagan' if b.stock is None else b.stock, 'faol' if b.status == 'active' else 'faol emas',
             _yes(b.audio_file), _yes(b.pdf_file), b.sold, b.revenue, b.orders_count, _when(b.created_on),
         ]

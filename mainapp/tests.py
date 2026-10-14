@@ -971,3 +971,82 @@ class PanelExportAndPromoTests(TestCase):
         self.assertEqual(self.client.get(f'{self.URL}?q=off').data['count'], 1)
         self.assertEqual(self.client.get(f'{self.URL}?ordering=-orders_count').data['results'][0]['code'], 'AKSIYA7')
         self.assertEqual(self.client.get(f'{self.URL}?ordering=hack').status_code, 200)
+
+
+class NetRevenueTests(TestCase):
+    """ Sof tushum: (sotuv - tannarx) * soni - chegirma; yetkazib berish kirmaydi; tannarxsiz qator hisobga olinmaydi """
+
+    def setUp(self):
+        BookShopAPITestCase.setUp(self)
+        self.staff = User.objects.create_user(username='boss', email='boss@example.com', password='password123', is_staff=True)
+        self.client.force_authenticate(user=self.staff)
+        self.book.price, self.book.cost_price = 60000, 50000  # ustama 10000
+        self.book.save()
+        self.other = Book.objects.create(
+            name='Tannarxsiz', category=self.book.category, author=self.book.author, language=self.book.language,
+            price=30000, about='x', publisher='y', pages=10, photo='x.jpg', status='active',
+        )
+
+    def summary(self):
+        return self.client.get('/api/panel/summary/').data
+
+    def test_basic_net_revenue_excludes_delivery(self):
+        o = Order.objects.create(user=self.user, status='confirmed', delivery_fee=20000)
+        OrderItem.objects.create(order=o, book=self.book, quantity=3, price=60000, cost_price=50000)
+        cur = self.summary()['current']
+        self.assertEqual(cur['net_revenue'], 30000)
+        self.assertEqual(cur['cost_total'], 150000)
+        self.assertEqual(cur['delivery'], 20000)
+        self.assertEqual(cur['missing_cost_count'], 0)
+
+    def test_promo_discount_is_subtracted(self):
+        o = Order.objects.create(user=self.user, status='confirmed', promo_code='X', discount=6000, delivery_fee=20000)
+        OrderItem.objects.create(order=o, book=self.book, quantity=2, price=60000, cost_price=50000)
+        self.assertEqual(self.summary()['current']['net_revenue'], 20000 - 6000)
+
+    def test_missing_cost_excluded_and_reported(self):
+        o = Order.objects.create(user=self.user, status='confirmed', discount=9000)
+        OrderItem.objects.create(order=o, book=self.book, quantity=1, price=60000, cost_price=50000)
+        OrderItem.objects.create(order=o, book=self.other, quantity=2, price=30000)
+        cur = self.summary()['current']
+        # tannarxsiz qator kirmaydi; chegirma faqat ma'lum qator ulushiga (60000/120000) ayriladi
+        self.assertEqual(cur['net_revenue'], 10000 - 4500)
+        self.assertEqual(cur['missing_cost_count'], 1)
+
+    def test_cancelled_and_cart_not_counted(self):
+        for st in ('cancelled', 'pending'):
+            o = Order.objects.create(user=self.user, status=st)
+            OrderItem.objects.create(order=o, book=self.book, quantity=1, price=60000, cost_price=50000)
+        self.assertEqual(self.summary()['current']['net_revenue'], 0)
+
+    def test_snapshot_not_changed_by_later_cost_edit(self):
+        o = Order.objects.create(user=self.user, status='confirmed')
+        OrderItem.objects.create(order=o, book=self.book, quantity=1, price=60000, cost_price=50000)
+        self.client.patch(f'/api/panel/books/{self.book.id}/', {'cost_price': 55000}, format='json')
+        self.assertEqual(self.summary()['current']['net_revenue'], 10000)
+
+    def test_checkout_snapshots_cost(self):
+        self.client.force_authenticate(user=self.user)
+        res = self.client.post('/api/cart/checkout/', {'items': [{'book_id': self.book.id, 'quantity': 1}]}, format='json')
+        self.assertEqual(res.status_code, 201)
+        item = OrderItem.objects.get(order_id=res.data['id'])
+        self.assertEqual(item.cost_price, 50000)
+        self.book.cost_price = 1
+        self.book.save()
+        item.refresh_from_db()
+        self.assertEqual(item.cost_price, 50000)
+
+    def test_book_endpoint_markup_and_order_detail_profit(self):
+        res = self.client.get('/api/panel/books/')
+        rows = {r['id']: r for r in res.data['results']}
+        self.assertEqual(rows[self.book.id]['markup'], 10000)
+        self.assertIsNone(rows[self.other.id]['markup'])
+        o = Order.objects.create(user=self.user, status='confirmed')
+        OrderItem.objects.create(order=o, book=self.book, quantity=2, price=60000, cost_price=50000)
+        det = self.client.get(f'/api/panel/orders/{o.id}/').data
+        self.assertEqual(det['items'][0]['profit'], 20000)
+        self.assertEqual(det['net_revenue'], 20000)
+
+    def test_csv_has_cost_columns(self):
+        self.assertIn('Ustama', self.client.get('/api/panel/export/books/').content.decode('utf-8-sig').splitlines()[0])
+        self.assertIn('Sof tushum', self.client.get('/api/panel/export/orders/').content.decode('utf-8-sig').splitlines()[0])
