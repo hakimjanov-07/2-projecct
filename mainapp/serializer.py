@@ -95,8 +95,13 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'user', 'status', 'items', 'total_items', 'subtotal',
             'promo_code', 'discount', 'delivery_fee', 'total_price', 'created_on', 'events',
+            'delivery_method', 'recipient_name', 'recipient_phone', 'city', 'district',
+            'street', 'house', 'delivery_comment',
         ]
-        read_only_fields = ['user', 'status']
+        read_only_fields = [
+            'user', 'status', 'delivery_method', 'recipient_name', 'recipient_phone',
+            'city', 'district', 'street', 'house', 'delivery_comment',
+        ]
 
 
 class AddToCartSerializer(serializers.Serializer):

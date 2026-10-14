@@ -907,7 +907,7 @@ class PanelExportAndPromoTests(TestCase):
         row = by_id[self.o1.id]
         self.assertEqual(row[2:6], ['testuser', 'test@example.com', 'Tasdiqlangan', 'AKSIYA7'])
         self.assertIn("O'tkan kunlar x2 (45000)", row[6])
-        self.assertEqual(row[7:], ['2', '90000', '9000', '20000', '101000'])
+        self.assertEqual(row[7:12], ['2', '90000', '9000', '20000', '101000'])
         self.assertEqual(len(self.read_csv('/api/panel/export/orders/?status=cancelled')), 2)  # sarlavha + 1
         self.assertEqual(len(self.read_csv('/api/panel/export/orders/?q=AKSIYA7')), 3)
 
@@ -938,7 +938,7 @@ class PanelExportAndPromoTests(TestCase):
         books = self.read_csv('/api/panel/export/books/')
         self.assertEqual(books[0][1], 'Nomi')
         row = next(r for r in books[1:] if r[1] == "O'tkan kunlar")
-        self.assertEqual((row[10], row[11], row[12]), ('2', '90000', '1'))  # bekor qilingani hisobga kirmaydi
+        self.assertEqual((row[12], row[13], row[14]), ('2', '90000', '1'))  # bekor qilingani hisobga kirmaydi
         users = self.read_csv('/api/panel/export/users/?ordering=-spent')
         top = users[1]
         self.assertEqual((top[1], top[7], top[8]), ('testuser', '1', '101000'))
@@ -1086,3 +1086,104 @@ class NetRevenueTests(TestCase):
     def test_csv_has_cost_columns(self):
         self.assertIn('Ustama', self.client.get('/api/panel/export/books/').content.decode('utf-8-sig').splitlines()[0])
         self.assertIn('Sof tushum', self.client.get('/api/panel/export/orders/').content.decode('utf-8-sig').splitlines()[0])
+
+
+class DeliveryMethodTests(BookShopAPITestCase):
+    """ Olib ketish / yetkazib berish: narx, majburiy maydonlar va saqlash """
+    ADDRESS = {
+        'recipient_name': 'Ali Valiyev', 'recipient_phone': '+998 90 123-45-67',
+        'city': 'Toshkent', 'district': 'Chilonzor', 'street': 'Bunyodkor 5', 'house': '12', 'delivery_comment': 'Qo\'ng\'iroq qiling',
+    }
+
+    def checkout(self, quantity=1, **extra):
+        self.client.force_authenticate(user=self.user)
+        return self.client.post(
+            '/api/cart/checkout/',
+            {'items': [{'book_id': self.book.id, 'quantity': quantity}], **extra},
+            format='json',
+        )
+
+    def test_pickup_has_no_fee_and_needs_no_address(self):
+        res = self.checkout(1, delivery_method='pickup')
+        self.assertEqual(res.status_code, 201)
+        self.assertEqual(res.data['delivery_fee'], 0)
+        self.assertEqual(res.data['total_price'], 45000)
+        order = Order.objects.get(id=res.data['id'])
+        self.assertEqual((order.delivery_method, order.city, order.street, order.address_text), ('pickup', '', '', ''))
+
+    def test_pickup_ignores_sent_address(self):
+        res = self.checkout(1, delivery_method='pickup', **self.ADDRESS)
+        self.assertEqual(res.status_code, 201)
+        order = Order.objects.get(id=res.data['id'])
+        self.assertEqual((order.recipient_name, order.city, order.street), ('Ali Valiyev', '', ''))
+
+    def test_delivery_requires_fields(self):
+        for key in ('recipient_name', 'recipient_phone', 'city', 'street'):
+            data = {k: v for k, v in self.ADDRESS.items() if k != key}
+            res = self.checkout(1, delivery_method='delivery', **data)
+            self.assertEqual(res.status_code, 400, key)
+            self.assertIn(key, res.data)
+        self.assertEqual(Order.objects.count(), 0)
+
+    def test_delivery_rejects_bad_phone(self):
+        res = self.checkout(1, delivery_method='delivery', **{**self.ADDRESS, 'recipient_phone': 'abc'})
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('recipient_phone', res.data)
+
+    def test_delivery_saves_address_and_charges_fee(self):
+        res = self.checkout(1, delivery_method='delivery', **self.ADDRESS)
+        self.assertEqual(res.status_code, 201)
+        self.assertEqual(res.data['delivery_fee'], 20000)
+        order = Order.objects.get(id=res.data['id'])
+        self.assertEqual(order.delivery_method, 'delivery')
+        self.assertEqual(order.address_text, 'Toshkent, Chilonzor, Bunyodkor 5, 12')
+        self.assertEqual(order.recipient_phone, '+998 90 123-45-67')
+
+    def test_fee_is_computed_on_server(self):
+        # Mijoz yuborgan summaga e'tibor berilmaydi
+        res = self.checkout(1, delivery_method='delivery', delivery_fee=0, total=1, **self.ADDRESS)
+        self.assertEqual(res.data['delivery_fee'], 20000)
+        res = self.checkout(1, delivery_method='pickup', delivery_fee=99999)
+        self.assertEqual(res.data['delivery_fee'], 0)
+
+    def test_quote_depends_on_method(self):
+        body = {'items': [{'book_id': self.book.id, 'quantity': 1}]}
+        self.assertEqual(self.client.post('/api/cart/quote/', {**body, 'delivery_method': 'pickup'}, format='json').data['delivery_fee'], 0)
+        self.assertEqual(self.client.post('/api/cart/quote/', {**body, 'delivery_method': 'delivery'}, format='json').data['delivery_fee'], 20000)
+        self.assertEqual(self.client.post('/api/cart/quote/', {**body, 'delivery_method': 'x'}, format='json').status_code, 400)
+
+    def test_panel_detail_and_csv(self):
+        staff = User.objects.create_user(username='boss2', email='b2@example.com', password='password123', is_staff=True)
+        res = self.checkout(1, delivery_method='delivery', **self.ADDRESS)
+        self.client.force_authenticate(user=staff)
+        det = self.client.get(f"/api/panel/orders/{res.data['id']}/").data
+        self.assertEqual(det['delivery_method'], 'delivery')
+        self.assertEqual(det['recipient_name'], 'Ali Valiyev')
+        self.assertEqual(det['address'], 'Toshkent, Chilonzor, Bunyodkor 5, 12')
+        self.assertEqual(det['delivery_comment'], "Qo'ng'iroq qiling")
+        lines = self.client.get('/api/panel/export/orders/').content.decode('utf-8-sig').splitlines()
+        self.assertTrue(lines[0].endswith('Usul;Manzil') or lines[0].endswith('Usul,Manzil'))
+        self.assertIn('Toshkent', lines[1])
+
+    def test_coordinates_saved_for_delivery_only(self):
+        res = self.checkout(1, delivery_method='delivery', delivery_lat=41.311158, delivery_lng=69.279737, **self.ADDRESS)
+        self.assertEqual(res.status_code, 201)
+        order = Order.objects.get(id=res.data['id'])
+        self.assertEqual((float(order.delivery_lat), float(order.delivery_lng)), (41.311158, 69.279737))
+        res = self.checkout(1, delivery_method='pickup', delivery_lat=41.3, delivery_lng=69.2)
+        self.assertIsNone(Order.objects.get(id=res.data['id']).delivery_lat)
+        # nuqta ixtiyoriy
+        res = self.checkout(1, delivery_method='delivery', **self.ADDRESS)
+        self.assertIsNone(Order.objects.get(id=res.data['id']).delivery_lat)
+
+    def test_bad_coordinates_rejected(self):
+        for extra in ({'delivery_lat': 123, 'delivery_lng': 69}, {'delivery_lat': 41.3}):
+            res = self.checkout(1, delivery_method='delivery', **self.ADDRESS, **extra)
+            self.assertEqual(res.status_code, 400, extra)
+
+    def test_panel_detail_has_coordinates(self):
+        staff = User.objects.create_user(username='boss3', email='b3@example.com', password='password123', is_staff=True)
+        res = self.checkout(1, delivery_method='delivery', delivery_lat=41.3, delivery_lng=69.2, **self.ADDRESS)
+        self.client.force_authenticate(user=staff)
+        det = self.client.get(f"/api/panel/orders/{res.data['id']}/").data
+        self.assertEqual((det['delivery_lat'], det['delivery_lng']), (41.3, 69.2))

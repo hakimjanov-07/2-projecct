@@ -7,6 +7,7 @@ import { Loading, Pagination, StatusBadge } from '../components/Bits'
 import CsvButton from '../components/CsvButton'
 
 const PAGE_SIZE = 20
+const METHOD_LABELS = { pickup: 'Olib ketish', delivery: 'Yetkazib berish' }
 
 export default function Orders() {
   const [params, setParams] = useSearchParams()
@@ -69,7 +70,7 @@ export default function Orders() {
             <div className="table-wrap">
               <table className="table clickable">
                 <thead>
-                  <tr><th>№</th><th>Mijoz</th><th>Sana</th><th className="right">Kitoblar</th><th className="right">Chegirma</th><th className="right">Summa</th><th>Holat</th></tr>
+                  <tr><th>№</th><th>Mijoz</th><th>Sana</th><th>Usul</th><th className="right">Kitoblar</th><th className="right">Chegirma</th><th className="right">Summa</th><th>Holat</th></tr>
                 </thead>
                 <tbody>
                   {data.results.map((o) => (
@@ -77,6 +78,7 @@ export default function Orders() {
                       <td><strong>#{o.id}</strong></td>
                       <td>{o.username}<small className="sub">{o.email}</small></td>
                       <td>{dateTime(o.created_on)}</td>
+                      <td>{METHOD_LABELS[o.delivery_method] || '—'}</td>
                       <td className="right">{num(o.items_count)}</td>
                       <td className="right">{o.discount ? `−${money(o.discount)}` : '—'}</td>
                       <td className="right"><strong>{money(o.total)}</strong></td>
@@ -137,6 +139,25 @@ function OrderDrawer({ id, onClose, onChanged }) {
               <div><span>Promo kod</span><strong>{data.promo_code || '—'}</strong></div>
             </div>
 
+            <h3>Qabul qilish</h3>
+            <div className="kv">
+              <div><span>Usul</span><strong>{METHOD_LABELS[data.delivery_method] || '—'}</strong></div>
+              <div><span>Qabul qiluvchi</span><strong>{data.recipient_name || '—'}</strong></div>
+              <div><span>Telefon</span><strong>{data.recipient_phone || '—'}</strong></div>
+              {data.delivery_method === 'delivery' && <div><span>Manzil</span><strong>{data.address || '—'}</strong></div>}
+              {data.delivery_comment && <div><span>Izoh</span><strong>{data.delivery_comment}</strong></div>}
+              {data.delivery_lat != null && data.delivery_lng != null && (
+                <div>
+                  <span>Xarita</span>
+                  <strong>
+                    <a href={`https://www.openstreetmap.org/?mlat=${data.delivery_lat}&mlon=${data.delivery_lng}#map=17/${data.delivery_lat}/${data.delivery_lng}`} target="_blank" rel="noopener noreferrer">
+                      Xaritada ochish
+                    </a>
+                  </strong>
+                </div>
+              )}
+            </div>
+
             {data.status !== 'cancelled' && (
               <>
                 <h3>Bosqich</h3>
@@ -177,7 +198,7 @@ function OrderDrawer({ id, onClose, onChanged }) {
             <dl className="sums">
               <div><dt>Mahsulotlar</dt><dd>{money(data.goods_total)}</dd></div>
               {data.discount > 0 && <div className="green"><dt>Chegirma</dt><dd>−{money(data.discount)}</dd></div>}
-              <div><dt>Yetkazib berish</dt><dd>{data.delivery_fee > 0 ? money(data.delivery_fee) : 'Bepul'}</dd></div>
+              <div><dt>Yetkazib berish</dt><dd>{data.delivery_method === 'pickup' ? 'Olib ketish – bepul' : data.delivery_fee > 0 ? money(data.delivery_fee) : 'Bepul'}</dd></div>
               <div className="grand"><dt>Jami</dt><dd>{money(data.total)}</dd></div>
               {data.status !== 'cancelled' && (
                 <div><dt>Sof tushum{data.missing_cost_count > 0 ? ' (tannarxsiz qatorlarsiz)' : ''}</dt><dd>{money(data.net_revenue)}</dd></div>

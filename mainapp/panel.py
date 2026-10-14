@@ -263,12 +263,17 @@ class PanelOrderSerializer(serializers.ModelSerializer):
     items_count = serializers.IntegerField(read_only=True)
     goods_total = serializers.IntegerField(read_only=True)
     total = serializers.IntegerField(read_only=True)
+    address = serializers.CharField(source='address_text', read_only=True)
+    delivery_lat = serializers.FloatField(read_only=True)
+    delivery_lng = serializers.FloatField(read_only=True)
 
     class Meta:
         model = Order
         fields = [
             'id', 'user', 'username', 'email', 'status', 'items_count', 'goods_total',
             'promo_code', 'discount', 'delivery_fee', 'total', 'created_on',
+            'delivery_method', 'recipient_name', 'recipient_phone', 'address', 'delivery_comment',
+            'delivery_lat', 'delivery_lng',
         ]
         read_only_fields = [f for f in fields if f != 'status']
 

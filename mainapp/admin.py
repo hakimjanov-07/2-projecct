@@ -45,10 +45,10 @@ class Book_Admin(admin.ModelAdmin):
 
 @admin.register(Order)
 class Order_Admin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'status', 'total', 'created_on')
+    list_display = ('id', 'user', 'status', 'delivery_method', 'total', 'created_on')
     list_editable = ('status',)
-    list_filter = ('status', 'created_on')
-    search_fields = ('user__username',)
+    list_filter = ('status', 'delivery_method', 'created_on')
+    search_fields = ('user__username', 'recipient_name', 'recipient_phone')
     inlines = [OrderItemInline, OrderEventInline]
     ordering = ('-created_on',)
     actions = ['mark_confirmed', 'mark_processing', 'mark_shipped', 'mark_delivered', 'mark_cancelled']

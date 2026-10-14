@@ -85,7 +85,7 @@ export default function Orders() {
                       <dd>−{money(order.discount)}</dd>
                     </div>
                   )}
-                  <div><dt>{t('cart.delivery')}</dt><dd>{order.delivery_fee > 0 ? money(order.delivery_fee) : t('cart.free')}</dd></div>
+                  <div><dt>{t('cart.delivery')}</dt><dd>{order.delivery_method === 'pickup' ? t('cart.pickupFree') : order.delivery_fee > 0 ? money(order.delivery_fee) : t('cart.free')}</dd></div>
                   <div className={styles.grand}><dt>{t('cart.total')}</dt><dd>{money(order.total_price)}</dd></div>
                 </dl>
               </article>

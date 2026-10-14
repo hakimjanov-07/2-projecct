@@ -60,13 +60,15 @@ def _orders(request):
     qs = _queryset(PanelOrderList, request).prefetch_related('items__book')
     header = [
         '№', 'Sana', 'Mijoz', 'Email', 'Holat', 'Promo kod', 'Kitoblar', 'Dona',
-        "Mahsulotlar (so'm)", "Chegirma (so'm)", "Yetkazib berish (so'm)", "Jami (so'm)",
+        "Mahsulotlar (so'm)", "Chegirma (so'm)", "Yetkazib berish (so'm)", "Jami (so'm)", "Sof tushum (so'm)",
+        'Usul', 'Manzil',
     ]
     rows = (
         [
             o.id, _when(o.created_on), o.user.username, o.user.email, STATUS.get(o.status, o.status),
             o.promo_code, '; '.join(f'{i.book.name} x{i.quantity} ({i.unit_price})' for i in o.items.all()),
-            o.items_count, o.goods_total, o.discount, o.delivery_fee, o.total,
+            o.items_count, o.goods_total, o.discount, o.delivery_fee, o.total, _net(o),
+            o.get_delivery_method_display(), o.address_text,
         ]
         for o in qs
     )

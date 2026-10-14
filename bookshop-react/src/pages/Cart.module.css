@@ -321,6 +321,176 @@
   font-weight: 800;
 }
 
+.methodBox {
+  margin-bottom: 20px;
+}
+
+.methodToggle {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--gray-200);
+  border-radius: 18px;
+  background: var(--cream);
+}
+
+.methodToggle button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  height: 48px;
+  padding: 0 6px;
+  white-space: nowrap;
+  border: none;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--gray-600);
+  font-size: clamp(13px, 3.6vw, 15px);
+  font-weight: 700;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  transition: color 0.25s ease, transform 0.2s ease;
+}
+
+/* Faol tanlovni ko'rsatuvchi jigarrang pill: tugmalar orasida siljiydi */
+.methodToggle::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc((100% - 12px) / 2);
+  border-radius: 14px;
+  background: var(--brown);
+  box-shadow: 0 4px 12px rgba(200, 149, 108, 0.4);
+  opacity: 0;
+  transform: translateX(0);
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+}
+
+.methodToggle[data-method='pickup']::before {
+  opacity: 1;
+}
+
+.methodToggle[data-method='delivery']::before {
+  opacity: 1;
+  transform: translateX(calc(100% + 4px));
+}
+
+/* Maqola kartalari (Static.module.css .helpBlock) uslubi: ko'tarilish, jigarrang chegara, yumshoq soya */
+.methodToggle button {
+  border: 1.5px solid transparent;
+  transition: color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.methodToggle button:active {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) {
+  .methodToggle button:not(.methodOn):hover,
+  .methodToggle button:not(.methodOn):focus-visible {
+    transform: translateY(-3px);
+    border-color: var(--brown);
+    color: var(--brown-2);
+    box-shadow: 0 10px 22px rgba(96, 63, 39, 0.16);
+  }
+
+  /* Ikonka animatsiyasi faol tugmada ham ishlaydi */
+  .methodToggle button:first-child:hover svg,
+  .methodToggle button:first-child:focus-visible svg {
+    animation: storeHop 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .methodToggle button:last-child:hover svg,
+  .methodToggle button:last-child:focus-visible svg {
+    animation: truckGo 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+@keyframes storeHop {
+  0%, 100% { transform: translateY(0) rotate(0) scale(1); }
+  40% { transform: translateY(-3px) rotate(-8deg) scale(1.15); }
+  70% { transform: translateY(0) rotate(5deg) scale(1.1); }
+}
+
+@keyframes truckGo {
+  0% { transform: translateX(0); }
+  45% { transform: translateX(5px); }
+  100% { transform: translateX(0); }
+}
+
+.methodToggle button.methodOn,
+.methodToggle button.methodOn:hover,
+.methodToggle button.methodOn:focus-visible {
+  color: var(--white);
+}
+
+/* Qiymat o'zgarganda yengil yonib o'chadi (faqat opacity) */
+.flash {
+  animation: flash 0.45s ease-out;
+}
+
+@keyframes flash {
+  from { opacity: 0.25; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .methodToggle::before,
+  .methodToggle button {
+    transition: none;
+  }
+
+  .methodToggle button:hover,
+  .methodToggle button:focus-visible,
+  .methodToggle button:active {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  .methodToggle button svg {
+    animation: none !important;
+  }
+
+  .flash {
+    animation: none;
+  }
+}
+
+.methodToggle svg {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.methodInfo,
+.methodHint {
+  margin: 10px 4px 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.methodInfo {
+  color: var(--gray-600);
+  overflow-wrap: anywhere;
+}
+
+.methodHint {
+  color: var(--brown-2);
+  font-weight: 600;
+}
+
 .rows {
   display: grid;
   gap: 14px;

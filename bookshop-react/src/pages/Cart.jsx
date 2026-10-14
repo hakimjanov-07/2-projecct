@@ -1,12 +1,17 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { checkoutOrder, getCartQuote } from '../api'
+import { checkoutOrder, getCartQuote, getProfile } from '../api'
+import { EMPTY_FORM, formatPhone, loadSavedForm, saveForm } from '../components/deliveryForm'
 import { useCart } from '../context/CartContext'
 import { useToast } from '../context/ToastContext'
 import { useLang } from '../i18n/LanguageContext'
 import styles from './Cart.module.css'
 
 const fallbackImage = '/book-cover-placeholder.svg'
+
+// Xarita (Leaflet) faqat oyna ochilganda yuklanadi
+const PickupModal = lazy(() => import('../components/PickupModal'))
+const DeliveryModal = lazy(() => import('../components/DeliveryModal'))
 
 function TrashIcon() {
   return (
@@ -33,6 +38,22 @@ function CardIcon() {
   )
 }
 
+function StoreIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0A2.7 2.7 0 0 0 20 9M10 20v-5h4v5" />
+    </svg>
+  )
+}
+
+function TruckIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3 6h11v10H3zM14 9h4l3 3v4h-7M7.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM17.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" />
+    </svg>
+  )
+}
+
 function PercentIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -53,13 +74,37 @@ export default function Cart() {
   const [promoInput, setPromoInput] = useState('')
   const [promoCode, setPromoCode] = useState('')
   const [quote, setQuote] = useState(null)
+  // Qabul qilish usuli: null - hali tanlanmagan; oyna faqat tasdiqlanganda usulni o'zgartiradi
+  const [method, setMethod] = useState(null)
+  const [modal, setModal] = useState(null)
+  const [form, setForm] = useState(() => ({ ...EMPTY_FORM, ...loadSavedForm() }))
+
+  // Bo'sh maydonlarni profil ma'lumoti bilan to'ldirish (kirgan foydalanuvchi uchun)
+  useEffect(() => {
+    if (!localStorage.getItem('access_token')) return
+    let active = true
+    getProfile()
+      .then(({ data }) => {
+        if (!active) return
+        setForm((prev) => ({
+          ...prev,
+          recipient_name: prev.recipient_name || data.full_name || '',
+          recipient_phone: prev.recipient_phone || formatPhone(data.phone || ''),
+          street: prev.street || data.address || '',
+        }))
+      })
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [])
 
   // Chegirma, yetkazib berish va to'lov summasi serverdan olinadi (buyurtmadagi hisob bilan bir xil)
   useEffect(() => {
     if (items.length === 0) return
     let active = true
     const timer = setTimeout(() => {
-      getCartQuote(items, promoCode)
+      getCartQuote(items, promoCode, method === 'pickup' ? 'pickup' : 'delivery')
         .then((response) => active && setQuote(response.data))
         .catch(() => active && setQuote(null))
     }, 250)
@@ -67,7 +112,7 @@ export default function Cart() {
       active = false
       clearTimeout(timer)
     }
-  }, [items, promoCode])
+  }, [items, promoCode, method])
 
   const activeQuote = items.length > 0 ? quote : null
   const subtotal = activeQuote?.subtotal ?? totalPrice
@@ -87,6 +132,20 @@ export default function Cart() {
     setPromoCode('')
   }
 
+  const confirmPickup = (contact) => {
+    setForm((prev) => ({ ...prev, ...contact }))
+    setMethod('pickup')
+    setModal(null)
+    setOrderError('')
+  }
+
+  const confirmDelivery = (values) => {
+    setForm(values)
+    setMethod('delivery')
+    setModal(null)
+    setOrderError('')
+  }
+
   const money = (value) => `${Number(value).toLocaleString(locale)} ${t('currency')}`
 
   const placeOrder = async () => {
@@ -97,22 +156,36 @@ export default function Cart() {
       return
     }
 
+    if (!method) {
+      setOrderError(t('cart.chooseMethod'))
+      return
+    }
+
     setSubmitting(true)
     try {
-      await checkoutOrder(items, promoApplied ? promoApplied.code : '')
+      const delivery = method === 'pickup'
+        ? { delivery_method: 'pickup', recipient_name: form.recipient_name, recipient_phone: form.recipient_phone }
+        : { delivery_method: 'delivery', ...form }
+      await checkoutOrder(items, promoApplied ? promoApplied.code : '', delivery)
+      saveForm(form)
       clearCart()
       clearPromo()
       setOrderPlaced(true)
       showToast(t('toast.orderPlaced'))
     } catch (error) {
       const data = error.response?.data
+      const addressInvalid = error.response?.status === 400
+        && ['recipient_name', 'recipient_phone', 'city', 'street'].some((key) => key in (data || {}))
+      if (addressInvalid) setModal('delivery')
       const shortages = error.response?.status === 409 && Array.isArray(data?.items)
         ? data.items.map((item) => item.name + ': ' + item.available + ' ' + t('cart.stockAvailable')).join(', ')
         : ''
       setOrderError(
         error.response?.status === 401
           ? t('cart.sessionExpired')
-          : shortages
+          : addressInvalid
+            ? t('cart.deliveryInvalid')
+            : shortages
             ? t('cart.stockError') + ' (' + shortages + ')'
             : data?.error || data?.promo_code || t('cart.orderFailed')
       )
@@ -208,6 +281,36 @@ export default function Cart() {
           <aside className={styles.summary} data-reveal>
             <h2>{t('cart.summaryTitle')}</h2>
 
+            <div className={styles.methodBox}>
+              <div className={styles.methodToggle} data-method={method || undefined} role="group" aria-label={t('cart.method')}>
+                <button
+                  type="button"
+                  className={method === 'pickup' ? styles.methodOn : ''}
+                  aria-pressed={method === 'pickup'}
+                  onClick={() => setModal('pickup')}
+                >
+                  <StoreIcon /> {t('cart.pickup')}
+                </button>
+                <button
+                  type="button"
+                  className={method === 'delivery' ? styles.methodOn : ''}
+                  aria-pressed={method === 'delivery'}
+                  onClick={() => setModal('delivery')}
+                >
+                  <TruckIcon /> {t('cart.delivery')}
+                </button>
+              </div>
+              {method === 'pickup' && <p className={styles.methodInfo}>{t('cart.pickupFrom')}</p>}
+              {method === 'delivery' && (
+                <p className={styles.methodInfo}>
+                  {form.recipient_name}, {form.recipient_phone}
+                  <br />
+                  {[form.city, form.district, form.street, form.house].filter(Boolean).join(', ')}
+                </p>
+              )}
+              {!method && <p className={styles.methodHint}>{t('cart.chooseMethod')}</p>}
+            </div>
+
             <div className={styles.rows}>
               <div className={styles.row}>
                 <span>{t('cart.products')}</span>
@@ -217,16 +320,18 @@ export default function Cart() {
                 <span>{t('cart.discount')}</span>
                 <strong className={styles.green}>{discount > 0 ? '−' : ''}{money(discount)}</strong>
               </div>
-              <div className={styles.row}>
-                <span>{t('cart.delivery')}</span>
-                <strong>{deliveryFee > 0 ? money(deliveryFee) : t('cart.free')}</strong>
-              </div>
+              {method === 'delivery' && (
+                <div className={`${styles.row} ${styles.flash}`}>
+                  <span>{t('cart.delivery')}</span>
+                  <strong key={deliveryFee}>{deliveryFee > 0 ? money(deliveryFee) : t('cart.free')}</strong>
+                </div>
+              )}
             </div>
 
             <div className={styles.totalRow}>
               <div>
                 <p>{t('cart.payTotal')}</p>
-                <strong>{money(payTotal)}</strong>
+                <strong key={payTotal} className={styles.flash}>{money(payTotal)}</strong>
               </div>
               <span className={styles.badge}>{t('cart.itemsCount', { n: totalItems })}</span>
             </div>
@@ -260,13 +365,18 @@ export default function Cart() {
               type="button"
               className={styles.checkoutBtn}
               onClick={placeOrder}
-              disabled={submitting || items.length === 0}
+              disabled={submitting || items.length === 0 || !method}
             >
               <CardIcon /> {submitting ? t('cart.ordering') : t('cart.checkout')}
             </button>
           </aside>
         </div>
       </div>
+
+      <Suspense fallback={null}>
+        {modal === 'pickup' && <PickupModal initial={form} onConfirm={confirmPickup} onClose={() => setModal(null)} />}
+        {modal === 'delivery' && <DeliveryModal initial={form} onConfirm={confirmDelivery} onClose={() => setModal(null)} />}
+      </Suspense>
     </main>
   )
 }

@@ -168,12 +168,13 @@ export const updateBookReview = (reviewId, bookId, review) =>
 
 const toOrderItems = (items) => items.map((item) => ({ book_id: item.id, quantity: item.quantity }))
 
-export const checkoutOrder = (items, promoCode = '') =>
-  api.post('/cart/checkout/', { items: toOrderItems(items), promo_code: promoCode })
+// delivery: { delivery_method, recipient_name, recipient_phone, city, district, street, house, delivery_comment }
+export const checkoutOrder = (items, promoCode = '', delivery = {}) =>
+  api.post('/cart/checkout/', { items: toOrderItems(items), promo_code: promoCode, ...delivery })
 
 // Savat hisob-kitobi: chegirma, yetkazib berish va to'lov summasi
-export const getCartQuote = (items, promoCode = '') =>
-  api.post('/cart/quote/', { items: toOrderItems(items), promo_code: promoCode }, { skipAuth: true })
+export const getCartQuote = (items, promoCode = '', deliveryMethod = 'delivery') =>
+  api.post('/cart/quote/', { items: toOrderItems(items), promo_code: promoCode, delivery_method: deliveryMethod }, { skipAuth: true })
 
 export const getMyOrders = () =>
   api.get('/order/', { params: { page_size: 100 } })

@@ -1,3 +1,5 @@
+import re
+
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import update_last_login
 from django.contrib.auth.models import User
@@ -95,6 +97,17 @@ def remove_from_cart(request, item_id):
     return Response({'message': "O'chirildi"}, status=200)
 
 
+PHONE_RE = re.compile(r'\+?[\d\s()\-]{7,24}')
+DELIVERY_TEXT_FIELDS = ('recipient_name', 'recipient_phone', 'city', 'district', 'street', 'house', 'delivery_comment')
+REQUIRED_DELIVERY = {
+    'recipient_name': 'Ismni kiriting.',
+    'recipient_phone': 'Telefon raqamini kiriting.',
+    'city': 'Viloyat yoki shaharni kiriting.',
+    'street': "Ko'cha yoki manzilni kiriting.",
+}
+PHONE_ERROR = "Telefon raqami noto'g'ri (kamida 9 ta raqam)."
+
+
 class CheckoutItemSerializer(serializers.Serializer):
     book_id = serializers.IntegerField()
     quantity = serializers.IntegerField(min_value=1, max_value=100)
@@ -103,6 +116,39 @@ class CheckoutItemSerializer(serializers.Serializer):
 class CheckoutSerializer(serializers.Serializer):
     items = CheckoutItemSerializer(many=True, allow_empty=False)
     promo_code = serializers.CharField(required=False, allow_blank=True, max_length=32)
+    delivery_method = serializers.ChoiceField(choices=['pickup', 'delivery'], required=False)
+    recipient_name = serializers.CharField(required=False, allow_blank=True, max_length=150)
+    recipient_phone = serializers.CharField(required=False, allow_blank=True, max_length=32)
+    city = serializers.CharField(required=False, allow_blank=True, max_length=100)
+    district = serializers.CharField(required=False, allow_blank=True, max_length=100)
+    street = serializers.CharField(required=False, allow_blank=True, max_length=200)
+    house = serializers.CharField(required=False, allow_blank=True, max_length=50)
+    delivery_comment = serializers.CharField(required=False, allow_blank=True, max_length=300)
+    # Xaritadagi nuqta (ixtiyoriy, ikkalasi birga)
+    delivery_lat = serializers.FloatField(required=False, allow_null=True, min_value=-90, max_value=90)
+    delivery_lng = serializers.FloatField(required=False, allow_null=True, min_value=-180, max_value=180)
+
+    def validate(self, data):
+        # Usul yuborilmasa (eski mijoz) 'delivery' deb olinadi, lekin manzil talab qilinmaydi.
+        # Buyurtma berishda (strict) usul aniq 'delivery' bo'lsa ism, telefon, shahar va ko'cha majburiy.
+        explicit = 'delivery_method' in data
+        data.setdefault('delivery_method', 'delivery')
+        for key in DELIVERY_TEXT_FIELDS:
+            data[key] = data.get(key, '').strip()
+        errors = {}
+        phone = data['recipient_phone']
+        if phone and (not PHONE_RE.fullmatch(phone) or len(re.sub(r'\D', '', phone)) < 9):
+            errors['recipient_phone'] = PHONE_ERROR
+        if self.context.get('strict') and data['delivery_method'] == 'delivery' and explicit:
+            for key, message in REQUIRED_DELIVERY.items():
+                if not data[key]:
+                    errors[key] = message
+        lat, lng = data.get('delivery_lat'), data.get('delivery_lng')
+        if (lat is None) != (lng is None):
+            errors['delivery_lat'] = "Koordinata to'liq emas."
+        if errors:
+            raise serializers.ValidationError(errors)
+        return data
 
 
 def merge_quantities(entries):
@@ -127,7 +173,7 @@ def quote(request):
 
     code = serializer.validated_data.get('promo_code', '')
     promo = find_promo(code)
-    result = calculate_totals(subtotal, promo)
+    result = calculate_totals(subtotal, promo, serializer.validated_data['delivery_method'])
     result['promo'] = {'code': promo.code, 'percent': promo.discount_percent} if promo else None
     result['promo_valid'] = promo is not None or not code.strip()
     return Response(result)
@@ -138,7 +184,7 @@ def quote(request):
 @permission_classes([IsAuthenticated])
 def checkout(request):
     """ Buyurtma berish: yuborilgan kitoblardan tasdiqlangan buyurtma yaratadi """
-    serializer = CheckoutSerializer(data=request.data)
+    serializer = CheckoutSerializer(data=request.data, context={'strict': True})
     serializer.is_valid(raise_exception=True)
 
     quantities = merge_quantities(serializer.validated_data['items'])
@@ -154,7 +200,14 @@ def checkout(request):
         return Response({'promo_code': "Promo kod topilmadi yoki faol emas."}, status=400)
 
     subtotal = sum((books[book_id].price or 0) * qty for book_id, qty in quantities.items())
-    totals = calculate_totals(subtotal, promo)
+    data = serializer.validated_data
+    method = data['delivery_method']
+    totals = calculate_totals(subtotal, promo, method)
+    # Olib ketishda manzil saqlanmaydi (faqat ixtiyoriy ism/telefon)
+    address = {k: data[k] for k in ('city', 'district', 'street', 'house', 'delivery_comment')} if method == 'delivery' else {}
+    if method == 'delivery' and data.get('delivery_lat') is not None:
+        address['delivery_lat'] = round(data['delivery_lat'], 6)
+        address['delivery_lng'] = round(data['delivery_lng'], 6)
 
     with transaction.atomic():
         shortages = stock.reserve(quantities)
@@ -165,6 +218,10 @@ def checkout(request):
                 promo_code=promo.code if promo else '',
                 discount=totals['discount'],
                 delivery_fee=totals['delivery_fee'],
+                delivery_method=method,
+                recipient_name=data['recipient_name'],
+                recipient_phone=data['recipient_phone'],
+                **address,
             )
             OrderItem.objects.bulk_create(
                 OrderItem(order=order, book=books[book_id], quantity=qty,

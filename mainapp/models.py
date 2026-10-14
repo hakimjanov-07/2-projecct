@@ -111,12 +111,32 @@ class Order(models.Model):
         ('cancelled', 'Bekor qilingan'),
     )
     STAGES = ('confirmed', 'processing', 'shipped', 'delivered')
+    DELIVERY_METHODS = (('delivery', 'Yetkazib berish'), ('pickup', 'Olib ketish'))
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     status = models.CharField(max_length=20, choices=STATUS, default='pending')
     promo_code = models.CharField(max_length=32, blank=True, default='')
     discount = models.PositiveIntegerField(default=0)
     delivery_fee = models.PositiveIntegerField(default=0)
+    # Qabul qilish usuli: eski buyurtmalar uchun 'delivery' (ular har doim yetkazib berilgan)
+    delivery_method = models.CharField(max_length=10, choices=DELIVERY_METHODS, default='delivery')
+    recipient_name = models.CharField(max_length=150, blank=True, default='', verbose_name='Qabul qiluvchi:')
+    recipient_phone = models.CharField(max_length=32, blank=True, default='', verbose_name='Telefon:')
+    city = models.CharField(max_length=100, blank=True, default='', verbose_name='Viloyat/shahar:')
+    district = models.CharField(max_length=100, blank=True, default='', verbose_name='Tuman:')
+    street = models.CharField(max_length=200, blank=True, default='', verbose_name="Ko'cha:")
+    house = models.CharField(max_length=50, blank=True, default='', verbose_name='Uy/xonadon:')
+    delivery_comment = models.CharField(max_length=300, blank=True, default='', verbose_name='Izoh:')
+    # Xaritada belgilangan nuqta (ixtiyoriy)
+    delivery_lat = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, verbose_name='Kenglik:')
+    delivery_lng = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, verbose_name='Uzunlik:')
     created_on = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def address_text(self):
+        """ Yetkazib berish manzili bitta qatorda (olib ketishda bo'sh) """
+        if self.delivery_method != 'delivery':
+            return ''
+        return ', '.join(p for p in (self.city, self.district, self.street, self.house) if p)
 
     def __str__(self):
         return f"{self.user.username} - {self.status}"
