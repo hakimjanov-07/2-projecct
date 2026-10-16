@@ -34,11 +34,12 @@ class Book_Serializer(serializers.ModelSerializer):
         return bool(obj.pdf_file)
 
     def get_avg_rating(self, obj):
-        avg = obj.reviews.aggregate(avg=Avg('rating'))['avg']
+        # Viewset annotatsiyasi bo'lsa shuni olamiz (N+1 yo'q), bo'lmasa eski hisoblash
+        avg = obj.avg_rating if hasattr(obj, 'reviews_count') else obj.reviews.aggregate(avg=Avg('rating'))['avg']
         return round(avg, 1) if avg is not None else 0
 
     def get_reviews_count(self, obj):
-        return obj.reviews.count()
+        return obj.reviews_count if hasattr(obj, 'reviews_count') else obj.reviews.count()
 
     class Meta:
         model = Book
@@ -121,7 +122,8 @@ class RegisterSerializer(serializers.Serializer):
 
     def validate_email(self, value):
         if User.objects.filter(email__iexact=value).exists():
-            raise serializers.ValidationError('Bu email allaqachon ro\'yxatdan o\'tgan.')
+            # Email mavjudligi aniq aytilmaydi (begona email bo'yicha hisob qidirib bo'lmasin)
+            raise serializers.ValidationError("Bu ma'lumotlar bilan ro'yxatdan o'tib bo'lmadi. Hisobingiz bo'lsa, tizimga kiring yoki parolni tiklang.")
         return value
 
     def validate(self, attrs):
@@ -131,6 +133,10 @@ class RegisterSerializer(serializers.Serializer):
         except DjangoValidationError as error:
             raise serializers.ValidationError({'password': list(error.messages)})
         return attrs
+
+
+MAX_REVIEW_PHOTO_BYTES = 2 * 1024 * 1024
+MAX_REVIEW_COMMENT = 2000
 
 
 class Review_Serializer(serializers.ModelSerializer):
@@ -143,6 +149,13 @@ class Review_Serializer(serializers.ModelSerializer):
         request = self.context.get('request')
         photo_url = obj.photo.url
         return request.build_absolute_uri(photo_url) if request else photo_url
+
+    def validate_photo(self, value):
+        # Rasm ixtiyoriy; bo'lsa panel bilan bir xil tekshiruv (JPG/PNG/WEBP), lekin hajm 2 MB gacha
+        if not value:
+            return value
+        from .panel_books import validate_photo
+        return validate_photo(value, MAX_REVIEW_PHOTO_BYTES)
 
     def validate_book(self, value):
         if self.instance and value != self.instance.book:
@@ -160,6 +173,7 @@ class Review_Serializer(serializers.ModelSerializer):
         model = Review
         fields = ['id', 'book', 'user', 'username', 'rating', 'comment', 'photo', 'photo_url', 'created_on']
         read_only_fields = ['user', 'created_on']
+        extra_kwargs = {'comment': {'max_length': MAX_REVIEW_COMMENT}}
 
 
 class ProfileSerializer(serializers.Serializer):
@@ -168,9 +182,20 @@ class ProfileSerializer(serializers.Serializer):
     phone = serializers.CharField(max_length=32, allow_blank=True, required=False)
     address = serializers.CharField(max_length=255, allow_blank=True, required=False)
     bio = serializers.CharField(max_length=1000, allow_blank=True, required=False)
+    # Faqat email o'zgarganda tekshiriladi; saqlanmaydi va javobda qaytmaydi
+    current_password = serializers.CharField(write_only=True, required=False, allow_blank=True, trim_whitespace=False)
 
     def validate_email(self, value):
         user = self.context['request'].user
         if value and User.objects.filter(email__iexact=value).exclude(pk=user.pk).exists():
-            raise serializers.ValidationError("Bu email boshqa foydalanuvchida bor.")
+            raise serializers.ValidationError("Bu email band.")
         return value
+
+    def validate(self, attrs):
+        user = self.context['request'].user
+        email = attrs.get('email')
+        password = attrs.pop('current_password', '')
+        if email and email.lower() != (user.email or '').lower():
+            if not password or not user.check_password(password):
+                raise serializers.ValidationError({'current_password': ["Joriy parolni to'g'ri kiriting."]})
+        return attrs

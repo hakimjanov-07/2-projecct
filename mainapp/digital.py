@@ -1,11 +1,16 @@
 """
 Audio va PDF kitoblar: faqat sotib olganlar (va adminlar) uchun.
-1) GET /api/book/<id>/digital/  - kirish huquqini tekshiradi va imzolangan, 2 soat amal qiladigan havolalar beradi
+1) GET /api/book/<id>/digital/  - kirish huquqini tekshiradi va imzolangan, 30 daqiqa amal qiladigan havolalar beradi
 2) GET /api/files/<token>/      - havola imzosini tekshirib faylni beradi (audio sakrab o'tishi uchun Range bilan)
+
+Havola <audio src> / <a href> orqali ochiladi va Authorization sarlavhasi yubora olmaydi, shuning uchun login talab
+qilinmaydi. Buning o'rniga havola tokeniga foydalanuvchi ham yoziladi va har yuklashda uning huquqi bazadan qayta
+tekshiriladi: buyurtma bekor qilinsa yoki hisob o'chirilsa, havola muddatidan oldin ishlamay qoladi.
 """
 import mimetypes
 import re
 
+from django.contrib.auth.models import User
 from django.core import signing
 from django.http import Http404, HttpResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404
@@ -16,7 +21,7 @@ from rest_framework.response import Response
 from .models import Book, Order, OrderItem
 
 SALT = 'book-digital-file'
-LINK_MAX_AGE = 2 * 60 * 60  # soniya
+LINK_MAX_AGE = 30 * 60  # soniya
 CHUNK = 64 * 1024
 FALLBACK_TYPES = {'audio': 'audio/mpeg', 'pdf': 'application/pdf'}
 
@@ -30,8 +35,8 @@ def can_access_digital(user, book):
     ).exists()
 
 
-def _sign(book_id, kind):
-    return signing.dumps({'b': book_id, 'k': kind}, salt=SALT)
+def _sign(book_id, kind, user_id):
+    return signing.dumps({'b': book_id, 'k': kind, 'u': user_id}, salt=SALT)
 
 
 @api_view(['GET'])
@@ -44,7 +49,7 @@ def book_digital(request, pk):
     def link(kind, field):
         if not field:
             return None
-        return request.build_absolute_uri(f'/api/files/{_sign(book.id, kind)}/')
+        return request.build_absolute_uri(f'/api/files/{_sign(book.id, kind, request.user.id)}/')
 
     return Response({'audio': link('audio', book.audio_file), 'pdf': link('pdf', book.pdf_file)})
 
@@ -70,6 +75,7 @@ def _serve(request, field, kind):
             handle.close()
             response = HttpResponse(status=416)
             response['Content-Range'] = f'bytes */{size}'
+            response['Referrer-Policy'] = 'no-referrer'
             return response
         status = 206
 
@@ -92,7 +98,8 @@ def _serve(request, field, kind):
     response['Content-Length'] = str(length)
     response['Accept-Ranges'] = 'bytes'
     response['Content-Disposition'] = 'inline'
-    response['Cache-Control'] = 'private, max-age=3600'
+    response['Cache-Control'] = f'private, max-age={LINK_MAX_AGE}'
+    response['Referrer-Policy'] = 'no-referrer'  # token manzilda: boshqa saytlarga Referer bilan chiqib ketmasin
     if status == 206:
         response['Content-Range'] = f'bytes {start}-{end}/{size}'
     return response
@@ -106,7 +113,11 @@ def book_file(request, token):
         data = signing.loads(token, salt=SALT, max_age=LINK_MAX_AGE)
         kind = data['k']
         book = Book.objects.get(pk=data['b'])
-    except (signing.BadSignature, KeyError, Book.DoesNotExist):
+        user = User.objects.get(pk=data['u'], is_active=True)  # 'u' yo'q (eski havola) -> KeyError -> 404
+    except (signing.BadSignature, KeyError, Book.DoesNotExist, User.DoesNotExist):
+        raise Http404
+    # Havola berilgandan keyin buyurtma bekor qilingan bo'lsa ham fayl berilmaydi
+    if not can_access_digital(user, book):
         raise Http404
     field = book.audio_file if kind == 'audio' else book.pdf_file if kind == 'pdf' else None
     if not field:
