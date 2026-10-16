@@ -26,10 +26,12 @@ CC BY / CC BY-SA litsenziyali rasmlar uchun muallif (rasm egasi) ko'rsatilgan; C
 | Yuval Noy Xarari | https://commons.wikimedia.org/wiki/File:MKr364751_Yuval_Noah_Harari_(Frankfurter_Buchmesse_2024).jpg | CC BY-SA 4.0 | Martin Kraft |
 | Jorj Oruell | https://commons.wikimedia.org/wiki/File:George_Orwell_press_photo.jpg | Public domain | Branch of the National Union of Journalists (BNUJ) |
 | Viktor Gyugo | https://commons.wikimedia.org/wiki/File:Victor_Hugo.jpg | Public domain | Walery (Stanisław Julian Ostroróg) |
+| Oybek | https://commons.wikimedia.org/wiki/File:Oybek_(Guliston_Magazine).jpg | Public domain (Commons belgisi) | Noma'lum muallif (Guliston jurnali); litsenziya Commons ma'lumotiga tayanadi |
 
-## Rasmi qo'yilmagan mualliflar
+## Avatarlar (erkin portret topilmaganlar)
+Erkin litsenziyali portret topilmagan mualliflar uchun ismining bosh harflari bilan sayt uslubidagi jigarrang avatar yasalgan (600x600 PNG, media/photo_author/avatar-<id>-<slug>.png): Abdulla Qodiriy, Mirtemir, Xurshid Do'stmuhammad, Abdulla Qahhor, Pirimqul Qodirov, Said Ahmad, Tog'ay Murod, Nodar Dumbadze.
 
-Erkin litsenziyali, aniq tasdiqlangan portret topilmadi: Abdulla Qodiriy, Mirtemir, Xurshid Do'stmuhammad, Abdulla Qahhor, Pirimqul Qodirov, Said Ahmad, Tog'ay Murod, Nodar Dumbadze, Oltinsoy.
+Oltinsoy (id 2) to'qima muallif edi; o'rniga Oybek qo'yilgan.
 
 ## Matn manbalari
 
