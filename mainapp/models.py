@@ -56,7 +56,7 @@ class Book(models.Model):
     pages = models.PositiveIntegerField(verbose_name='Sahifalar soni:')
     audio_file = models.FileField(upload_to='audio_file/', storage=PrivateStorage(), verbose_name='Audio fayl:', null=True, blank=True)
     pdf_file = models.FileField(upload_to='pdf_file/', storage=PrivateStorage(), verbose_name='PDF fayl:', null=True, blank=True)
-    photo = models.ImageField(upload_to='photo_book/', verbose_name='Raasmi:')
+    photo = models.ImageField(upload_to='photo_book/', verbose_name='Raasmi:', blank=True)
     # Ombordagi soni. Bo'sh = qoldiq hisoblanmaydi (cheklanmagan), 0 = tugagan
     stock = models.PositiveIntegerField(null=True, blank=True, verbose_name='Ombordagi soni:')
 

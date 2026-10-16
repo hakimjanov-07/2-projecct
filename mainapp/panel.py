@@ -367,6 +367,16 @@ class PanelBookSerializer(serializers.ModelSerializer):
     has_audio = serializers.SerializerMethodField()
     has_pdf = serializers.SerializerMethodField()
     markup = serializers.SerializerMethodField()
+    # Muqova: faqat yozish (PATCH multipart); ro'yxatda photo_url ko'rsatiladi
+    photo = serializers.ImageField(write_only=True, required=False)
+    photo_url = serializers.SerializerMethodField()
+
+    def validate_photo(self, value):
+        from .panel_books import validate_photo
+        return validate_photo(value)
+
+    def get_photo_url(self, obj):
+        return obj.photo.url if obj.photo else ''
 
     def get_markup(self, obj):
         """ Ustama = narx - tannarx (ikkalasi ham bo'lsa) """
@@ -384,15 +394,20 @@ class PanelBookSerializer(serializers.ModelSerializer):
         model = Book
         fields = [
             'id', 'name', 'category_name', 'author_name', 'language', 'price', 'cost_price', 'markup', 'status', 'stock',
-            'created_on', 'sold', 'revenue', 'orders_count', 'has_audio', 'has_pdf',
+            'created_on', 'sold', 'revenue', 'orders_count', 'has_audio', 'has_pdf', 'photo', 'photo_url',
         ]
-        read_only_fields = [f for f in fields if f not in ('price', 'cost_price', 'status', 'stock')]
+        read_only_fields = [f for f in fields if f not in ('price', 'cost_price', 'status', 'stock', 'photo')]
 
 
-class PanelBookList(generics.ListAPIView):
+class PanelBookList(generics.ListCreateAPIView):
+    """ GET: ro'yxat; POST: yangi kitob (JSON yoki multipart; mantiq panel_books.py da) """
     permission_classes = [IsAdminUser]
     serializer_class = PanelBookSerializer
     ORDERING = {'sold', 'revenue', 'name', 'price', 'created_on', 'orders_count', 'stock'}
+
+    def create(self, request, *args, **kwargs):
+        from .panel_books import create_book
+        return create_book(request)
 
     def get_queryset(self):
         active = Q(orderitem__order__status__in=ACTIVE)
@@ -428,7 +443,7 @@ class PanelBookList(generics.ListAPIView):
 
 
 class PanelBookDetail(generics.UpdateAPIView):
-    """ PATCH: faqat narx, tannarx, ombor va holat (qolgan tahrir Django adminda) """
+    """ PATCH: narx, tannarx, ombor, holat va muqova rasmi (qolgan tahrir Django adminda) """
     permission_classes = [IsAdminUser]
     serializer_class = PanelBookSerializer
     http_method_names = ['patch', 'options']

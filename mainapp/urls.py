@@ -3,6 +3,7 @@ from rest_framework import routers
 
 from .digital import book_digital, book_file
 from .panel_export import export_csv
+from .panel_books import panel_book_options, panel_books_import, panel_books_import_template
 from .panel_promos import PanelPromoDetail, PanelPromoList
 from .panel import (
     PanelBookDetail, PanelBookList, PanelOrderDetail, PanelOrderList, PanelUserList,
@@ -29,10 +30,13 @@ urlpatterns = [
     path('profile/', my_profile),
     path('panel/login/', panel_login),
     path('panel/summary/', panel_summary),
-    path('panel/orders/', PanelOrderList.as_view()),
     path('panel/orders/new-count/', panel_new_orders_count),
+    path('panel/orders/', PanelOrderList.as_view()),
     path('panel/orders/<int:pk>/', PanelOrderDetail.as_view()),
     path('panel/books/', PanelBookList.as_view()),
+    path('panel/books/options/', panel_book_options),
+    path('panel/books/import/', panel_books_import),
+    path('panel/books/import-template/', panel_books_import_template),
     path('panel/books/<int:pk>/', PanelBookDetail.as_view()),
     path('panel/users/', PanelUserList.as_view()),
     path('panel/users/<int:pk>/', panel_user_detail),

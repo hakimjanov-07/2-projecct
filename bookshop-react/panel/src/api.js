@@ -53,6 +53,17 @@ export const getOrder =(id) => api.get(`/panel/orders/${id}/`).then((r) => r.dat
 export const setOrderStatus = (id, status) => api.patch(`/panel/orders/${id}/`, { status }).then((r) => r.data)
 export const getBooks = (params) => api.get('/panel/books/', { params }).then((r) => r.data)
 export const updateBook = (id, data) => api.patch(`/panel/books/${id}/`, data).then((r) => r.data)
+// Yangi kitob / muqova: FormData (multipart) yoki oddiy obyekt yuboriladi
+export const createBook = (data) => api.post('/panel/books/', data).then((r) => r.data)
+export const getBookOptions = () => api.get('/panel/books/options/').then((r) => r.data)
+// Ommaviy qo'shish: mode = 'preview' (hech narsa yozilmaydi) yoki 'commit'
+export const importBooks = (file, mode, skipErrors = false) => {
+  const form = new FormData()
+  form.append('file', file)
+  form.append('mode', mode)
+  if (skipErrors) form.append('skip_errors', '1')
+  return api.post('/panel/books/import/', form, { timeout: 60000 }).then((r) => r.data)
+}
 export const getUsers = (params) => api.get('/panel/users/', { params }).then((r) => r.data)
 export const getUser = (id) => api.get(`/panel/users/${id}/`).then((r) => r.data)
 
@@ -62,15 +73,24 @@ export const updatePromo = (id, data) => api.patch(`/panel/promos/${id}/`, data)
 export const deletePromo = (id) => api.delete(`/panel/promos/${id}/`)
 
 // CSV (Excel) yuklab olish: token kerak bo'lgani uchun fayl so'rov bilan olinib, brauzerga saqlatiladi
-export const downloadCsv = async (kind, params = {}) => {
-  const response = await api.get(`/panel/export/${kind}/`, { params, responseType: 'blob' })
+const saveResponse = (response, fallbackName) => {
   const match = /filename="([^"]+)"/.exec(response.headers['content-disposition'] || '')
   const url = URL.createObjectURL(response.data)
   const link = document.createElement('a')
   link.href = url
-  link.download = match ? match[1] : `${kind}.csv`
+  link.download = match ? match[1] : fallbackName
   document.body.appendChild(link)
   link.click()
   link.remove()
   URL.revokeObjectURL(url)
+}
+
+export const downloadCsv = async (kind, params = {}) => {
+  const response = await api.get(`/panel/export/${kind}/`, { params, responseType: 'blob' })
+  saveResponse(response, `${kind}.csv`)
+}
+
+export const downloadBookTemplate = async () => {
+  const response = await api.get('/panel/books/import-template/', { responseType: 'blob' })
+  saveResponse(response, 'kitoblar-namuna.csv')
 }

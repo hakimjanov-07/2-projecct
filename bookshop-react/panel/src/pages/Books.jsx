@@ -1,10 +1,13 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { getBooks, updateBook } from '../api'
 import { useFetch } from '../useFetch'
 import { date, money, num } from '../format'
 import { Loading, Pagination, SortTh } from '../components/Bits'
 import CsvButton from '../components/CsvButton'
+import BookForm from '../components/BookForm'
+import { photoProblem } from '../photo'
+import BulkImport from '../components/BulkImport'
 
 const PAGE_SIZE = 20
 const LOW = 5
@@ -19,6 +22,10 @@ export default function Books() {
   const [search, setSearch] = useState(q)
   const [editing, setEditing] = useState(null) // { id, field: 'price' | 'stock', value }
   const [message, setMessage] = useState('')
+  const [notice, setNotice] = useState('')
+  const [dialog, setDialog] = useState(null) // 'add' | 'bulk'
+  const photoInput = useRef(null)
+  const photoFor = useRef(null) // rasm yuklanayotgan kitob ID
 
   const key = `${page}|${q}|${status}|${stock}|${ordering}`
   const { data, error, loading, reload } = useFetch(
@@ -57,6 +64,25 @@ export default function Books() {
     }
   }
 
+  // Mavjud kitobga muqova rasmi yuklash (PATCH multipart)
+  const uploadPhoto = async (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file || !photoFor.current) return
+    const problem = photoProblem(file)
+    if (problem) { setMessage(problem); return }
+    setMessage('')
+    try {
+      const body = new FormData()
+      body.append('photo', file)
+      await updateBook(photoFor.current, body)
+      setNotice('Muqova yuklandi.')
+      reload()
+    } catch (err) {
+      setMessage(err.response?.data?.photo?.[0] || "Rasmni yuklab bo'lmadi.")
+    }
+  }
+
   const sortProps = { ordering, onSort: (value) => update({ ordering: value }) }
 
   const editor = (book, field) => (
@@ -83,7 +109,11 @@ export default function Books() {
       <div className="page-head">
         <div>
           <h1>Kitoblar</h1>
-          <p className="muted">Sotuv statistikasi. Narx, tannarx, ombor qoldig'i va holatni shu yerda o'zgartirish mumkin; boshqa maydonlar Django adminda. Ombor bo'sh bo'lsa, qoldiq hisoblanmaydi.</p>
+          <p className="muted">Sotuv statistikasi. Narx, tannarx, ombor qoldig'i va holatni shu yerda o'zgartirish mumkin; audio/PDF va boshqa maydonlar Django adminda. Ombor bo'sh bo'lsa, qoldiq hisoblanmaydi.</p>
+        </div>
+        <div className="page-actions">
+          <button type="button" className="btn btn-ghost" onClick={() => { setNotice(''); setDialog('bulk') }}>Ommaviy qo'shish</button>
+          <button type="button" className="btn btn-primary" onClick={() => { setNotice(''); setDialog('add') }}>+ Kitob qo'shish</button>
         </div>
       </div>
 
@@ -106,6 +136,15 @@ export default function Books() {
       </form>
 
       {message && <p className="alert">{message}</p>}
+      {notice && <p className="notice-ok">{notice}</p>}
+      <input ref={photoInput} type="file" hidden accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onChange={uploadPhoto} />
+      {dialog === 'add' && (
+        <BookForm
+          onClose={() => setDialog(null)}
+          onCreated={(created) => { setDialog(null); setNotice(`"${created.name}" qo'shildi.`); setSearch(''); setParams({ ordering: '-created_on' }, { replace: true }); reload() }}
+        />
+      )}
+      {dialog === 'bulk' && <BulkImport onClose={() => setDialog(null)} onDone={() => { setSearch(''); setParams({ ordering: '-created_on' }, { replace: true }); reload() }} />}
 
       {!data ? <Loading error={error} /> : (
         <div className="card">
@@ -131,7 +170,19 @@ export default function Books() {
                 <tbody>
                   {data.results.map((b) => (
                     <tr key={b.id}>
-                      <td><strong>{b.name}</strong><small className="sub">{b.author_name}</small></td>
+                      <td>
+                        <div className="book-cell">
+                          <button
+                            type="button"
+                            className="thumb thumb-btn"
+                            title={b.photo_url ? "Muqovani almashtirish" : 'Rasm yuklash'}
+                            onClick={() => { photoFor.current = b.id; photoInput.current?.click() }}
+                          >
+                            {b.photo_url ? <img src={b.photo_url} alt="" loading="lazy" /> : <span className="thumb-add">+ Rasm</span>}
+                          </button>
+                          <div><strong>{b.name}</strong><small className="sub">{b.author_name}</small></div>
+                        </div>
+                      </td>
                       <td>{b.category_name}</td>
                       <td className="right">
                         {isEditing(b, 'price') ? editor(b, 'price') : (

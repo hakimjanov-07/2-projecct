@@ -1225,3 +1225,268 @@ class DeliveryMethodTests(BookShopAPITestCase):
         self.client.force_authenticate(user=staff)
         det = self.client.get(f"/api/panel/orders/{res.data['id']}/").data
         self.assertEqual((det['delivery_lat'], det['delivery_lng']), (41.3, 69.2))
+
+
+
+import io
+import shutil
+import tempfile
+
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import override_settings
+from PIL import Image
+
+TEST_MEDIA = tempfile.mkdtemp(prefix='bookshop-test-media-')
+
+
+def png_file(name='cover.png', size=(10, 10)):
+    buffer = io.BytesIO()
+    Image.new('RGB', size, 'brown').save(buffer, 'PNG')
+    return SimpleUploadedFile(name, buffer.getvalue(), content_type='image/png')
+
+
+def csv_file(text, encoding='utf-8', name='kitoblar.csv'):
+    return SimpleUploadedFile(name, text.encode(encoding) if isinstance(text, str) else text, content_type='text/csv')
+
+
+@override_settings(MEDIA_ROOT=TEST_MEDIA)
+class PanelBookAddTests(TestCase):
+    """ Panel: bitta kitob qo'shish, rasm yuklash, ommaviy (CSV) qo'shish """
+
+    URL = '/api/panel/books/'
+    IMPORT = '/api/panel/books/import/'
+    HEAD = 'nom;muallif;kategoriya;til;narx;tannarx;sahifalar;nashriyot;tavsif;ombor;holat\n'
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(TEST_MEDIA, ignore_errors=True)
+
+    def setUp(self):
+        BookShopAPITestCase.setUp(self)
+        self.staff = User.objects.create_user(username='boss', password='password123', is_staff=True)
+        self.client.force_authenticate(user=self.staff)
+        self.payload = {'name': 'Yangi kitob', 'author': self.author.id, 'category': self.category.id, 'price': 50000, 'cost_price': 30000}
+
+    # --- bitta kitob ---
+    def test_create_success(self):
+        res = self.client.post(self.URL, {**self.payload, 'pages': 100, 'stock': 5, 'status': 'deactive'}, format='json')
+        self.assertEqual(res.status_code, 201, res.data)
+        book = Book.objects.get(pk=res.data['id'])
+        self.assertEqual((book.price, book.cost_price, book.pages, book.stock, book.status), (50000, 30000, 100, 5, 'deactive'))
+        self.assertEqual(book.publisher, '—')
+        self.assertFalse(book.photo)
+
+    def test_create_stock_null_is_unlimited(self):
+        res = self.client.post(self.URL, {**self.payload, 'stock': None}, format='json')
+        self.assertEqual(res.status_code, 201, res.data)
+        self.assertIsNone(Book.objects.get(pk=res.data['id']).stock)
+
+    def test_create_requires_fields(self):
+        for field in ('name', 'category', 'price', 'cost_price'):
+            data = {k: v for k, v in self.payload.items() if k != field}
+            res = self.client.post(self.URL, data, format='json')
+            self.assertEqual(res.status_code, 400, field)
+            self.assertIn(field, res.data)
+        data = {k: v for k, v in self.payload.items() if k != 'author'}
+        self.assertIn('author', self.client.post(self.URL, data, format='json').data)
+        self.assertEqual(Book.objects.count(), 1)
+
+    def test_create_invalid_price(self):
+        for bad in (0, -5, 'abc', 10.5):
+            res = self.client.post(self.URL, {**self.payload, 'price': bad}, format='json')
+            self.assertEqual(res.status_code, 400, bad)
+        self.assertEqual(self.client.post(self.URL, {**self.payload, 'cost_price': 0}, format='json').status_code, 400)
+
+    def test_price_below_cost_warns_but_saves(self):
+        res = self.client.post(self.URL, {**self.payload, 'price': 20000}, format='json')
+        self.assertEqual(res.status_code, 201)
+        self.assertTrue(res.data['warnings'])
+
+    def test_create_duplicate(self):
+        data = {**self.payload, 'name': "  o'TKAN   kunlar "}
+        res = self.client.post(self.URL, data, format='json')
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('name', res.data)
+
+    def test_create_forbidden_for_non_staff(self):
+        self.client.force_authenticate(user=User.objects.create_user(username='u', password='password123'))
+        self.assertEqual(self.client.post(self.URL, self.payload, format='json').status_code, 403)
+        self.client.force_authenticate(user=None)
+        self.assertEqual(self.client.post(self.URL, self.payload, format='json').status_code, 401)
+        self.assertEqual(Book.objects.count(), 1)
+
+    def test_create_new_author(self):
+        data = {k: v for k, v in self.payload.items() if k != 'author'}
+        res = self.client.post(self.URL, {**data, 'new_author': 'Yangi Ismli'}, format='json')
+        self.assertEqual(res.status_code, 201)
+        self.assertEqual(Book.objects.get(pk=res.data['id']).author.full_name, 'Yangi Ismli')
+        # bir xil ism (katta-kichik harf) bo'lsa, qayta yaratilmaydi
+        self.client.post(self.URL, {**data, 'name': 'Ikkinchi', 'new_author': ' yangi  ISMLI'}, format='json')
+        self.assertEqual(Author.objects.filter(full_name__iexact='Yangi Ismli').count(), 1)
+
+    def test_create_with_photo_multipart(self):
+        data = {**self.payload, 'photo': png_file(), 'stock': 3}
+        res = self.client.post(self.URL, data, format='multipart')
+        self.assertEqual(res.status_code, 201, res.data)
+        self.assertTrue(Book.objects.get(pk=res.data['id']).photo.name.startswith('photo_book/'))
+
+    def test_photo_type_validation(self):
+        fake = SimpleUploadedFile('shell.php', b'<?php echo 1;', content_type='image/png')
+        self.assertEqual(self.client.post(self.URL, {**self.payload, 'photo': fake}, format='multipart').status_code, 400)
+        svg = SimpleUploadedFile('a.svg', b'<svg xmlns="http://www.w3.org/2000/svg"/>', content_type='image/svg+xml')
+        self.assertEqual(self.client.post(self.URL, {**self.payload, 'photo': svg}, format='multipart').status_code, 400)
+        notimg = SimpleUploadedFile('a.png', b'not an image', content_type='image/png')
+        self.assertEqual(self.client.post(self.URL, {**self.payload, 'photo': notimg}, format='multipart').status_code, 400)
+        # test klienti MIME'ni fayl nomidan o'zi qo'yadi, shuning uchun MIME tekshiruvi to'g'ridan-to'g'ri sinaladi
+        from rest_framework.serializers import ValidationError
+        from .panel_books import validate_photo
+        wrong_mime = png_file()
+        wrong_mime.content_type = 'text/html'
+        with self.assertRaises(ValidationError):
+            validate_photo(wrong_mime)
+        self.assertEqual(Book.objects.count(), 1)
+
+    def test_photo_too_large(self):
+        from unittest import mock
+        with mock.patch('mainapp.panel_books.MAX_PHOTO_BYTES', 50):  # haqiqiy 5 MB rasm yaratmaslik uchun
+            res = self.client.post(self.URL, {**self.payload, 'photo': png_file()}, format='multipart')
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('photo', res.data)
+
+    def test_patch_photo(self):
+        res = self.client.patch(f'{self.URL}{self.book.id}/', {'photo': png_file()}, format='multipart')
+        self.assertEqual(res.status_code, 200, res.data)
+        self.book.refresh_from_db()
+        self.assertTrue(self.book.photo)
+        bad = SimpleUploadedFile('x.gif', b'GIF89a', content_type='image/gif')
+        self.assertEqual(self.client.patch(f'{self.URL}{self.book.id}/', {'photo': bad}, format='multipart').status_code, 400)
+
+    def test_options(self):
+        res = self.client.get(f'{self.URL}options/')
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['categories'][0]['name'], 'Badiiy adabiyot')
+        self.assertEqual(res.data['authors'][0]['name'], 'Abdulla Qodiriy')
+        self.client.force_authenticate(user=self.user)
+        self.assertEqual(self.client.get(f'{self.URL}options/').status_code, 403)
+
+    # --- ommaviy ---
+    def preview(self, text, **kw):
+        return self.client.post(self.IMPORT, {'file': csv_file(text, **kw), 'mode': 'preview'}, format='multipart')
+
+    def commit(self, text, **extra):
+        return self.client.post(self.IMPORT, {'file': csv_file(text), 'mode': 'commit', **extra}, format='multipart')
+
+    GOOD = HEAD + "Birinchi;abdulla qodiriy;BADIIY ADABIYOT;uzbek;40000;25000;100;Nashr;Tavsif;7;faol\n"
+
+    def test_preview_rows(self):
+        text = self.HEAD + (
+            "Yangi 1;Yangi Muallif;Badiiy adabiyot;uzbek;40000;25000;100;;;;faol\n"
+            "Yangi 2;yangi  muallif;Badiiy adabiyot;;1;1;;;;;\n"
+            "Xato narx;Abdulla Qodiriy;Badiiy adabiyot;uzbek;abc;100;;;;;\n"
+            "Xato kategoriya;Abdulla Qodiriy;Yo'q janr;uzbek;100;50;;;;;\n"
+            "Xato til;Abdulla Qodiriy;Badiiy adabiyot;klingon;100;50;;;;;\n"
+            "O'tkan KUNLAR;ABDULLA   qodiriy;Badiiy adabiyot;uzbek;100;50;;;;;\n"
+            "Yangi 1;Yangi Muallif;Badiiy adabiyot;uzbek;1;1;;;;;\n"
+        )
+        res = self.preview(text)
+        self.assertEqual(res.status_code, 200, res.data)
+        self.assertEqual([r['status'] for r in res.data['rows']], ['new', 'new', 'error', 'error', 'error', 'duplicate', 'duplicate'])
+        self.assertTrue(res.data['rows'][0]['new_author'])
+        self.assertFalse(res.data['rows'][1]['new_author'])  # faylda bir marta yaratiladi
+        self.assertEqual(res.data['summary'], {'total': 7, 'new': 2, 'duplicate': 2, 'error': 3, 'new_authors': 1})
+        self.assertEqual(res.data['rows'][2]['row'], 4)
+        # dry-run: hech narsa yozilmagan
+        self.assertEqual(Book.objects.count(), 1)
+        self.assertEqual(Author.objects.count(), 1)
+
+    def test_commit_case_insensitive_author_and_category(self):
+        res = self.commit(self.GOOD)
+        self.assertEqual(res.status_code, 201, res.data)
+        self.assertEqual(res.data['created'], 1)
+        book = Book.objects.get(name='Birinchi')
+        self.assertEqual(book.author_id, self.author.id)
+        self.assertEqual(book.category_id, self.category.id)
+        self.assertEqual((book.stock, book.pages, book.publisher), (7, 100, 'Nashr'))
+        self.assertFalse(book.photo)
+        self.assertEqual(Author.objects.count(), 1)
+
+    def test_commit_defaults_and_new_author(self):
+        res = self.commit(self.HEAD + "Bo'sh;Yangi A;Badiiy adabiyot;;100;50;;;;;\n")
+        self.assertEqual(res.status_code, 201, res.data)
+        book = Book.objects.get(name="Bo'sh")
+        self.assertEqual((book.language, book.status, book.stock, book.publisher, book.pages), ('uzbek', 'active', None, '—', 0))
+        self.assertEqual(book.author.full_name, 'Yangi A')
+
+    def test_commit_atomic_with_errors(self):
+        text = self.GOOD + "Xato;Abdulla Qodiriy;Badiiy adabiyot;uzbek;abc;1;;;;;\n"
+        res = self.commit(text)
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(Book.objects.count(), 1)  # hech narsa qo'shilmadi
+
+    def test_commit_skip_errors_option(self):
+        text = self.GOOD + "Xato;Abdulla Qodiriy;Badiiy adabiyot;uzbek;abc;1;;;;;\nO'tkan kunlar;Abdulla Qodiriy;Badiiy adabiyot;uzbek;5;5;;;;;\n"
+        res = self.commit(text, skip_errors='1')
+        self.assertEqual(res.status_code, 201)
+        self.assertEqual((res.data['created'], res.data['skipped_errors'], res.data['skipped_duplicates']), (1, 1, 1))
+        self.assertEqual(Book.objects.count(), 2)
+
+    def test_commit_rolls_back_on_exception(self):
+        from unittest import mock
+        with mock.patch('mainapp.panel_books.Book.objects.create', side_effect=[self.book, RuntimeError('boom')]):
+            text = self.HEAD + "A;Muallif X;Badiiy adabiyot;;1;1;;;;;\nB;Muallif X;Badiiy adabiyot;;1;1;;;;;\n"
+            with self.assertRaises(RuntimeError):
+                self.commit(text)
+        self.assertFalse(Author.objects.filter(full_name='Muallif X').exists())
+
+    def test_delimiters_and_bom(self):
+        comma = self.GOOD.replace(';', ',')
+        for text, encoding in ((self.GOOD, 'utf-8-sig'), (self.GOOD, 'utf-8'), (comma, 'utf-8'), (comma, 'utf-8-sig')):
+            res = self.preview(text, encoding=encoding)
+            self.assertEqual(res.status_code, 200, (encoding, res.data))
+            self.assertEqual(res.data['rows'][0]['status'], 'new')
+
+    def test_header_errors(self):
+        self.assertEqual(self.preview('').status_code, 400)
+        self.assertIn("bo'sh", self.preview('').data['detail'])
+        res = self.preview('a;b;c\n1;2;3\n')
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('majburiy ustun', res.data['detail'])
+        self.assertEqual(self.preview(self.HEAD).status_code, 400)  # faqat sarlavha
+        self.assertEqual(self.client.post(self.IMPORT, {'mode': 'preview'}, format='multipart').status_code, 400)
+
+    def test_bad_encoding(self):
+        res = self.preview(self.GOOD.replace('Tavsif', 'Тавсиф'), encoding='cp1251')
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('UTF-8', res.data['detail'])
+
+    def test_limits(self):
+        rows = ''.join(f'Kitob {i};Muallif;Badiiy adabiyot;;1;1;;;;;\n' for i in range(501))
+        res = self.preview(self.HEAD + rows)
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('500', res.data['detail'])
+        rows = ''.join(f'Kitob {i};Muallif;Badiiy adabiyot;;1;1;;;;;\n' for i in range(500))
+        self.assertEqual(self.preview(self.HEAD + rows).status_code, 200)
+        big = self.HEAD + 'x;' * (1024 * 1024 + 10)
+        res = self.preview(big)
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('2 MB', res.data['detail'])
+
+    def test_import_permissions_and_template(self):
+        self.client.force_authenticate(user=self.user)
+        self.assertEqual(self.client.post(self.IMPORT, {'file': csv_file(self.GOOD)}, format='multipart').status_code, 403)
+        self.assertEqual(self.client.get('/api/panel/books/import-template/').status_code, 403)
+        self.client.force_authenticate(user=self.staff)
+        res = self.client.get('/api/panel/books/import-template/')
+        self.assertEqual(res.status_code, 200)
+        body = res.content.decode('utf-8')
+        self.assertTrue(body.startswith('﻿nom;muallif;kategoriya'))
+        # namunaning o'zi preview'dan xatosiz o'tadi (kategoriya mavjud bo'lsa)
+        preview = self.preview(body)
+        self.assertEqual(preview.status_code, 200)
+        self.assertEqual(preview.data['summary']['error'], 0)
+
+    def test_formula_values_stored_as_text(self):
+        res = self.commit(self.HEAD + "=1+1;Muallif;Badiiy adabiyot;;1;1;;;=HYPERLINK(1);;\n")
+        self.assertEqual(res.status_code, 201)
+        self.assertEqual(Book.objects.get(name='=1+1').about, '=HYPERLINK(1)')
