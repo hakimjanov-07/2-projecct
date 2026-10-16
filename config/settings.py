@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'corsheaders',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',  # logout va parol almashganda refresh tokenni bekor qilish
 ]
 
 MIDDLEWARE = [
@@ -161,6 +162,8 @@ DEFAULT_FROM_EMAIL = formataddr((EMAIL_FROM_NAME, EMAIL_FROM_ADDRESS))
 PASSWORD_RESET_CODE_TTL_MINUTES = 15
 PASSWORD_RESET_MAX_ATTEMPTS = 5
 PASSWORD_RESET_RESEND_SECONDS = 60
+# Bitta hisobga soatiga yuboriladigan kodlar soni (oshsa ham javob bir xil, faqat xat yuborilmaydi)
+PASSWORD_RESET_MAX_PER_HOUR = config('PASSWORD_RESET_MAX_PER_HOUR', default=5, cast=int)
 
 # Yetkazib berish: shu summadan (chegirmadan keyin) boshlab bepul, aks holda DELIVERY_FEE
 DELIVERY_FEE = config('DELIVERY_FEE', default=20000, cast=int)
@@ -191,6 +194,11 @@ REST_FRAMEWORK = {
         'catalog': '100/minute',
         'password': '10/hour',
         'panel_login': '10/minute',
+        # Ochiq savat hisob-kitobi (promo kod mavjudligini terib topishdan himoya)
+        'quote': config('THROTTLE_QUOTE', default='60/minute'),
+        # Mijoz kirishi va ro'yxatdan o'tish: IP bo'yicha (parol terib topishdan himoya); env bilan o'zgartiriladi
+        'login': config('THROTTLE_LOGIN', default='10/minute'),
+        'register': config('THROTTLE_REGISTER', default='20/hour'),
     },
 
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -198,9 +206,20 @@ REST_FRAMEWORK = {
     ),
 }
 
+# Proksi qatlamlari soni (IP ni X-Forwarded-For dan to'g'ri olish uchun). Bo'sh bo'lsa DRF butun sarlavhaga
+# ishonadi va hujumchi uni soxtalashtirib throttle'dan o'ta oladi: productionda proksi orqasida albatta yozing.
+NUM_PROXIES = config('NUM_PROXIES', default=None)
+if NUM_PROXIES not in (None, ''):
+    REST_FRAMEWORK['NUM_PROXIES'] = int(NUM_PROXIES)
+
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    # Refresh almashtirilmaydi: eski klient (yangi refresh'ni saqlamaydi) buzilmasin. Bekor qilish: logout + parol o'zgarishi.
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': False,
+    # Tokenga parol hash'i yoziladi: parol o'zgarsa eski access/refresh tokenlar yaroqsiz bo'ladi
+    'CHECK_REVOKE_TOKEN': True,
 }
 
 
@@ -228,4 +247,20 @@ CORS_ALLOW_HEADERS = (
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
+    'idempotency-key',  # checkout: dublikat buyurtmadan himoya (frontend yuboradi)
 )
+
+
+# PRODUCTION XAVFSIZLIGI (faqat DEBUG=False bo'lganda yoqiladi; lokal DEBUG=True ga ta'sir qilmaydi)
+if not DEBUG:
+    # PythonAnywhere proksi orqasida: HTTPS ekanini X-Forwarded-Proto sarlavhasidan biladi
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # HSTS ehtiyotkor boshlanadi (1 soat); hammasi barqaror ishlagach env orqali oshiriladi (31536000 = 1 yil)
+    SECURE_HSTS_SECONDS = config('SECURE_HSTS_SECONDS', default=3600, cast=int)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    # Admin/CSRF uchun ishonchli HTTPS manzillar (masalan https://bookshoptest.pythonanywhere.com); bo'sh = faqat o'z domeni
+    CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='', cast=Csv())

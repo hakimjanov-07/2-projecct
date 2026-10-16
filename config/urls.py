@@ -14,8 +14,8 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from mainapp.views import login, password_forgot, password_reset, register
-from rest_framework_simplejwt.views import TokenRefreshView
+from mainapp.auth_tokens import SafeTokenRefreshView
+from mainapp.views import login, logout, password_forgot, password_reset, register
 
 from django.contrib import admin
 from django.urls import path, include
@@ -23,9 +23,13 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import re_path
 from rest_framework import permissions
+from rest_framework.authentication import SessionAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
+# Swagger: lokalda (DEBUG=True) hamma uchun ochiq; productionda faqat is_staff foydalanuvchiga
+# (brauzerda /admin/ orqali kirgan admin, yoki Bearer JWT). Anonim foydalanuvchi 401/403 oladi.
 schema_view = get_schema_view(
    openapi.Info(
       title="Book Shop API",
@@ -33,7 +37,8 @@ schema_view = get_schema_view(
       description="Book Shop API Documentation",
    ),
    public=True,
-   permission_classes=(permissions.AllowAny,),
+   permission_classes=(permissions.AllowAny,) if settings.DEBUG else (permissions.IsAdminUser,),
+   authentication_classes=(JWTAuthentication, SessionAuthentication),
 )
 
 
@@ -43,7 +48,8 @@ urlpatterns = [
     path("api/", include("mainapp.urls")),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('api/token/', login),                                # login
-    path('api/token/refresh/', TokenRefreshView.as_view()),   # token yangilash
+    path('api/token/refresh/', SafeTokenRefreshView.as_view()),   # token yangilash (parol o'zgargan bo'lsa 401)
+    path('api/logout/', logout),                              # refresh tokenni bekor qilish
     path('api/register/', register),
     path('api/password/forgot/', password_forgot),
     path('api/password/reset/', password_reset),
