@@ -12,8 +12,16 @@ const api = axios.create({
   timeout: 10000,
 })
 
+// Kirish/chiqish/sessiya tugashi: Navbar, Footer kabi komponentlar shu hodisa bilan yangilanadi (useAuthToken)
+export const AUTH_EVENT = 'auth-changed'
+export const notifyAuthChanged = () => window.dispatchEvent(new Event(AUTH_EVENT))
+
+// Chiqishda shaxsiy ma'lumotlar ham o'chadi (email, yetkazib berish manzili: 'bookshop-delivery'); savat va sevimlilar qoladi
+const SESSION_KEYS = ['access_token', 'refresh_token', 'username', 'user_info', 'user_email', 'bookshop-delivery']
+
 export const clearSession = () => {
-  ;['access_token', 'refresh_token', 'username', 'user_info'].forEach((key) => localStorage.removeItem(key))
+  SESSION_KEYS.forEach((key) => localStorage.removeItem(key))
+  notifyAuthChanged()
 }
 
 // Token faqat foydalanuvchi kirgan bo'lsa yuboriladi (login/register uchun skipAuth)
@@ -72,16 +80,33 @@ const writeCache = (key, data) => {
   }
 }
 
+// Kesh ishlatilganda (API yiqildi) StaleBanner uchun hodisa; shu so'rov keyin muvaffaqiyatli bo'lsa FRESH_EVENT
+export const STALE_EVENT = 'api-stale'
+export const FRESH_EVENT = 'api-fresh'
+const notifyCache = (name, key) => window.dispatchEvent(new CustomEvent(name, { detail: { key } }))
+
+// Kesh kaliti barcha parametrlarni o'z ichiga oladi (tartiblangan), shuning uchun turli filtrlar bir-birining keshini bosmaydi
+const listKey = (base, params = {}) => {
+  const pairs = Object.keys(params)
+    .filter((name) => params[name] !== undefined && params[name] !== null && params[name] !== '')
+    .sort()
+    .map((name) => [name, params[name]])
+  return pairs.length ? `${base}-${JSON.stringify(pairs)}` : base
+}
+
+// mockData: qiymat yoki funksiya (funksiya faqat mock rejimda kerak bo'lganda chaqiriladi)
 const withFallback = (key, requestFactory, mockData) =>
   requestFactory()
     .then((response) => {
       writeCache(key, response.data)
+      notifyCache(FRESH_EVENT, key)
       return response
     })
     .catch((error) => {
       const fallbackData = readCache(key)
       if (fallbackData) {
         console.warn('Using cached API data:', key)
+        notifyCache(STALE_EVENT, key)
         return Promise.resolve({ data: fallbackData })
       }
 
@@ -90,8 +115,24 @@ const withFallback = (key, requestFactory, mockData) =>
       }
 
       console.warn('Using mock API data for development:', error.message)
-      return Promise.resolve({ data: mockData })
+      return Promise.resolve({ data: typeof mockData === 'function' ? mockData() : mockData })
     })
+
+// Keshdagi har qanday kitoblar ro'yxatidan (turli filtrlar) bitta kitobni qidiradi
+const findCachedBook = (id) => {
+  try {
+    const prefix = cacheKey('books')
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const name = sessionStorage.key(i)
+      if (!name || !name.startsWith(prefix)) continue
+      const found = JSON.parse(sessionStorage.getItem(name))?.results?.find((b) => String(b.id) === String(id))
+      if (found) return found
+    }
+  } catch {
+    // Ignore unavailable browser storage.
+  }
+  return undefined
+}
 
 
 const normalizeListResponse = (response) => {
@@ -103,30 +144,48 @@ const normalizeListResponse = (response) => {
 
 export const getBooks = (params = {}) =>
   withFallback(
-    `books-${params.page_size || 'default'}`,
+    listKey('books', params),
     () => api.get('/book/', { params: { status: 'active', ...params } }),
     mockBooks
   ).then(normalizeListResponse)
+
+// Barcha sahifalarni yig'ib bitta ro'yxat qaytaradi (xavfsizlik: 20 sahifagacha, 2000 kitob)
+const MAX_BOOK_PAGES = 20
+const fetchAllBookPages = async (params) => {
+  const first = await api.get('/book/', { params: { status: 'active', page_size: 100, ...params } })
+  if (Array.isArray(first.data)) return { data: { results: first.data, count: first.data.length } }
+  const results = [...(first.data.results || [])]
+  let next = first.data.next
+  let page = 1
+  while (next && page < MAX_BOOK_PAGES) {
+    page += 1
+    const response = await api.get('/book/', { params: { status: 'active', page_size: 100, ...params, page } })
+    results.push(...(response.data.results || []))
+    next = response.data.next
+  }
+  return { data: { ...first.data, results, next: null } }
+}
+
+export const getAllBooks = (params = {}) =>
+  withFallback(listKey('books-all', params), () => fetchAllBookPages(params), mockBooks).then(normalizeListResponse)
 
 export const getBook = (id) =>
   withFallback(
     `book-${id}`,
     () => api.get(`/book/${id}/`),
-    readCache('books-100')?.results?.find(b => String(b.id) === String(id)) ||
-      readCache('books-12')?.results?.find(b => String(b.id) === String(id)) ||
-      mockBooks.results.find(b => String(b.id) === String(id))
+    () => findCachedBook(id) || mockBooks.results.find(b => String(b.id) === String(id))
   )
 
 export const getCategories = (params = {}) =>
   withFallback(
-    'categories',
+    listKey('categories', params),
     () => api.get('/category/', { params: { status: 'active', page_size: 100, ...params } }),
     mockCategories
   ).then(normalizeListResponse)
 
 export const getAuthors = (params = {}) =>
   withFallback(
-    'authors',
+    listKey('authors', params),
     () => api.get('/author/', { params: { status: 'active', page_size: 100, ...params } }),
     mockAuthors
   ).then(normalizeListResponse)
@@ -169,8 +228,31 @@ export const updateBookReview = (reviewId, bookId, review) =>
 const toOrderItems = (items) => items.map((item) => ({ book_id: item.id, quantity: item.quantity }))
 
 // delivery: { delivery_method, recipient_name, recipient_phone, city, district, street, house, delivery_comment }
-export const checkoutOrder = (items, promoCode = '', delivery = {}) =>
-  api.post('/cart/checkout/', { items: toOrderItems(items), promo_code: promoCode, ...delivery })
+// idempotencyKey: qayta bosish/timeout'da bir xil buyurtma ikki marta yaratilmasligi uchun (server sarlavhani qo'llab-quvvatlasa)
+export const checkoutOrder = (items, promoCode = '', delivery = {}, { idempotencyKey } = {}) =>
+  api.post(
+    '/cart/checkout/',
+    { items: toOrderItems(items), promo_code: promoCode, ...delivery },
+    idempotencyKey ? { headers: { 'Idempotency-Key': idempotencyKey } } : undefined
+  )
+
+// Serverda sessiyani bekor qilish (best-effort). fetch+keepalive: keyingi to'liq reload so'rovni uzib qo'ymaydi.
+export const logoutOnServer = () => {
+  const refresh = localStorage.getItem('refresh_token')
+  if (!refresh) return
+  const access = localStorage.getItem('access_token')
+  try {
+    fetch(`${baseURL}/logout/`, {
+      method: 'POST',
+      keepalive: true,
+      headers: { 'Content-Type': 'application/json', ...(access ? { Authorization: `Bearer ${access}` } : {}) },
+      body: JSON.stringify({ refresh }),
+      signal: AbortSignal.timeout(3000),
+    }).catch(() => {})
+  } catch {
+    // Chiqish baribir davom etadi.
+  }
+}
 
 // Savat hisob-kitobi: chegirma, yetkazib berish va to'lov summasi
 export const getCartQuote = (items, promoCode = '', deliveryMethod = 'delivery') =>

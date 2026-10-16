@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getBookDigital } from '../api'
 import { useLang } from '../i18n/LanguageContext'
+import useAuthToken from '../useAuthToken'
 import styles from './DigitalCopy.module.css'
 
 // Kitobning audio va PDF nusxasi: faqat sotib olganlar uchun ochiladi
 export default function DigitalCopy({ book }) {
   const { t } = useLang()
-  const loggedIn = Boolean(localStorage.getItem('access_token'))
+  const loggedIn = Boolean(useAuthToken())
   const hasFiles = Boolean(book.has_audio || book.has_pdf)
   const [result, setResult] = useState(null) // { id, links } yoki { id, locked: true }
 

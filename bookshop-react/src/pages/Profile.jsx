@@ -1,9 +1,12 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { clearSession, getMyOrders, getProfile, updateProfile } from '../api'
+import { clearSession, logoutOnServer, getMyOrders, getProfile, updateProfile } from '../api'
+import ErrorMessage from '../components/ErrorMessage'
+import PasswordInput from '../components/PasswordInput'
 import { useFavorites } from '../context/FavoritesContext'
 import { useToast } from '../context/ToastContext'
 import { useLang } from '../i18n/LanguageContext'
+import useDocumentTitle from '../useDocumentTitle'
 import styles from './Profile.module.css'
 
 const PROFILE_KEY = 'bookshop-profile'
@@ -41,17 +44,40 @@ const readLegacyProfile = () => {
 
 export default function Profile() {
   const { t, locale } = useLang()
+  useDocumentTitle(t('title.profile'))
   const navigate = useNavigate()
   const { favoriteIds } = useFavorites()
   const { showToast } = useToast()
   const [profile, setProfile] = useState({ ...EMPTY_PROFILE, fullName: localStorage.getItem('username') || '' })
   const [profileError, setProfileError] = useState('')
+  const [serverEmail, setServerEmail] = useState('') // serverdagi joriy email
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [passwordError, setPasswordError] = useState('')
   const [saving, setSaving] = useState(false)
   const [orders, setOrders] = useState([])
+  const [ordersError, setOrdersError] = useState(false)
   const [saved, setSaved] = useState(false)
+  const savedTimer = useRef(null)
 
   const isLoggedIn = Boolean(localStorage.getItem('access_token'))
   const money = (value) => `${Number(value || 0).toLocaleString(locale)} ${t('currency')}`
+
+  // Saqlandi belgisi taymeri sahifadan chiqilganda tozalanadi
+  useEffect(() => () => clearTimeout(savedTimer.current), [])
+
+  const loadOrders = useCallback(() => {
+    getMyOrders()
+      .then((response) => setOrders(response.data.results || response.data))
+      .catch((error) => {
+        if (error.response?.status === 401) navigate('/login', { state: { from: '/profile' } })
+        else setOrdersError(true)
+      })
+  }, [navigate])
+
+  const retryOrders = () => {
+    setOrdersError(false)
+    loadOrders()
+  }
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -74,18 +100,15 @@ export default function Profile() {
         try { localStorage.removeItem(PROFILE_KEY) } catch { /* xotira yo'q */ }
         if (data.email) localStorage.setItem('user_email', data.email)
         setProfile(data)
+        setServerEmail(data.email)
       })
       .catch((error) => {
         if (error.response?.status === 401) navigate('/login', { state: { from: '/profile' } })
         else setProfileError('loadError')
       })
 
-    getMyOrders()
-      .then((response) => setOrders(response.data.results || response.data))
-      .catch((error) => {
-        if (error.response?.status === 401) navigate('/login', { state: { from: '/profile' } })
-      })
-  }, [isLoggedIn, navigate])
+    loadOrders()
+  }, [isLoggedIn, navigate, loadOrders])
 
   const stats = useMemo(() => ({
     orders: orders.length,
@@ -98,26 +121,42 @@ export default function Profile() {
     setProfile((current) => ({ ...current, [name]: value }))
   }
 
+  // Email o'zgargandagina joriy parol so'raladi (server ham shuni talab qiladi)
+  const emailChanged = profile.email.trim().toLowerCase() !== serverEmail.trim().toLowerCase()
+
   const handleSave = async (event) => {
     event.preventDefault()
-    setSaving(true)
     setProfileError('')
+    setPasswordError('')
+    if (emailChanged && !currentPassword) {
+      setPasswordError('currentPasswordRequired')
+      return
+    }
+    setSaving(true)
     try {
-      const response = await updateProfile(toServer(profile))
+      const payload = toServer(profile)
+      if (emailChanged) payload.current_password = currentPassword
+      const response = await updateProfile(payload)
       const data = fromServer(response.data)
       setProfile(data)
+      setServerEmail(data.email)
+      setCurrentPassword('')
       if (data.email) localStorage.setItem('user_email', data.email)
       setSaved(true)
       showToast(t('toast.profileSaved'))
-      setTimeout(() => setSaved(false), 1800)
+      clearTimeout(savedTimer.current)
+      savedTimer.current = setTimeout(() => setSaved(false), 1800)
     } catch (error) {
-      setProfileError(error.response?.data?.email ? 'emailTaken' : 'saveError')
+      const body = error.response?.data
+      if (body?.current_password) setPasswordError('currentPasswordWrong')
+      else setProfileError(body?.email ? 'emailTaken' : 'saveError')
     } finally {
       setSaving(false)
     }
   }
 
   const logout = () => {
+    logoutOnServer()
     clearSession()
     window.location.assign('/')
   }
@@ -149,18 +188,19 @@ export default function Profile() {
         </aside>
 
         <section className={styles.content}>
+          {ordersError && <ErrorMessage message={t('profile.ordersLoadError')} onRetry={retryOrders} />}
           <div className={styles.stats}>
             <div className={styles.stat} data-reveal>
               <span>{t('profile.statOrders')}</span>
-              <strong>{stats.orders}</strong>
+              <strong>{ordersError ? '—' : stats.orders}</strong>
             </div>
             <div className={styles.stat} data-reveal>
               <span>{t('profile.statBooks')}</span>
-              <strong>{stats.books}</strong>
+              <strong>{ordersError ? '—' : stats.books}</strong>
             </div>
             <div className={styles.stat} data-reveal>
               <span>{t('profile.statSpent')}</span>
-              <strong>{money(stats.spent)}</strong>
+              <strong>{ordersError ? '—' : money(stats.spent)}</strong>
             </div>
             <div className={styles.stat} data-reveal>
               <span>{t('profile.statFavorites')}</span>
@@ -182,6 +222,20 @@ export default function Profile() {
                   {t('profile.email')}
                   <input type="email" name="email" value={profile.email} onChange={handleChange} />
                 </label>
+                {emailChanged && (
+                  <label className={styles.wide}>
+                    {t('profile.currentPassword')}
+                    <PasswordInput
+                      name="current_password"
+                      autoComplete="current-password"
+                      value={currentPassword}
+                      onChange={(event) => setCurrentPassword(event.target.value)}
+                      aria-invalid={passwordError ? 'true' : undefined}
+                    />
+                    <small className={styles.fieldHint}>{t('profile.currentPasswordHint')}</small>
+                    {passwordError && <small className={styles.fieldError} role="alert">{t(`profile.${passwordError}`)}</small>}
+                  </label>
+                )}
                 <label>
                   {t('profile.phone')}
                   <input name="phone" value={profile.phone} onChange={handleChange} />

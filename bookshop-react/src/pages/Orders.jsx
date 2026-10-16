@@ -3,11 +3,13 @@ import { Link, useNavigate } from 'react-router-dom'
 import { getMyOrders } from '../api'
 import OrderProgress from '../components/OrderProgress'
 import { useLang } from '../i18n/LanguageContext'
+import useDocumentTitle from '../useDocumentTitle'
 import styles from './Profile.module.css'
 
 // Xaridlarim: foydalanuvchining buyurtmalar tarixi
 export default function Orders() {
   const { t, locale } = useLang()
+  useDocumentTitle(t('title.orders'))
   const navigate = useNavigate()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)

@@ -5,10 +5,18 @@ import { useToast } from './ToastContext'
 const FavoritesContext = createContext(null)
 const STORAGE_KEY = 'bookshop-favorites'
 
+const parseSaved = (raw) => {
+  try {
+    const saved = JSON.parse(raw || '[]')
+    return Array.isArray(saved) ? saved.map(Number).filter(Number.isFinite) : []
+  } catch {
+    return []
+  }
+}
+
 const readSaved = () => {
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
-    return Array.isArray(saved) ? saved.map(Number).filter(Number.isFinite) : []
+    return parseSaved(localStorage.getItem(STORAGE_KEY))
   } catch {
     return []
   }
@@ -29,6 +37,19 @@ export function FavoritesProvider({ children }) {
       // Brauzer xotirasi mavjud bo'lmasa, ro'yxat faqat shu sessiya uchun saqlanadi.
     }
   }, [ids])
+
+  // Boshqa tabda sevimlilar o'zgarsa shu tab ham yangilanadi (teng bo'lsa state almashtirilmaydi: yozish halqasi yo'q)
+  useEffect(() => {
+    const onStorage = (event) => {
+      if (event.key !== null && event.key !== STORAGE_KEY) return
+      const next = parseSaved(event.newValue)
+      if (JSON.stringify(idsRef.current) === JSON.stringify(next)) return
+      idsRef.current = next
+      setIds(next)
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
 
   const toggleFavorite = useCallback((bookId) => {
     const id = Number(bookId)

@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { loginUser, registerUser } from '../api'
+import { loginUser, notifyAuthChanged, registerUser } from '../api'
 import PasswordInput from '../components/PasswordInput'
 import { useToast } from '../context/ToastContext'
 import { useLang } from '../i18n/LanguageContext'
+import useDocumentTitle from '../useDocumentTitle'
 import styles from './Auth.module.css'
 
 export function Login() {
   const { t } = useLang()
+  useDocumentTitle(t('title.login'))
   const { showToast } = useToast()
   const navigate = useNavigate()
   const location = useLocation()
@@ -25,10 +27,11 @@ export function Login() {
       localStorage.setItem('access_token', data.access)
       if (data.refresh) localStorage.setItem('refresh_token', data.refresh)
       localStorage.setItem('username', data.user?.username || form.username)
+      notifyAuthChanged()
       showToast(t('toast.welcome', { name: data.user?.username || form.username }))
       navigate(location.state?.from || '/')
     } catch (requestError) {
-      setError(requestError.response?.data?.detail || t('auth.loginFailed'))
+      setError(requestError.response?.status === 429 ? t('auth.tooManyAttempts') : requestError.response?.data?.detail || t('auth.loginFailed'))
     } finally {
       setLoading(false)
     }
@@ -52,6 +55,7 @@ export function Login() {
 
 export function Register() {
   const { t } = useLang()
+  useDocumentTitle(t('title.register'))
   const { showToast } = useToast()
   const navigate = useNavigate()
   const location = useLocation()
@@ -74,6 +78,7 @@ export function Register() {
     } catch (requestError) {
       const data = requestError.response?.data
       setError(
+        requestError.response?.status === 429 ? t('auth.tooManyAttempts') :
         data?.detail || data?.error || data?.username?.[0] || data?.email?.[0] ||
         data?.password?.[0] || t('auth.registerFailed')
       )
@@ -105,7 +110,7 @@ function AuthLayout({ title, subtitle, children }) {
   return (
     <main className={styles.page}>
       <section className={styles.card}>
-        <p className={styles.eyebrow}>Kitobxona</p>
+        <p className={styles.eyebrow}>BOOK.UZ</p>
         <h1>{title}</h1>
         <p className={styles.subtitle}>{subtitle}</p>
         {children}

@@ -77,7 +77,7 @@
 }
 
 .facts dt {
-  color: var(--gray-400);
+  color: var(--gray-600);
   font-size: 12px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -168,8 +168,8 @@
 
 .tabActive,
 .tabActive:hover {
-  background: var(--brown);
-  color: var(--white);
+  background: color-mix(in srgb, var(--brown-2) 90%, #000);
+  color: var(--on-accent);
 }
 
 .panel {
@@ -239,8 +239,8 @@
   padding: 0 32px;
   border: none;
   border-radius: 14px;
-  background: var(--brown);
-  color: var(--white);
+  background: color-mix(in srgb, var(--brown-2) 90%, #000);
+  color: var(--on-accent);
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
@@ -325,7 +325,7 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  color: var(--gray-400);
+  color: var(--gray-600);
   font-size: 12px;
   text-align: center;
 }
@@ -379,7 +379,7 @@
 .step small {
   min-height: 14px;
   color: var(--gray-600);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .cancelledLine {
@@ -600,8 +600,8 @@
   display: inline-block;
   padding: 11px 24px;
   border-radius: 14px;
-  background: var(--brown);
-  color: var(--white);
+  background: color-mix(in srgb, var(--brown-2) 90%, #000);
+  color: var(--on-accent);
   font-weight: 700;
   text-decoration: none;
 }
@@ -649,4 +649,15 @@
   .orderHead {
     flex-wrap: wrap;
   }
+}
+
+.fieldHint {
+  color: var(--gray-600);
+  font-size: 13px;
+}
+
+.fieldError {
+  color: #d3354f;
+  font-size: 13px;
+  font-weight: 600;
 }

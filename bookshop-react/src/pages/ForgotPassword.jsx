@@ -4,6 +4,7 @@ import { forgotPassword, resetPassword } from '../api'
 import PasswordInput from '../components/PasswordInput'
 import { useToast } from '../context/ToastContext'
 import { useLang } from '../i18n/LanguageContext'
+import useDocumentTitle from '../useDocumentTitle'
 import authStyles from './Auth.module.css'
 import styles from './ForgotPassword.module.css'
 
@@ -75,6 +76,7 @@ function CodeInput({ value, onChange, label }) {
 
 export default function ForgotPassword() {
   const { t } = useLang()
+  useDocumentTitle(t('title.forgot'))
   const { showToast } = useToast()
   const navigate = useNavigate()
   const [step, setStep] = useState('email')

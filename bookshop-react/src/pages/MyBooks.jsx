@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getBooks } from '../api'
+import { getAllBooks } from '../api'
 import BookCard from '../components/BookCard'
 import LoadingSpinner from '../components/LoadingSpinner'
 import ErrorMessage from '../components/ErrorMessage'
 import { useFavorites } from '../context/FavoritesContext'
 import { useLang } from '../i18n/LanguageContext'
+import useDocumentTitle from '../useDocumentTitle'
 import styles from './MyBooks.module.css'
 
 export default function MyBooks() {
   const { t } = useLang()
+  useDocumentTitle(t('title.myBooks'))
   const { favoriteIds } = useFavorites()
   const [books, setBooks] = useState([])
   const [loading, setLoading] = useState(true)
@@ -18,7 +20,7 @@ export default function MyBooks() {
   const load = () => {
     setLoading(true)
     setError(null)
-    getBooks({ page_size: 100 })
+    getAllBooks()
       .then((response) => setBooks(response.data.results || []))
       .catch(() => setError(t('books.loadError')))
       .finally(() => setLoading(false))

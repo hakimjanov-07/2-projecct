@@ -1,19 +1,36 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { getBooks } from '../api'
+import { getAllBooks } from '../api'
+import ErrorMessage from '../components/ErrorMessage'
 import { useFavorites } from '../context/FavoritesContext'
 import { useLang } from '../i18n/LanguageContext'
+import useDocumentTitle from '../useDocumentTitle'
 import styles from './Static.module.css'
 
 // Sevimli kitoblar: maqolalar sahifasi uslubida (bosh qism + rasmli kartalar)
 export default function Favorites() {
   const { t, locale } = useLang()
+  useDocumentTitle(t('title.favorites'))
   const navigate = useNavigate()
   const { favoriteIds, toggleFavorite } = useFavorites()
   const [books, setBooks] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
   const isLoggedIn = Boolean(localStorage.getItem('access_token'))
+
+  const loadBooks = useCallback(() => {
+    getAllBooks()
+      .then((response) => setBooks(response.data.results || []))
+      .catch(() => setError(true))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const retry = () => {
+    setError(false)
+    setLoading(true)
+    loadBooks()
+  }
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -21,11 +38,8 @@ export default function Favorites() {
       return
     }
 
-    getBooks({ page_size: 100 })
-      .then((response) => setBooks(response.data.results || []))
-      .catch(() => setBooks([]))
-      .finally(() => setLoading(false))
-  }, [isLoggedIn, navigate])
+    loadBooks()
+  }, [isLoggedIn, navigate, loadBooks])
 
   const favoriteBooks = useMemo(
     () => favoriteIds.map((id) => books.find((book) => book.id === id)).filter(Boolean),
@@ -41,7 +55,10 @@ export default function Favorites() {
       </div>
 
       <div className={styles.content}>
-        {!loading && favoriteBooks.length === 0 ? (
+        {error && favoriteIds.length > 0 ? (
+          // Tarmoq xatosi "sevimlilar yo'q" deb ko'rinmasin
+          <ErrorMessage message={t('favorites.loadError')} onRetry={retry} />
+        ) : !loading && favoriteBooks.length === 0 ? (
           <div className={styles.favEmpty}>
             <p aria-hidden="true">♡</p>
             <p>{t('profile.noFavorites')}</p>

@@ -1,28 +1,46 @@
 import { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { getBooks, getAuthors, getCategories } from '../api'
+import { getAllBooks, getAuthors, getCategories } from '../api'
 import BookCard from '../components/BookCard'
+import ErrorMessage from '../components/ErrorMessage'
+import { categoriesWithBooks } from '../categories'
 import { useLang } from '../i18n/LanguageContext'
+import useDocumentTitle from '../useDocumentTitle'
 import styles from './Home.module.css'
 
 export default function Home() {
   const { t } = useLang()
+  useDocumentTitle(t('title.home'))
   const [books, setBooks] = useState([])
   const [authors, setAuthors] = useState([])
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
+  // Har bo'lim o'z xatosiga ega: bittasi yiqilsa qolganlari ko'rinishda qoladi
+  const [errors, setErrors] = useState({ books: false, authors: false, categories: false })
   const sliderRef = useRef(null)
 
-  useEffect(() => {
-    Promise.all([
-      getBooks({ page_size: 100 }),
+  const loadData = () => {
+    setLoading(true)
+    setErrors({ books: false, authors: false, categories: false })
+    Promise.allSettled([
+      getAllBooks(),
       getAuthors(),
       getCategories(),
     ]).then(([bRes, aRes, cRes]) => {
-      setBooks(bRes.data.results || [])
-      setAuthors(aRes.data.results || [])
-      setCategories(cRes.data.results || [])
+      if (bRes.status === 'fulfilled') setBooks(bRes.value.data.results || [])
+      if (aRes.status === 'fulfilled') setAuthors(aRes.value.data.results || [])
+      if (cRes.status === 'fulfilled') setCategories(cRes.value.data.results || [])
+      setErrors({
+        books: bRes.status === 'rejected',
+        authors: aRes.status === 'rejected',
+        categories: cRes.status === 'rejected',
+      })
     }).finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadData()
   }, [])
 
   const handleSliderWheel = (event) => {
@@ -81,11 +99,16 @@ export default function Home() {
             <span className={styles.catLabel}>{t('home.categoriesLabel')}</span>
             <div className={styles.catRowScroll} onWheel={handleHorizontalScroll}>
               <Link to="/books" className={styles.catPill + ' ' + styles.catActive}>{t('home.all')}</Link>
-              {categories.map(cat => (
+              {categoriesWithBooks(categories, books).map(cat => (
                 <Link key={cat.id} to={`/books?category=${cat.id}`} className={styles.catPill}>
                   {cat.name}
                 </Link>
               ))}
+              {errors.categories && !loading && (
+                <button type="button" className={`${styles.catPill} ${styles.catRetry}`} title={t('common.error')} onClick={loadData}>
+                  {t('common.retry')}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -100,6 +123,8 @@ export default function Home() {
 
           {loading ? (
             <p className="loading">{t('common.loading')}</p>
+          ) : errors.books ? (
+            <ErrorMessage message={t('books.loadError')} onRetry={loadData} />
           ) : (
             <div className={styles.slider} ref={sliderRef} onWheel={handleSliderWheel}>
               {topBooks.map(book => (
@@ -116,6 +141,7 @@ export default function Home() {
       <section className={styles.sectionWhite} data-reveal>
         <div className="container">
           <h2 className={styles.sectionTitle} style={{ marginBottom: 28 }}>{t('home.popularAuthors')}</h2>
+          {errors.authors && !loading && <ErrorMessage message={t('authors.loadError')} onRetry={loadData} />}
           <div className={styles.authorsRowScroll} onWheel={handleHorizontalScroll}>
             {authors.map(author => {
               const BASE = import.meta.env.VITE_API_URL || ''

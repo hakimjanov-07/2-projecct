@@ -1,13 +1,16 @@
+import { useLang } from '../i18n/LanguageContext'
 import styles from './ErrorMessage.module.css'
 
-export default function ErrorMessage({ message = 'Xatolik yuz berdi', onRetry }) {
+export default function ErrorMessage({ message, onRetry }) {
+  const { t } = useLang()
+
   return (
-    <div className={styles.errorWrap}>
-      <div className={styles.icon}>⚠️</div>
-      <p className={styles.message}>{message}</p>
+    <div className={styles.errorWrap} role="alert">
+      <div className={styles.icon} aria-hidden="true">⚠️</div>
+      <p className={styles.message}>{message || t('common.error')}</p>
       {onRetry && (
-        <button className={styles.retryBtn} onClick={onRetry}>
-          Qayta urinish
+        <button type="button" className={styles.retryBtn} onClick={onRetry}>
+          {t('common.retry')}
         </button>
       )}
     </div>

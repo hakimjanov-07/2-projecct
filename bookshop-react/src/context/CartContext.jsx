@@ -3,19 +3,66 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 const CartContext = createContext(null)
 const STORAGE_KEY = 'bookshop-cart'
 
-export function CartProvider({ children }) {
-  const [items, setItems] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY)
-      return saved ? JSON.parse(saved) : []
-    } catch {
-      return []
+// Saqlangan savat buzilgan bo'lishi mumkin (massiv emas, "null", noto'g'ri qatorlar): faqat yaroqli qatorlar qoldiriladi.
+// Narx noto'g'ri bo'lsa 0 qo'yiladi, savat sinxronlanganda (syncItems) serverdagi narx yoziladi.
+const parseSaved = (raw) => {
+  try {
+    const saved = JSON.parse(raw || '[]')
+    if (!Array.isArray(saved)) return []
+    const seen = new Set()
+    const result = []
+    for (const item of saved) {
+      if (!item || typeof item !== 'object') continue
+      const { id, name, price, quantity, stock } = item
+      if (typeof id !== 'number' || !Number.isFinite(id) || seen.has(id)) continue
+      if (typeof name !== 'string') continue
+      if (!Number.isInteger(quantity) || quantity < 1) continue
+      seen.add(id)
+      result.push({
+        id,
+        name,
+        price: typeof price === 'number' && Number.isFinite(price) && price >= 0 ? price : 0,
+        photo: typeof item.photo === 'string' ? item.photo : '',
+        category_name: typeof item.category_name === 'string' ? item.category_name : '',
+        stock: Number.isInteger(stock) && stock >= 0 ? stock : null,
+        quantity,
+      })
     }
-  })
+    return result
+  } catch {
+    return []
+  }
+}
+
+const readSaved = () => {
+  try {
+    return parseSaved(localStorage.getItem(STORAGE_KEY))
+  } catch {
+    return []
+  }
+}
+
+export function CartProvider({ children }) {
+  const [items, setItems] = useState(readSaved)
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
+    } catch {
+      // Brauzer xotirasi mavjud bo'lmasa, savat faqat shu sessiya uchun saqlanadi.
+    }
   }, [items])
+
+  // Boshqa tabda savat o'zgarsa shu tab ham yangilanadi. Qiymat teng bo'lsa state almashtirilmaydi (qayta-yozish halqasi bo'lmaydi).
+  useEffect(() => {
+    const onStorage = (event) => {
+      if (event.key !== null && event.key !== STORAGE_KEY) return
+      const next = parseSaved(event.newValue)
+      setItems((current) => (JSON.stringify(current) === JSON.stringify(next) ? current : next))
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
 
   const addToCart = (book, quantity = 1) => {
     setItems((current) => {

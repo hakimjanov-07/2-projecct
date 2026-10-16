@@ -1,17 +1,19 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { getBooks, getCategories, getAuthors } from '../api'
+import { getAllBooks, getCategories, getAuthors } from '../api'
 import BookCard from '../components/BookCard'
+import { categoriesWithBooks } from '../categories'
 import LoadingSpinner from '../components/LoadingSpinner'
 import ErrorMessage from '../components/ErrorMessage'
 import FilterSelect from '../components/FilterSelect'
 import RangeSlider from '../components/RangeSlider'
 import SortSelect from '../components/SortSelect'
 import { useLang } from '../i18n/LanguageContext'
+import useDocumentTitle from '../useDocumentTitle'
 import styles from './Books.module.css'
 
-// Narx slayderining yuqori chegarasi (so'm) va qadami
-const MAX_PRICE = 1000000
+// Narx slayderining zaxira yuqori chegarasi (so'm; kitoblar yuklanmaguncha) va qadami
+const DEFAULT_MAX_PRICE = 1000000
 const PRICE_STEP = 10000
 
 // Kitoblar sonini berilgan maydon bo'yicha sanaydi
@@ -19,12 +21,13 @@ const countBy = (books, key) => books.reduce((map, book) => map.set(book[key], (
 
 export default function Books() {
   const { t, locale } = useLang()
+  useDocumentTitle(t('title.books'))
   const [searchParams, setSearchParams] = useSearchParams()
   const [books, setBooks] = useState([])
   const [categories, setCategories] = useState([])
   const [authors, setAuthors] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState(false)
 
   const urlSearch = searchParams.get('search') || ''
   const urlCategory = searchParams.get('category') || null
@@ -48,26 +51,30 @@ export default function Books() {
 
   const loadData = () => {
     setLoading(true)
-    setError(null)
+    setError(false)
     Promise.allSettled([
-      getBooks({ page_size: 100 }),
+      getAllBooks(),
       getCategories(),
       getAuthors(),
     ]).then(([booksResult, categoriesResult, authorsResult]) => {
       if (booksResult.status === 'fulfilled') setBooks(booksResult.value.data.results || [])
       if (categoriesResult.status === 'fulfilled') setCategories(categoriesResult.value.data.results || [])
       if (authorsResult.status === 'fulfilled') setAuthors(authorsResult.value.data.results || [])
-      if (booksResult.status === 'rejected' && categoriesResult.status === 'rejected') {
-        setError(t('books.loadError'))
-      }
+      // Kitoblar yuklanmasa xato ko'rsatiladi ("Kitob topilmadi" emas); janr/muallif yiqilsa kitoblar baribir chiqadi
+      if (booksResult.status === 'rejected') setError(true)
     }).finally(() => setLoading(false))
   }
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Slayder chegarasi eng qimmat kitob narxidan (qadamga yuqoriga yaxlitlab) olinadi
+  const MAX_PRICE = useMemo(() => {
+    const top = books.reduce((max, b) => Math.max(max, parseFloat(b.price) || 0), 0)
+    return top > 0 ? Math.ceil(top / PRICE_STEP) * PRICE_STEP : DEFAULT_MAX_PRICE
+  }, [books])
 
   const filtered = useMemo(() => {
     let list = [...books]
@@ -101,8 +108,9 @@ export default function Books() {
 
   const categoryOptions = useMemo(() => {
     const counts = countBy(books, 'category')
-    return categories.map((c) => ({ value: c.id, label: c.name, count: counts.get(c.id) || 0 }))
-  }, [categories, books])
+    // Kitobi yo'q kategoriyalar chiqmaydi (URL'da tanlangani qoladi)
+    return categoriesWithBooks(categories, books, selectedCat).map((c) => ({ value: c.id, label: c.name, count: counts.get(c.id) || 0 }))
+  }, [categories, books, selectedCat])
 
   const authorOptions = useMemo(() => {
     const counts = countBy(books, 'author')
@@ -272,12 +280,12 @@ export default function Books() {
             />
           </div>
 
-          <p className={styles.count}>{t('books.results', { n: filtered.length })}</p>
+          {!error && <p className={styles.count}>{t('books.results', { n: filtered.length })}</p>}
 
           {loading ? (
             <LoadingSpinner text={t('books.loading')} />
           ) : error ? (
-            <ErrorMessage message={error} onRetry={loadData} />
+            <ErrorMessage message={t('books.loadError')} onRetry={loadData} />
           ) : filtered.length === 0 ? (
             <div className={styles.emptyWrap}>
               <p className={styles.emptyIcon}>📖</p>
