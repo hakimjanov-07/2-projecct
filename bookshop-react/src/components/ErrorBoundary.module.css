@@ -1,0 +1,110 @@
+.page {
+  min-height: 70vh;
+  display: grid;
+  place-items: center;
+  padding: 72px 24px;
+  background: var(--cream, #f7f3ee);
+  text-align: center;
+}
+
+.box {
+  width: min(100%, 520px);
+  display: grid;
+  justify-items: center;
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  border: 3px solid var(--brown, #c8956c);
+  color: var(--brown-dark, #6b4429);
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.title {
+  margin-top: 20px;
+  font-size: clamp(24px, 5vw, 30px);
+  font-weight: 600;
+  letter-spacing: -0.4px;
+  color: var(--text, #1a1a1a);
+}
+
+.text {
+  margin-top: 10px;
+  max-width: 440px;
+  color: var(--gray-600, #6b6460);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 12px 24px;
+  border-radius: var(--radius-sm, 6px);
+  border: 1px solid var(--brown-dark, #6b4429);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primary {
+  background: var(--brown-dark, #6b4429);
+  color: var(--on-accent, #ffffff);
+}
+
+.secondary {
+  background: transparent;
+  color: var(--brown-dark, #6b4429);
+}
+
+.primary:focus-visible,
+.secondary:focus-visible {
+  outline: 3px solid var(--ring, #e6d3c2);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .primary,
+  .secondary {
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  }
+
+  .primary:hover,
+  .secondary:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.primary:hover {
+  background: var(--brown-2, #a0704a);
+  border-color: var(--brown-2, #a0704a);
+}
+
+.secondary:hover {
+  background: var(--nav-soft, #f3e8df);
+}
+
+@media (max-width: 480px) {
+  .actions { width: 100%; flex-direction: column; }
+  .primary,
+  .secondary { width: 100%; }
+}
