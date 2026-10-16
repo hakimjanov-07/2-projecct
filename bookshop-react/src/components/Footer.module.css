@@ -234,18 +234,69 @@
   place-items: center;
   width: 52px;
   height: 52px;
-  border: none;
+  border: 2px solid rgba(255, 255, 255, 0.55);
   border-radius: 50%;
-  background: var(--surface);
-  color: var(--text);
-  font-size: 22px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  /* sayt palitrasi: jigarrang gradient (global --brown / --brown-2), krem strelka */
+  background: linear-gradient(145deg, var(--brown) 0%, var(--brown-2) 100%);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(96, 63, 39, 0.35);
   cursor: pointer;
-  transition: transform 0.15s;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
-.toTop:hover {
-  transform: translateY(-3px);
+.toTopIcon {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .toTop {
+    animation: toTopIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+@keyframes toTopIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.85);
+  }
+}
+
+@media (hover: hover) {
+  .toTop:hover,
+  .toTop:focus-visible {
+    transform: translateY(-4px);
+    border-color: #fff;
+    box-shadow: 0 16px 28px rgba(96, 63, 39, 0.42);
+  }
+
+  .toTop:hover .toTopIcon,
+  .toTop:focus-visible .toTopIcon {
+    animation: toTopNudge 0.6s ease;
+  }
+}
+
+.toTop:active {
+  transform: scale(0.94);
+}
+
+@keyframes toTopNudge {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-5px); }
+  70% { transform: translateY(1px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toTop,
+  .toTopIcon {
+    animation: none !important;
+    transition: none;
+  }
 }
 
 @media (max-width: 1000px) {

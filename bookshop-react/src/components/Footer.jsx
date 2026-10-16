@@ -123,7 +123,9 @@ export default function Footer() {
           aria-label={t('footer.toTop')}
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
-          ↑
+          <svg className={styles.toTopIcon} viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 19V5M5.5 11.5L12 5l6.5 6.5" />
+          </svg>
         </button>
       )}
     </footer>

@@ -349,7 +349,9 @@
   scrollbar-width: none;
   -ms-overflow-style: none;
   scroll-behavior: smooth;
-  padding: 12px 4px 16px;
+  /* tepada izoh oynasi (authorDetail), pastda soya sig'ishi uchun joy; margin bilan tenglashtirilgan */
+  padding: 152px 4px 40px;
+  margin: -140px 0 -24px;
   white-space: nowrap;
   overscroll-behavior-x: contain;
   overscroll-behavior-y: none;
@@ -413,12 +415,14 @@
   transform: translate(-50%, 12px);
   width: 240px;
   max-width: 240px;
-  background: rgba(24, 20, 18, 0.96);
-  color: #fff;
+  white-space: normal;
+  /* sayt palitrasi: navbar chizig'idagi jigarrang, ranglar mavzuga bog'liq emas (dark mode'da ham o'qiladi) */
+  background: linear-gradient(145deg, #7a4f32 0%, #5e3c25 100%);
+  color: #f7f3ee;
   border-radius: 18px;
   padding: 14px 16px;
-  box-shadow: 0 24px 30px rgba(0,0,0,0.22);
-  border: 1px solid rgba(200,149,108,0.35);
+  box-shadow: 0 18px 30px rgba(96, 63, 39, 0.28);
+  border: 1px solid rgba(243, 211, 177, 0.35);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.28s ease, transform 0.28s ease;
@@ -430,17 +434,34 @@
   transform: translate(-50%, 0);
 }
 
+/* birinchi karta: izoh chap tomondan kesilmasin */
+.authorCard:first-child .authorDetail {
+  left: 0;
+  transform: translate(0, 12px);
+}
+
+.authorCard:first-child:hover .authorDetail {
+  transform: translate(0, 0);
+}
+
+@media (max-width: 480px) {
+  .authorDetail {
+    width: 200px;
+    max-width: 200px;
+  }
+}
+
 .authorDetailTitle {
   font-size: 13px;
   font-weight: 700;
   margin-bottom: 8px;
-  color: #f4e9dd;
+  color: #f3d3b1;
 }
 
 .authorDetailText {
   font-size: 11.5px;
   line-height: 1.6;
-  color: rgba(255,255,255,0.8);
+  color: rgba(247, 243, 238, 0.88);
   display: -webkit-box;
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
