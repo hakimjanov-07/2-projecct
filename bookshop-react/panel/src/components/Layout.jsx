@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
+import { getNewOrdersCount } from '../api'
 import { clearSession, getUsername } from '../auth'
 import { getTheme, setTheme } from '../theme'
 import NavIcon from './NavIcons'
@@ -15,9 +16,68 @@ const NAV = [
 // Katalogni (kitob, muallif, janr) to'liq tahrirlash Django adminda qoladi
 const DJANGO_ADMIN = import.meta.env.VITE_DJANGO_ADMIN_URL || 'http://127.0.0.1:8000/admin/'
 
+const POLL_MS = 25000
+
+// Yangi (tasdiqlangan) buyurtmalar soni: ochilganda, har 25 soniyada va holat o'zgarganda yangilanadi
+function useNewOrders() {
+  const [count, setCount] = useState(0)
+  const [pop, setPop] = useState(0)
+  const prev = useRef(0)
+
+  useEffect(() => {
+    let stopped = false
+    let timer = null
+
+    const load = async () => {
+      try {
+        const data = await getNewOrdersCount()
+        if (stopped) return
+        if (data.count > prev.current) setPop((n) => n + 1)
+        prev.current = data.count
+        setCount(data.count)
+      } catch (err) {
+        // Token yaroqsiz: yangilashni to'xtatamiz (api.js login'ga qaytaradi)
+        if ([401, 403].includes(err.response?.status)) stop()
+      }
+    }
+    const start = () => {
+      if (timer || stopped) return
+      load()
+      timer = setInterval(load, POLL_MS)
+    }
+    const pause = () => {
+      clearInterval(timer)
+      timer = null
+    }
+    const stop = () => {
+      stopped = true
+      pause()
+    }
+    const onVisible = () => (document.visibilityState === 'visible' ? start() : pause())
+    const onChanged = () => !stopped && load()
+
+    if (document.visibilityState === 'visible') start()
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('panel-orders-changed', onChanged)
+    return () => {
+      stop()
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('panel-orders-changed', onChanged)
+    }
+  }, [])
+
+  return { count, pop }
+}
+
 export default function Layout({ onLogout }) {
   const [theme, setThemeState] = useState(getTheme)
   const [open, setOpen] = useState(false)
+  const { count: newOrders, pop } = useNewOrders()
+
+  useEffect(() => {
+    const base = 'BOOK.UZ Admin'
+    document.title = newOrders > 0 ? `(${newOrders}) ${base}` : base
+  }, [newOrders])
 
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark'
@@ -46,6 +106,11 @@ export default function Layout({ onLogout }) {
             <NavLink key={item.to} to={item.to} end={item.end} onClick={() => setOpen(false)} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
               <NavIcon name={item.icon} />
               {item.label}
+              {item.to === '/orders' && newOrders > 0 && (
+                <span key={pop} className="nav-badge" aria-label={`${newOrders} ta yangi buyurtma`}>
+                  {newOrders > 99 ? '99+' : newOrders}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>

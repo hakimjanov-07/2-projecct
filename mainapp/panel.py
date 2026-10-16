@@ -100,6 +100,16 @@ def panel_login(request):
     return Response(tokens_for(user))
 
 
+""" YANGI BUYURTMALAR SONI (yon menyu badge'i uchun) """
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def panel_new_orders_count(request):
+    # Yangi = tasdiqlangan (mijoz buyurtma bergan, admin hali "Yig'ilmoqda"ga o'tkazmagan); bitta so'rov
+    stats = Order.objects.filter(status='confirmed').aggregate(count=Count('id'), latest_id=Max('id'))
+    return Response({'count': stats['count'], 'latest_id': stats['latest_id']})
+
+
 """ DASHBOARD """
 
 @api_view(['GET'])

@@ -111,6 +111,7 @@ function OrderDrawer({ id, onClose, onChanged }) {
       await setOrderStatus(id, next)
       reload()
       onChanged()
+      window.dispatchEvent(new Event('panel-orders-changed')) // yon menyudagi badge qayta yuklansin
     } catch {
       setMessage("Holatni o'zgartirib bo'lmadi.")
     } finally {

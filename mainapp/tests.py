@@ -495,6 +495,31 @@ class PanelTests(TestCase):
         self.assertEqual((empty.data['orders'], empty.data['reviews'], empty.data['cart']), ([], [], None))
         self.assertEqual(empty.data['stats']['average'], 0)
 
+    def test_new_orders_count_requires_staff(self):
+        url = '/api/panel/orders/new-count/'
+        self.assertEqual(self.client.get(url).status_code, 401)
+        self.client.force_authenticate(user=self.user)
+        self.assertEqual(self.client.get(url).status_code, 403)
+
+    def test_new_orders_count_only_confirmed(self):
+        url = '/api/panel/orders/new-count/'
+        self.client.force_authenticate(user=self.staff)
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 200)
+        # setUp: 2 ta confirmed; cancelled va pending hisoblanmaydi
+        self.assertEqual(res.data['count'], 2)
+        self.assertEqual(res.data['latest_id'], self.o2.id)
+        Order.objects.create(user=self.user, status='processing')
+        Order.objects.create(user=self.user, status='shipped')
+        Order.objects.create(user=self.user, status='delivered')
+        self.assertEqual(self.client.get(url).data['count'], 2)
+        # keyingi bosqichga o'tkazilsa son kamayadi
+        self.client.patch(f'/api/panel/orders/{self.o1.id}/', {'status': 'processing'}, format='json')
+        self.assertEqual(self.client.get(url).data['count'], 1)
+        Order.objects.filter(pk=self.o2.pk).update(status='cancelled')
+        res = self.client.get(url)
+        self.assertEqual((res.data['count'], res.data['latest_id']), (0, None))
+
     def test_user_detail_not_found(self):
         self.client.force_authenticate(user=self.staff)
         self.assertEqual(self.client.get('/api/panel/users/999999/').status_code, 404)

@@ -6,7 +6,7 @@ from .panel_export import export_csv
 from .panel_promos import PanelPromoDetail, PanelPromoList
 from .panel import (
     PanelBookDetail, PanelBookList, PanelOrderDetail, PanelOrderList, PanelUserList,
-    panel_login, panel_summary, panel_user_detail,
+    panel_login, panel_new_orders_count, panel_summary, panel_user_detail,
 )
 from .views import (
     Author_ViewSet, Book_ViewSet, Category_ViewSet, Order_ViewSet, Review_ViewSet,
@@ -30,6 +30,7 @@ urlpatterns = [
     path('panel/login/', panel_login),
     path('panel/summary/', panel_summary),
     path('panel/orders/', PanelOrderList.as_view()),
+    path('panel/orders/new-count/', panel_new_orders_count),
     path('panel/orders/<int:pk>/', PanelOrderDetail.as_view()),
     path('panel/books/', PanelBookList.as_view()),
     path('panel/books/<int:pk>/', PanelBookDetail.as_view()),

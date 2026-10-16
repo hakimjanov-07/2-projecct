@@ -48,7 +48,8 @@ export const login = (username, password) =>
 
 export const getSummary = (days) => api.get('/panel/summary/', { params: { days } }).then((r) => r.data)
 export const getOrders = (params) => api.get('/panel/orders/', { params }).then((r) => r.data)
-export const getOrder = (id) => api.get(`/panel/orders/${id}/`).then((r) => r.data)
+export const getNewOrdersCount = () => api.get('/panel/orders/new-count/').then((r) => r.data)
+export const getOrder =(id) => api.get(`/panel/orders/${id}/`).then((r) => r.data)
 export const setOrderStatus = (id, status) => api.patch(`/panel/orders/${id}/`, { status }).then((r) => r.data)
 export const getBooks = (params) => api.get('/panel/books/', { params }).then((r) => r.data)
 export const updateBook = (id, data) => api.patch(`/panel/books/${id}/`, data).then((r) => r.data)
