@@ -127,6 +127,11 @@
   align-items: start;
 }
 
+.list,
+.summary {
+  min-width: 0;
+}
+
 .list {
   display: flex;
   flex-direction: column;
@@ -397,12 +402,80 @@
 }
 
 .qty .qtyPlus {
-  background: var(--brown);
-  color: var(--white);
+  background: color-mix(in srgb, var(--brown-2) 90%, #000);
+  color: var(--on-accent);
 }
 
 .qty .qtyPlus:hover {
   background: var(--brown-2);
+}
+
+/* Ombor chegarasiga yetganda "+" o'chadi */
+.qty .qtyPlus:disabled,
+.qty .qtyPlus:disabled:hover {
+  background: var(--gray-200);
+  color: var(--gray-400);
+  cursor: not-allowed;
+}
+
+.qtyWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.stockHint {
+  margin: 0;
+  padding-left: 4px;
+  color: #b45309;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Savatni tozalash tasdig'i */
+.confirmText {
+  margin: 0 0 20px;
+  color: var(--gray-600);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.confirmActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.confirmCancel,
+.confirmYes {
+  height: 46px;
+  padding: 0 22px;
+  border: none;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.confirmCancel {
+  border: 1px solid var(--gray-200);
+  background: var(--cream);
+  color: var(--text);
+}
+
+.confirmCancel:hover {
+  background: var(--gray-200);
+}
+
+.confirmYes {
+  background: #d3354f;
+  color: #fff;
+}
+
+.confirmYes:hover {
+  filter: brightness(0.94);
 }
 
 .empty {
@@ -641,6 +714,7 @@
 
 .totalRow {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
   gap: 12px;
@@ -786,8 +860,8 @@
   height: 60px;
   border: none;
   border-radius: 20px;
-  background: var(--brown);
-  color: var(--white);
+  background: color-mix(in srgb, var(--brown-2) 90%, #000);
+  color: var(--on-accent);
   font-size: 17px;
   font-weight: 700;
   box-shadow: 0 10px 24px rgba(200, 149, 108, 0.45);
@@ -819,7 +893,7 @@
 
 @media (max-width: 980px) {
   .layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .summary {

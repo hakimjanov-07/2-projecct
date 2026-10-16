@@ -39,7 +39,7 @@
 
 .placeholder {
   overflow: hidden;
-  color: var(--gray-400);
+  color: var(--gray-600);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -54,7 +54,7 @@
 
 .chevron {
   flex-shrink: 0;
-  color: var(--gray-400);
+  color: var(--gray-600);
   font-size: 16px;
   line-height: 1;
 }
@@ -115,7 +115,7 @@
 
 .count {
   flex-shrink: 0;
-  color: var(--gray-400);
+  color: var(--gray-600);
   font-size: 12px;
 }
 
@@ -137,6 +137,6 @@
 .empty {
   margin: 0;
   padding: 10px 12px;
-  color: var(--gray-400);
+  color: var(--gray-600);
   font-size: 13px;
 }

@@ -30,7 +30,7 @@
 .form input { width: 100%; padding: 12px 14px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); font: inherit; }
 .form input:focus { outline: 2px solid var(--accent-bg); border-color: var(--accent); }
 .submitArea { display: block; width: 100%; margin-top: 2px; }
-.submit { display: block; width: 100%; min-height: 46px; border: 0; border-radius: var(--radius-sm); padding: 13px; color: white; background: var(--brown); font-weight: 600; cursor: pointer; }
+.submit { display: block; width: 100%; min-height: 46px; border: 0; border-radius: var(--radius-sm); padding: 13px; color: var(--on-accent); background: color-mix(in srgb, var(--brown-2) 90%, #000); font-weight: 600; cursor: pointer; }
 .submit:disabled { opacity: .6; cursor: wait; }
 .error { color: #c0392b; font-size: 13px; }
 .switch { color: var(--gray-600); text-align: center; font-size: 13px; }
@@ -40,6 +40,6 @@
   .card { padding: 28px 22px; }
 }
 
-.forgot { justify-self: end; margin-top: -6px; color: var(--brown-2); font-size: 13px; font-weight: 600; text-decoration: none; }
+.forgot { justify-self: end; margin-top: -6px; color: var(--brown-dark); font-size: 13px; font-weight: 600; text-decoration: none; }
 .forgot:hover { text-decoration: underline; }
 .success { margin: 0; padding: 10px 14px; border-radius: 12px; background: color-mix(in srgb, #2f8f5b 14%, var(--surface)); color: #3f6b38; font-size: 13px; }

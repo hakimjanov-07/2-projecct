@@ -1,7 +1,7 @@
 import { NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { useCart } from '../context/CartContext'
-import { clearSession } from '../api'
+import { clearSession, logoutOnServer } from '../api'
 import { SITE } from '../config/site'
 import { LANGUAGES } from '../i18n/translations'
 import { getTheme, setTheme } from '../theme'
@@ -9,6 +9,7 @@ import { useLang } from '../i18n/LanguageContext'
 import CategoryMenu from './CategoryMenu'
 import SearchSuggest from './SearchSuggest'
 import { useSuggestions } from '../useSuggestions'
+import useAuthToken from '../useAuthToken'
 import styles from './Navbar.module.css'
 
 const categoryLinks = [
@@ -103,7 +104,7 @@ export default function Navbar() {
   const [activeIdx, setActiveIdx] = useState(-1)
   const suggest = useSuggestions(query, searchFocused)
   const langRef = useRef(null)
-  const token = localStorage.getItem('access_token')
+  const token = useAuthToken()
   const username = localStorage.getItem('username')
 
   useEffect(() => {
@@ -222,6 +223,7 @@ export default function Navbar() {
   }
 
   const logout = () => {
+    logoutOnServer()
     clearSession()
     window.location.assign('/')
   }

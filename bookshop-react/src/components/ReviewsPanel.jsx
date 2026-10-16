@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { createBookReview, getBookReviews, getMyBookReview, updateBookReview } from '../api'
 import { useToast } from '../context/ToastContext'
 import { useLang } from '../i18n/LanguageContext'
+import useAuthToken from '../useAuthToken'
 import styles from './ReviewsPanel.module.css'
 
 const emptyForm = { rating: '5', comment: '', photo: null }
@@ -23,7 +24,7 @@ export default function ReviewsPanel({ bookId, onCountChange }) {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const photoRef = useRef(null)
-  const isLoggedIn = Boolean(localStorage.getItem('access_token'))
+  const isLoggedIn = Boolean(useAuthToken())
   const returnTo = `/books/${bookId}?tab=reviews`
 
   const load = useCallback(async () => {

@@ -128,7 +128,7 @@
   border: 1.5px dashed var(--brown);
   border-radius: 14px;
   background: var(--nav-soft);
-  color: var(--brown-2);
+  color: var(--brown-dark);
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
@@ -147,9 +147,9 @@
 }
 
 .fileBtn:hover {
-  background: var(--brown);
+  background: color-mix(in srgb, var(--brown-2) 90%, #000);
   border-style: solid;
-  color: var(--white);
+  color: var(--on-accent);
   transform: translateY(-2px);
   box-shadow: 0 6px 14px rgba(200, 149, 108, 0.3);
 }
@@ -197,7 +197,7 @@
   border: none;
   border-radius: 50%;
   background: var(--nav-soft);
-  color: var(--brown-2);
+  color: var(--brown-dark);
   cursor: pointer;
   transition: background 0.2s, color 0.2s, transform 0.2s;
 }
@@ -212,8 +212,8 @@
 }
 
 .fileRemove:hover {
-  background: var(--brown);
-  color: var(--white);
+  background: color-mix(in srgb, var(--brown-2) 90%, #000);
+  color: var(--on-accent);
   transform: rotate(90deg);
 }
 
@@ -223,8 +223,8 @@
   padding: 0 28px;
   border: none;
   border-radius: 14px;
-  background: var(--brown);
-  color: var(--white);
+  background: color-mix(in srgb, var(--brown-2) 90%, #000);
+  color: var(--on-accent);
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
@@ -297,8 +297,8 @@
 }
 
 .gateRegister {
-  background: var(--brown);
-  color: var(--white);
+  background: color-mix(in srgb, var(--brown-2) 90%, #000);
+  color: var(--on-accent);
 }
 
 .gateLogin:hover {
@@ -339,8 +339,8 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--brown);
-  color: var(--white);
+  background: color-mix(in srgb, var(--brown-2) 90%, #000);
+  color: var(--on-accent);
   font-weight: 700;
 }
 
@@ -367,8 +367,8 @@
   padding: 2px 8px;
   border-radius: 999px;
   background: var(--nav-soft);
-  color: var(--brown-2);
-  font-size: 11px;
+  color: var(--brown-dark);
+  font-size: 12px;
   font-style: normal;
   font-weight: 700;
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { SITE } from '../config/site'
 import { useLang } from '../i18n/LanguageContext'
+import useAuthToken from '../useAuthToken'
 import styles from './Footer.module.css'
 
 const SOCIAL_ICONS = {
@@ -31,7 +32,7 @@ function ClockIcon() {
 export default function Footer() {
   const { t } = useLang()
   const [showTop, setShowTop] = useState(false)
-  const isLoggedIn = Boolean(localStorage.getItem('access_token'))
+  const isLoggedIn = Boolean(useAuthToken())
   const socials = Object.entries(SITE.social) // havolasi yo'qlari ham ko'rinadi (bosilmaydi), havola yozilsa ishlaydi
 
   useEffect(() => {

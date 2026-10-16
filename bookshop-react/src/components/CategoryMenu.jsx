@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getBooks, getCategories } from '../api'
+import { getAllBooks, getCategories } from '../api'
+import { categoriesWithBooks } from '../categories'
 import { useLang } from '../i18n/LanguageContext'
 import styles from './CategoryMenu.module.css'
 
@@ -27,7 +28,7 @@ export default function CategoryMenu({ open, onClose }) {
     if (!open || loaded) return
     let active = true
 
-    Promise.allSettled([getCategories(), getBooks({ page_size: 100 })]).then(([categoriesResult, booksResult]) => {
+    Promise.allSettled([getCategories(), getAllBooks()]).then(([categoriesResult, booksResult]) => {
       if (!active) return
       if (categoriesResult.status === 'fulfilled') {
         const list = categoriesResult.value.data.results || []
@@ -60,9 +61,12 @@ export default function CategoryMenu({ open, onClose }) {
     return map
   }, [books])
 
+  // Kitobi yo'q kategoriyalar menyuda ko'rsatilmaydi
+  const visibleCategories = useMemo(() => categoriesWithBooks(categories, books), [categories, books])
+
   if (!open) return null
 
-  const activeCategory = categories.find((category) => category.id === activeId)
+  const activeCategory = visibleCategories.find((category) => category.id === activeId)
   const activeBooks = booksByCategory.get(activeId) || []
 
   return (
@@ -75,12 +79,12 @@ export default function CategoryMenu({ open, onClose }) {
 
       {!loaded && <p className={styles.state}>{t('menu.loading')}</p>}
       {loaded && failed && <p className={styles.state}>{t('menu.failed')}</p>}
-      {loaded && !failed && categories.length === 0 && <p className={styles.state}>{t('menu.noGenres')}</p>}
+      {loaded && !failed && visibleCategories.length === 0 && <p className={styles.state}>{t('menu.noGenres')}</p>}
 
-      {categories.length > 0 && (
+      {visibleCategories.length > 0 && (
         <div className={styles.body}>
           <ul className={styles.list}>
-            {categories.map((category, index) => (
+            {visibleCategories.map((category, index) => (
               <li key={category.id} style={{ '--i': Math.min(index, 10) }}>
                 <Link
                   to={`/books?category=${category.id}`}

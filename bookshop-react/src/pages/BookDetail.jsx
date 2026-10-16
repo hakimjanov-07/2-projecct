@@ -9,6 +9,7 @@ import { useCart } from '../context/CartContext'
 import { useToast } from '../context/ToastContext'
 import { useFavorites } from '../context/FavoritesContext'
 import { useLang } from '../i18n/LanguageContext'
+import useDocumentTitle from '../useDocumentTitle'
 import styles from './BookDetail.module.css'
 
 const fallbackImage = '/book-cover-placeholder.svg'
@@ -34,6 +35,7 @@ export default function BookDetail() {
   const [error, setError] = useState(false)
   const [imgError, setImgError] = useState(false)
   const sliderRef = useRef(null)
+  useDocumentTitle(book && String(book.id) === String(id) ? book.name : '')
 
   useEffect(() => {
     if (location.state?.book && String(location.state.book.id) === String(id)) {
@@ -43,18 +45,22 @@ export default function BookDetail() {
       return
     }
 
+    // Tez ketma-ket kitobga o'tilsa eski javob yangisini bosmasligi uchun (cleanup'da active=false)
+    let active = true
     setLoading(true)
     setError(false)
     getBook(id)
       .then(res => {
+        if (!active) return
         if (!res.data) {
           setError(true)
           return
         }
         setBook(res.data)
       })
-      .catch(() => setError(true))
-      .finally(() => setLoading(false))
+      .catch(() => active && setError(true))
+      .finally(() => active && setLoading(false))
+    return () => { active = false }
   }, [id, location.state])
 
   // Yangi kitobga o'tilganda holat boshiga qaytadi
@@ -146,7 +152,7 @@ export default function BookDetail() {
   return (
     <main className={styles.page}>
       <div className={styles.container}>
-        <nav className={styles.breadcrumb} aria-label="breadcrumb" data-reveal>
+        <nav className={styles.breadcrumb} aria-label={t('book.breadcrumb')} data-reveal>
           <Link to="/">{t('nav.home')}</Link>
           <span aria-hidden="true">›</span>
           {book.category_name && (

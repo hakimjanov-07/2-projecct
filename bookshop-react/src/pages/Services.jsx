@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useLang } from '../i18n/LanguageContext'
+import useDocumentTitle from '../useDocumentTitle'
 import styles from './Static.module.css'
 
 // "Xizmatlar" bo'limi: har bir yordam sahifasi uchun alohida tugma
@@ -21,6 +22,7 @@ const SERVICES = [
 
 export default function Services() {
   const { t } = useLang()
+  useDocumentTitle(t('title.services'))
 
   return (
     <main className={styles.wrap}>

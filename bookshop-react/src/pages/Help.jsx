@@ -1,5 +1,7 @@
-import { Navigate, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { useLang } from '../i18n/LanguageContext'
+import useDocumentTitle from '../useDocumentTitle'
+import NotFound from './NotFound'
 import styles from './Static.module.css'
 
 // Yordam sahifalari matni (namuna): to'lov, yetkazib berish, maxfiylik
@@ -10,7 +12,7 @@ const PAGES = {
       lead: "Buyurtma uchun qulay usulda to'lang",
       blocks: [
         { h: 'Naqd pul', p: "Buyurtmani qabul qilganingizda kuryerga naqd pul bilan to'lashingiz mumkin." },
-        { h: 'Bank kartasi', p: "Uzcard va Humo kartalari orqali to'lov qabul qilinadi. Karta ma'lumotlaringiz bizning serverimizda saqlanmaydi." },
+        { h: 'Bank kartasi', p: "Onlayn to'lov hali mavjud emas. Hozircha to'lov buyurtmani olib ketganda yoki yetkazib berilganda amalga oshiriladi (naqd yoki karta orqali). Karta ma'lumotlaringiz bizning serverimizda saqlanmaydi." },
         { h: 'Promo kod', p: "Savat sahifasida promo kodni kiriting, chegirma buyurtma summasiga avtomatik qo'llanadi." },
       ],
     },
@@ -19,7 +21,7 @@ const PAGES = {
       lead: 'Оплачивайте заказ удобным способом',
       blocks: [
         { h: 'Наличные', p: 'Вы можете оплатить заказ наличными курьеру при получении.' },
-        { h: 'Банковская карта', p: 'Принимаются карты Uzcard и Humo. Данные вашей карты не хранятся на нашем сервере.' },
+        { h: 'Банковская карта', p: 'Онлайн-оплата пока недоступна. Сейчас оплата производится при получении заказа в магазине или при доставке (наличными или картой). Данные вашей карты не хранятся на нашем сервере.' },
         { h: 'Промокод', p: 'Введите промокод на странице корзины, скидка применится к сумме заказа автоматически.' },
       ],
     },
@@ -28,7 +30,7 @@ const PAGES = {
       lead: 'Pay for your order the way that suits you',
       blocks: [
         { h: 'Cash', p: 'You can pay the courier in cash when you receive your order.' },
-        { h: 'Bank card', p: 'Uzcard and Humo cards are accepted. Your card details are not stored on our server.' },
+        { h: 'Bank card', p: 'Online payment is not available yet. For now, you pay when you pick up your order or when it is delivered (in cash or by card). Your card details are not stored on our server.' },
         { h: 'Promo code', p: 'Enter a promo code in the cart and the discount is applied to your order automatically.' },
       ],
     },
@@ -38,7 +40,7 @@ const PAGES = {
       title: 'Yetkazib berish',
       lead: "Buyurtmangiz o'zingiz aytgan manzilga yetkaziladi",
       blocks: [
-        { h: 'Narxi', p: "Yetkazib berish 20 000 so'm. Buyurtma summasi 300 000 so'mdan oshsa, yetkazib berish bepul." },
+        { h: 'Narxi', p: "Yetkazib berish 20 000 so'm. Buyurtma summasi 300 000 so'm va undan ko'p bo'lsa, yetkazib berish bepul." },
         { h: 'Muddati', p: 'Buyurtma tasdiqlangandan keyin odatda 1-3 ish kuni ichida yetkaziladi. Aniq muddatni operator telefon orqali aytadi.' },
         { h: 'Buyurtma holati', p: "Buyurtmangiz holatini profilingizdagi buyurtmalar bo'limida kuzatishingiz mumkin." },
       ],
@@ -47,7 +49,7 @@ const PAGES = {
       title: 'Доставка',
       lead: 'Заказ доставляется по указанному вами адресу',
       blocks: [
-        { h: 'Стоимость', p: 'Доставка стоит 20 000 сум. При сумме заказа свыше 300 000 сум доставка бесплатная.' },
+        { h: 'Стоимость', p: 'Доставка стоит 20 000 сум. При сумме заказа от 300 000 сум доставка бесплатная.' },
         { h: 'Сроки', p: 'Обычно заказ доставляется в течение 1-3 рабочих дней после подтверждения. Точный срок сообщит оператор по телефону.' },
         { h: 'Статус заказа', p: 'Следить за статусом заказа можно в разделе заказов вашего профиля.' },
       ],
@@ -56,7 +58,7 @@ const PAGES = {
       title: 'Delivery',
       lead: 'Your order is delivered to the address you give us',
       blocks: [
-        { h: 'Price', p: 'Delivery costs 20,000 UZS. Orders over 300,000 UZS ship free.' },
+        { h: 'Price', p: 'Delivery costs 20,000 UZS. Orders of 300,000 UZS or more ship free.' },
         { h: 'Timing', p: 'Orders are usually delivered within 1-3 business days after confirmation. An operator will confirm the exact time by phone.' },
         { h: 'Order status', p: 'You can follow your order status in the orders section of your profile.' },
       ],
@@ -98,10 +100,16 @@ const PAGES = {
 
 export default function Help() {
   const { page } = useParams()
+  // hasOwn: /help/constructor, /help/__proto__ kabi prototip kalitlari "mavjud sahifa" bo'lib qolmasin
+  if (!Object.hasOwn(PAGES, page)) return <NotFound />
+  return <HelpPage page={page} />
+}
+
+function HelpPage({ page }) {
   const { lang } = useLang()
   const data = PAGES[page]
-  if (!data) return <Navigate to="/" replace />
   const c = data[lang] ?? data.uz
+  useDocumentTitle(c.title)
 
   return (
     <main className={styles.wrap}>

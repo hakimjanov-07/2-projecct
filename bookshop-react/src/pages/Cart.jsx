@@ -2,9 +2,12 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { checkoutOrder, getCartQuote, getProfile } from '../api'
 import { EMPTY_FORM, formatPhone, loadSavedForm, saveForm } from '../components/deliveryForm'
+import Modal from '../components/Modal'
+import ModalBoundary from '../components/ModalBoundary'
 import { useCart } from '../context/CartContext'
 import { useToast } from '../context/ToastContext'
 import { useLang } from '../i18n/LanguageContext'
+import useDocumentTitle from '../useDocumentTitle'
 import styles from './Cart.module.css'
 
 const fallbackImage = '/book-cover-placeholder.svg'
@@ -102,17 +105,23 @@ const setSlide = (button) => {
   if (label) button.style.setProperty('--slide', `${Math.round(label.offsetWidth / 2 + 24)}px`)
 }
 
+// Savatdagi miqdor ombordagi sondan oshmasligi uchun "+" shu chegarada o'chadi (stock noma'lum bo'lsa cheklanmagan)
+const atLimit = (item) => typeof item.stock === 'number' && item.quantity >= item.stock
+
 export default function Cart() {
   const { items, totalItems, totalPrice, updateQuantity, removeFromCart, clearCart, syncItems } = useCart()
   const navigate = useNavigate()
   const { showToast } = useToast()
   const { t, locale } = useLang()
+  useDocumentTitle(t('title.cart'))
   const [submitting, setSubmitting] = useState(false)
   const [orderPlaced, setOrderPlaced] = useState(false)
   const [orderError, setOrderError] = useState('')
   const [promoInput, setPromoInput] = useState('')
   const [promoCode, setPromoCode] = useState('')
   const [quote, setQuote] = useState(null)
+  const [quoteFailed, setQuoteFailed] = useState(false)
+  const [quoteTry, setQuoteTry] = useState(0) // "Qo'llash" qayta bosilganda (kod o'sha-o'sha bo'lsa ham) hisob-kitob qayta so'raladi
   // Qabul qilish usuli: null - hali tanlanmagan; oyna faqat tasdiqlanganda usulni o'zgartiradi
   const [method, setMethod] = useState(null)
   const [modal, setModal] = useState(null)
@@ -120,7 +129,10 @@ export default function Cart() {
   // O'chirilayotgan qatorlar (animatsiya vaqtida) va "hammasini tozalash" holati
   const [leavingIds, setLeavingIds] = useState([])
   const [clearing, setClearing] = useState(false)
+  const [confirmClear, setConfirmClear] = useState(false)
+  const clearBtnRef = useRef(null)
   const timers = useRef([])
+  const orderKey = useRef({ sig: '', key: '' }) // Idempotency-Key: bir xil savat/usul/manzil uchun qayta bosishda o'sha kalit
   const headingRef = useRef(null)
 
   useEffect(() => {
@@ -160,14 +172,24 @@ export default function Cart() {
     }, REMOVE_MS))
   }
 
-  const handleClear = (event) => {
+  // 2 ta va undan ko'p kitob bo'lsa avval tasdiq so'raladi, 1 tasi bo'lsa darhol tozalanadi
+  const handleClear = () => {
+    if (clearing) return
+    if (items.length >= 2) {
+      setConfirmClear(true)
+      return
+    }
+    runClear()
+  }
+
+  const runClear = () => {
     if (clearing) return
     if (prefersReducedMotion()) {
       headingRef.current?.focus({ preventScroll: true })
       clearCart()
       return
     }
-    setSlide(event.currentTarget)
+    if (clearBtnRef.current) setSlide(clearBtnRef.current)
     setClearing(true)
     // Qatorlar yengil stagger bilan so'nib yig'iladi
     const rows = [...document.querySelectorAll('[data-cart-row]')].filter((row) => !row.dataset.leaving)
@@ -211,6 +233,7 @@ export default function Cart() {
           if (!active) return
           const data = response.data
           setQuote({ ...data, method: quoteMethod })
+          setQuoteFailed(false)
           // Savatdagi eski nom/narx/rasmni joriy ma'lumot bilan almashtirish, yo'q kitobni olib tashlash
           const lines = data.items || []
           const lineIds = new Set(lines.map((line) => line.id))
@@ -218,14 +241,18 @@ export default function Cart() {
           syncItems(lines, data.missing || [])
           if (dropped) showToast(t('cart.removedUnavailable'), { type: 'error', icon: '!' })
         })
-        .catch(() => active && setQuote(null))
+        .catch(() => {
+          if (!active) return
+          setQuote(null)
+          setQuoteFailed(true)
+        })
     }, 250)
     return () => {
       active = false
       clearTimeout(timer)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, promoCode, quoteMethod])
+  }, [items, promoCode, quoteMethod, quoteTry])
 
   // Server javobi savatdagi joriy qatorlarga aynan mos bo'lsagina ishlatiladi, aks holda qatorlar yig'indisi
   const quoteFits = items.length > 0 && quote !== null && quote.method === quoteMethod
@@ -242,6 +269,7 @@ export default function Cart() {
   const applyPromo = (event) => {
     event.preventDefault()
     setPromoCode(promoInput.trim())
+    setQuoteTry((n) => n + 1)
   }
 
   const clearPromo = () => {
@@ -283,7 +311,11 @@ export default function Cart() {
       const delivery = method === 'pickup'
         ? { delivery_method: 'pickup', recipient_name: form.recipient_name, recipient_phone: form.recipient_phone }
         : { delivery_method: 'delivery', ...form }
-      const { data: order } = await checkoutOrder(items, promoApplied ? promoApplied.code : '', delivery)
+      const promo = promoApplied ? promoApplied.code : ''
+      const sig = JSON.stringify([items.map((i) => [i.id, i.quantity]), promo, delivery])
+      if (orderKey.current.sig !== sig) orderKey.current = { sig, key: crypto.randomUUID() }
+      const { data: order } = await checkoutOrder(items, promo, delivery, { idempotencyKey: orderKey.current.key })
+      orderKey.current = { sig: '', key: '' }
       saveForm(form)
       clearCart()
       clearPromo()
@@ -303,7 +335,9 @@ export default function Cart() {
         ? data.items.map((item) => item.name + ': ' + item.available + ' ' + t('cart.stockAvailable')).join(', ')
         : ''
       setOrderError(
-        error.response?.status === 401
+        error.response?.status === 429
+          ? t('auth.tooManyAttempts')
+          : error.response?.status === 401
           ? t('cart.sessionExpired')
           : addressInvalid
             ? t('cart.deliveryInvalid')
@@ -348,6 +382,7 @@ export default function Cart() {
                 <button
                   type="button"
                   className={`${styles.clearBtn} ${clearing ? styles.removing : ''}`}
+                  ref={clearBtnRef}
                   onClick={handleClear}
                   disabled={clearing}
                 >
@@ -387,19 +422,26 @@ export default function Cart() {
                     </div>
 
                     <div className={styles.bottom}>
-                      <div className={styles.qty}>
-                        <button
-                          type="button"
-                          aria-label={t('cart.decrease')}
-                          onClick={() => updateQuantity(item.id, -1)}
-                        >−</button>
-                        <span aria-live="polite">{item.quantity}</span>
-                        <button
-                          type="button"
-                          className={styles.qtyPlus}
-                          aria-label={t('cart.increase')}
-                          onClick={() => updateQuantity(item.id, 1)}
-                        >+</button>
+                      <div className={styles.qtyWrap}>
+                        <div className={styles.qty}>
+                          <button
+                            type="button"
+                            aria-label={t('cart.decrease')}
+                            onClick={() => updateQuantity(item.id, -1)}
+                          >−</button>
+                          <span aria-live="polite">{item.quantity}</span>
+                          <button
+                            type="button"
+                            className={styles.qtyPlus}
+                            aria-label={t('cart.increase')}
+                            aria-describedby={atLimit(item) ? `stock-${item.id}` : undefined}
+                            disabled={atLimit(item)}
+                            onClick={() => updateQuantity(item.id, 1)}
+                          >+</button>
+                        </div>
+                        {atLimit(item) && (
+                          <p id={`stock-${item.id}`} className={styles.stockHint}>{t('cart.stockLimit', { n: item.stock })}</p>
+                        )}
                       </div>
 
                       <button
@@ -497,6 +539,10 @@ export default function Cart() {
                 </p>
               )}
               {promoInvalid && <p className={styles.promoBad}>{t('cart.promoInvalid')}</p>}
+              {/* Server hisob-kitobi yiqilsa promo kod jim yo'qolmasin */}
+              {Boolean(promoCode) && items.length > 0 && quoteFailed && (
+                <p className={styles.promoBad} role="alert">{t('cart.quoteError')}</p>
+              )}
             </form>
 
             {orderError && <p className={styles.error} role="alert">{orderError}</p>}
@@ -513,10 +559,39 @@ export default function Cart() {
         </div>
       </div>
 
-      <Suspense fallback={null}>
-        {modal === 'pickup' && <PickupModal initial={form} onConfirm={confirmPickup} onClose={() => setModal(null)} />}
-        {modal === 'delivery' && <DeliveryModal initial={form} onConfirm={confirmDelivery} onClose={() => setModal(null)} />}
-      </Suspense>
+      {confirmClear && items.length > 0 && (
+        <Modal title={t('cart.clearConfirmTitle')} onClose={() => setConfirmClear(false)}>
+          <p className={styles.confirmText}>{t('cart.clearConfirmText', { n: items.length })}</p>
+          <div className={styles.confirmActions}>
+            <button type="button" className={styles.confirmCancel} data-autofocus onClick={() => setConfirmClear(false)}>
+              {t('modal.cancel')}
+            </button>
+            <button
+              type="button"
+              className={styles.confirmYes}
+              onClick={() => {
+                setConfirmClear(false)
+                runClear()
+              }}
+            >
+              {t('cart.clearYes')}
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      <ModalBoundary
+        resetKey={modal}
+        onError={() => {
+          setModal(null)
+          showToast(t('cart.modalLoadFailed'), { type: 'error', icon: '!' })
+        }}
+      >
+        <Suspense fallback={null}>
+          {modal === 'pickup' && <PickupModal initial={form} onConfirm={confirmPickup} onClose={() => setModal(null)} />}
+          {modal === 'delivery' && <DeliveryModal initial={form} onConfirm={confirmDelivery} onClose={() => setModal(null)} />}
+        </Suspense>
+      </ModalBoundary>
     </main>
   )
 }

@@ -319,3 +319,12 @@
     gap: 28px;
   }
 }
+
+/* Sensorli ekran/telefon: havolalar orasi bosish uchun qulay */
+@media (pointer: coarse), (max-width: 768px) {
+  .col a,
+  .legal a {
+    display: inline-block;
+    padding: 12px 0;
+  }
+}

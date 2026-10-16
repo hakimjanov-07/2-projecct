@@ -75,7 +75,7 @@
 .clearLink {
   border: none;
   background: none;
-  color: var(--gray-400);
+  color: var(--gray-600);
   font-size: 14px;
   cursor: pointer;
 }
@@ -119,8 +119,8 @@
 
 .chipActive,
 .chipActive:hover {
-  background: var(--brown);
-  color: var(--white);
+  background: color-mix(in srgb, var(--brown-2) 90%, #000);
+  color: var(--on-accent);
   font-weight: 600;
 }
 
@@ -135,7 +135,7 @@
 .scale {
   display: flex;
   justify-content: space-between;
-  color: var(--gray-400);
+  color: var(--gray-600);
   font-size: 12px;
 }
 
@@ -150,9 +150,9 @@
 }
 
 .filterLabel {
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 1px;
-  color: var(--gray-400);
+  color: var(--gray-600);
   text-transform: uppercase;
   margin-bottom: 10px;
 }
@@ -177,9 +177,9 @@
 }
 
 .filterActive {
-  background: var(--brown);
+  background: color-mix(in srgb, var(--brown-2) 90%, #000);
   border-color: var(--brown);
-  color: var(--white);
+  color: var(--on-accent);
   font-weight: 600;
   box-shadow: 0 8px 18px rgba(160, 112, 74, 0.16);
 }
@@ -208,7 +208,7 @@
 
 .priceSep {
   font-size: 12px;
-  color: var(--gray-400);
+  color: var(--gray-600);
 }
 
 .clearBtn {
@@ -289,7 +289,7 @@
 }
 
 .searchBox input::placeholder {
-  color: var(--gray-400);
+  color: var(--gray-600);
 }
 
 .clearSearchBtn {
@@ -312,7 +312,7 @@
   margin: 0 0 20px;
   padding-left: 4px;
   font-size: 13px;
-  color: var(--gray-400);
+  color: var(--gray-600);
 }
 
 /* 4 TA KITOB 1 QATORDA */
@@ -387,5 +387,20 @@
   .grid {
     grid-template-columns: 1fr;
     gap: 14px;
+  }
+}
+
+/* Sensorli ekran/telefon: bosiladigan maydon kamida 40px */
+@media (pointer: coarse), (max-width: 768px) {
+  .chip {
+    min-height: 40px;
+  }
+
+  .priceInput {
+    min-height: 40px;
+  }
+
+  .clearBtn {
+    min-height: 40px;
   }
 }

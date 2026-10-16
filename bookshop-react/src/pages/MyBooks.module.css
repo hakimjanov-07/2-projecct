@@ -24,8 +24,8 @@
 .catalogBtn {
   padding: 12px 22px;
   border-radius: 14px;
-  background: var(--brown);
-  color: var(--white);
+  background: color-mix(in srgb, var(--brown-2) 90%, #000);
+  color: var(--on-accent);
   font-weight: 600;
   text-decoration: none;
   transition: background 0.2s;

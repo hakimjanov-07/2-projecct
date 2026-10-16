@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useFavorites } from '../context/FavoritesContext'
 import { useLang } from '../i18n/LanguageContext'
 import styles from './BookCard.module.css'
@@ -41,7 +41,12 @@ export default function BookCard({ book }) {
       <div className={styles.body}>
         {book.category_name && <p className={styles.category}>{book.category_name}</p>}
         <div className={styles.titleRow}>
-          <p className={styles.title}>{book.name}</p>
+          <h3 className={styles.title}>
+            {/* Haqiqiy havola: klaviatura va "yangi tabda ochish" uchun; karta bosilishi saqlanadi */}
+            <Link to={`/books/${book.id}`} state={{ book }} className={styles.titleLink} onClick={(e) => e.stopPropagation()}>
+              {book.name}
+            </Link>
+          </h3>
           <button
             type="button"
             className={`${styles.heart} ${favorite ? styles.heartActive : ''} ${heartPop ? styles.heartPop : ''}`}
@@ -81,7 +86,14 @@ export default function BookCard({ book }) {
           {book.price
             ? <p className={styles.price}>{Number(book.price).toLocaleString(locale)} {t('currency')}</p>
             : <span />}
-          <button className={styles.addBtn} onClick={handleOpenDetails} disabled={book.stock === 0}>
+          <button
+            type="button"
+            className={styles.addBtn}
+            aria-label={t('book.openDetails', { name: book.name })}
+            title={t('book.openDetails', { name: book.name })}
+            onClick={handleOpenDetails}
+            disabled={book.stock === 0}
+          >
             <svg className={styles.addIcon} viewBox="0 0 24 24" aria-hidden="true">
               <path d="M3 4.5h2l2.2 9.1a1.5 1.5 0 0 0 1.46 1.2h8.7a1.5 1.5 0 0 0 1.46-1.2L20 7H6.4M9 18.5a1.25 1.25 0 1 1 0 2.5a1.25 1.25 0 0 1 0-2.5Zm8 0a1.25 1.25 0 1 1 0 2.5a1.25 1.25 0 0 1 0-2.5Z" />
             </svg>

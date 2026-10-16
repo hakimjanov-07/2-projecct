@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getAuthors, getBooks } from '../api'
+import { getAuthors, getAllBooks } from '../api'
 import { useLang } from '../i18n/LanguageContext'
+import useDocumentTitle from '../useDocumentTitle'
 import LoadingSpinner from '../components/LoadingSpinner'
 import ErrorMessage from '../components/ErrorMessage'
 import styles from './Authors.module.css'
@@ -15,6 +16,7 @@ const getImgUrl = (photo) => {
 
 export default function Authors() {
   const { t, locale } = useLang()
+  useDocumentTitle(t('title.authors'))
   const [authors, setAuthors] = useState([])
   const [books, setBooks] = useState([])
   const [search, setSearch] = useState('')
@@ -25,7 +27,7 @@ export default function Authors() {
   const load = () => {
     setLoading(true)
     setError(null)
-    Promise.allSettled([getAuthors(), getBooks({ page_size: 100 })])
+    Promise.allSettled([getAuthors(), getAllBooks()])
       .then(([authorsResult, booksResult]) => {
         if (authorsResult.status === 'fulfilled') {
           setAuthors(authorsResult.value.data.results || [])

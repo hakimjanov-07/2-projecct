@@ -52,8 +52,8 @@
 }
 
 .category {
-  font-size: 10px;
-  color: var(--brown);
+  font-size: 12px;
+  color: var(--brown-dark);
   font-weight: 600;
   letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -70,9 +70,19 @@
   transition: color 0.25s ease;
 }
 
+.titleLink {
+  color: inherit;
+  border-radius: 4px;
+}
+
+.titleLink:focus-visible {
+  outline: 2px solid var(--brown-2);
+  outline-offset: 2px;
+}
+
 .author {
   font-size: 12px;
-  color: var(--gray-400);
+  color: var(--gray-600);
   margin-bottom: 8px;
 }
 
@@ -107,8 +117,8 @@
 }
 
 .reviewCount {
-  font-size: 11px;
-  color: var(--text-soft);
+  font-size: 12px;
+  color: var(--gray-600);
 }
 
 .footer {
@@ -125,8 +135,9 @@
 }
 
 .addBtn {
-  background: var(--brown);
-  color: var(--white);
+  /* --brown-2 ustiga oq matn 4.3:1 beradi; biroz to'qroq qilib 4.5:1 dan oshiriladi */
+  background: color-mix(in srgb, var(--brown-2) 90%, #000);
+  color: var(--on-accent);
   border: none;
   padding: 6px 12px;
   border-radius: var(--radius-sm);
@@ -136,7 +147,7 @@
   transition: background 0.2s;
 }
 
-.addBtn:hover { background: var(--brown-2); }
+.addBtn:hover:not(:disabled) { background: var(--brown-dark); }
 
 .addedBtn {
   background: #6f8f68;
@@ -253,4 +264,21 @@
 .addBtn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+/* Sensorli ekran/telefon: ko'rinish o'sha-o'sha, bosiladigan maydon kengayadi */
+@media (pointer: coarse), (max-width: 768px) {
+  .addBtn {
+    min-height: 40px;
+  }
+
+  .heart {
+    position: relative;
+  }
+
+  .heart::after {
+    content: '';
+    position: absolute;
+    inset: -10px;
+  }
 }

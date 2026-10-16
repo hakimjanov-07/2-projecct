@@ -78,7 +78,7 @@ button { font-family: inherit; cursor: pointer; border: none; }
 .loading {
   text-align: center;
   padding: 60px;
-  color: var(--gray-400);
+  color: var(--gray-600);
   font-size: 14px;
 }
 

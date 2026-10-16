@@ -113,6 +113,8 @@ const dict = {
   'reviews.you': { uz: 'Siz', ru: 'Вы', en: 'You' },
   'book.addFavorite': { uz: "Sevimlilarga qo'shish", ru: 'Добавить в избранное', en: 'Add to favorites' },
   'book.removeFavorite': { uz: "Sevimlilardan olib tashlash", ru: 'Убрать из избранного', en: 'Remove from favorites' },
+  'book.openDetails': { uz: 'Kitob sahifasini ochish: {name}', ru: 'Открыть страницу книги: {name}', en: 'Open book page: {name}' },
+  'book.breadcrumb': { uz: "Sahifa yo'li", ru: 'Навигационная цепочка', en: 'Breadcrumb' },
 
   // Footer
   'footer.tagline': {
@@ -133,7 +135,7 @@ const dict = {
   'footer.delivery': { uz: 'Yetkazib berish', ru: 'Доставка', en: 'Delivery' },
   'footer.privacy': { uz: 'Maxfiylik siyosati', ru: 'Конфиденциальность', en: 'Privacy policy' },
   'footer.toTop': { uz: 'Tepaga qaytish', ru: 'Наверх', en: 'Back to top' },
-  'footer.copy': { uz: '© 2026 Kitobxona. Barcha huquqlar himoyalangan.', ru: '© 2026 Kitobxona. Все права защищены.', en: '© 2026 Kitobxona. All rights reserved.' },
+  'footer.copy': { uz: '© 2026 BOOK.UZ. Barcha huquqlar himoyalangan.', ru: '© 2026 BOOK.UZ. Все права защищены.', en: '© 2026 BOOK.UZ. All rights reserved.' },
 
   // Bosh sahifa
   'home.eyebrow': { uz: 'YANGI KOLLEKSIYA · 2026', ru: 'НОВАЯ КОЛЛЕКЦИЯ · 2026', en: 'NEW COLLECTION · 2026' },
@@ -154,9 +156,9 @@ const dict = {
   'home.aboutEyebrow': { uz: 'Biz haqimizda', ru: 'О нас', en: 'About us' },
   'home.aboutTitle': { uz: 'Kitobga yaqinroq hayot', ru: 'Жизнь ближе к книге', en: 'Life closer to books' },
   'home.aboutText': {
-    uz: "Kitobxona — o'zbek va jahon adabiyotining sara asarlarini bir joyga jamlagan zamonaviy kitob do'koni. Har bir kitobxon o'ziga mos hikoyani topishi uchun tanlovimizni doim kengaytiramiz.",
-    ru: 'Kitobxona — современный книжный магазин, собравший лучшие произведения узбекской и мировой литературы. Мы постоянно расширяем выбор, чтобы каждый читатель нашёл подходящую историю.',
-    en: 'Kitobxona is a modern bookstore bringing together the finest works of Uzbek and world literature. We keep expanding our selection so every reader can find the right story.',
+    uz: "BOOK.UZ — o'zbek va jahon adabiyotining sara asarlarini bir joyga jamlagan zamonaviy kitob do'koni. Har bir kitobxon o'ziga mos hikoyani topishi uchun tanlovimizni doim kengaytiramiz.",
+    ru: 'BOOK.UZ — современный книжный магазин, собравший лучшие произведения узбекской и мировой литературы. Мы постоянно расширяем выбор, чтобы каждый читатель нашёл подходящую историю.',
+    en: 'BOOK.UZ is a modern bookstore bringing together the finest works of Uzbek and world literature. We keep expanding our selection so every reader can find the right story.',
   },
   'home.aboutMore': { uz: 'Biz haqimizda batafsil', ru: 'Подробнее о нас', en: 'Learn more about us' },
   'home.quoteEyebrow': { uz: "Nega kitob o'qiymiz", ru: 'Зачем мы читаем книги', en: 'Why we read' },
@@ -179,6 +181,68 @@ const dict = {
   'home.article3.time': { uz: '4 daqiqa', ru: '4 минуты', en: '4 min' },
   'home.readTime': { uz: "{time} o'qish →", ru: 'Читать {time} →', en: '{time} read →' },
   'common.loading': { uz: 'Yuklanmoqda...', ru: 'Загрузка...', en: 'Loading...' },
+  'common.error': { uz: 'Xatolik yuz berdi', ru: 'Произошла ошибка', en: 'Something went wrong' },
+  'common.retry': { uz: 'Qayta urinish', ru: 'Попробовать снова', en: 'Try again' },
+
+  // Biz haqimizda (/about)
+  'about.lead': { uz: "O'zbek va jahon adabiyotining eng sara namunalarini sizga yetkazib beramiz", ru: 'Мы доставляем вам лучшие образцы узбекской и мировой литературы', en: 'We bring you the finest works of Uzbek and world literature' },
+  'about.missionTitle': { uz: 'Bizning missiyamiz', ru: 'Наша миссия', en: 'Our mission' },
+  'about.missionText': {
+    uz: "BOOK.UZ — o'zbek kitobxonlariga qulay, ishonchli va zamonaviy onlayn kitob do'koni yaratish maqsadida tashkil etilgan. Biz har bir kitobni sevuvchi inson uchun eng sara asarlarni bir joyga jamlashga harakat qilamiz.",
+    ru: 'BOOK.UZ создан, чтобы подарить узбекским читателям удобный, надёжный и современный онлайн-магазин книг. Мы стремимся собрать в одном месте лучшие произведения для каждого, кто любит книги.',
+    en: 'BOOK.UZ was founded to give Uzbek readers a convenient, reliable and modern online bookstore. We strive to bring the finest works together in one place for everyone who loves books.',
+  },
+  'about.whyTitle': { uz: 'Nima uchun biz?', ru: 'Почему мы?', en: 'Why choose us?' },
+  'about.f1.title': { uz: 'Keng tanlov', ru: 'Большой выбор', en: 'Wide selection' },
+  'about.f1.desc': { uz: "Keng kitoblar tanlovi va ko'plab mualliflar", ru: 'Широкий выбор книг и множество авторов', en: 'A wide choice of books and many authors' },
+  'about.f2.title': { uz: 'Tez yetkazib berish', ru: 'Быстрая доставка', en: 'Fast delivery' },
+  'about.f2.desc': { uz: "Butun O'zbekiston bo'ylab", ru: 'По всему Узбекистану', en: 'Across all of Uzbekistan' },
+  'about.f3.title': { uz: 'Sifat kafolati', ru: 'Гарантия качества', en: 'Quality guarantee' },
+  'about.f3.desc': { uz: 'Faqat original va sifatli nashrlar', ru: 'Только оригинальные и качественные издания', en: 'Only original, high-quality editions' },
+  'about.f4.title': { uz: "Qo'llab-quvvatlash", ru: 'Поддержка клиентов', en: 'Customer support' },
+  'about.f4.desc': { uz: "Har kuni {hours}: har qanday savolingizga javob", ru: 'Ежедневно {hours}: ответим на любой ваш вопрос', en: 'Every day {hours}: answers to any of your questions' },
+
+  // Maqolalar (/articles)
+  'articles.title': { uz: 'Kitob dunyosidan', ru: 'Из мира книг', en: 'From the world of books' },
+  'articles.lead': { uz: "Adabiyot, mualliflar va o'qish madaniyati haqida qiziqarli maqolalar", ru: 'Интересные статьи о литературе, авторах и культуре чтения', en: 'Interesting articles about literature, authors and reading culture' },
+  'articles.min': { uz: '{n} daqiqa', ru: '{n} мин', en: '{n} min' },
+  'articles.readTime': { uz: "{time} o'qish", ru: 'Время чтения: {time}', en: '{time} read' },
+  'articles.a1.title': { uz: "Kitob o'qishning 5 muhim foydasi", ru: '5 важных преимуществ чтения книг', en: '5 key benefits of reading' },
+  'articles.a1.text': {
+    uz: "Muntazam kitob o'qish xotira, e'tibor va ijodiy tafakkurni kuchaytiradi. Ilmiy tadqiqotlar shuni isbotlaganki, har kuni kamida 30 daqiqa kitob o'qish stress darajasini sezilarli kamaytiradi.",
+    ru: 'Регулярное чтение укрепляет память, внимание и творческое мышление. Научные исследования показали, что чтение хотя бы 30 минут в день заметно снижает уровень стресса.',
+    en: 'Regular reading strengthens memory, attention and creative thinking. Research has shown that reading for at least 30 minutes a day noticeably lowers stress levels.',
+  },
+  'articles.a2.title': { uz: "O'zbek adabiyoti: tarix va bugun", ru: 'Узбекская литература: история и современность', en: 'Uzbek literature: past and present' },
+  'articles.a2.text': {
+    uz: "Asrlar davomida shakllanib kelgan o'zbek adabiyotining yorqin sahifalari. Abdulla Qodiriydan Erkin Vohidovgacha — milliy adabiyotimizning buyuk vakillari.",
+    ru: 'Яркие страницы узбекской литературы, складывавшейся на протяжении веков. От Абдуллы Кадыри до Эркина Вахидова — великие представители нашей национальной литературы.',
+    en: 'Bright pages of Uzbek literature, shaped over centuries. From Abdulla Qodiriy to Erkin Vohidov — the great figures of our national literature.',
+  },
+  'articles.a3.title': { uz: "Yoshlar uchun 10 ta tavsiya etilgan kitob", ru: '10 рекомендуемых книг для молодёжи', en: '10 recommended books for young people' },
+  'articles.a3.text': {
+    uz: "Hayotni o'zgartirgan va millionlar qalbiga yo'l topgan asarlar. Ushbu ro'yxatdagi har bir kitob siz haqingizda yangi bir narsani ochib beradi.",
+    ru: 'Произведения, изменившие жизнь и нашедшие путь к сердцам миллионов. Каждая книга из этого списка откроет вам что-то новое о себе.',
+    en: 'Works that changed lives and found their way into millions of hearts. Every book on this list will reveal something new about you.',
+  },
+  'articles.a4.title': { uz: 'Jahon adabiyotining durdonalari', ru: 'Шедевры мировой литературы', en: 'Masterpieces of world literature' },
+  'articles.a4.text': {
+    uz: "Dostoevskiydan Márquezgacha — insoniyat madaniyatiga ulkan hissa qo'shgan asarlar haqida. Bu kitoblarni o'qish — nafaqat badiiy zavq, balki chuqur hayotiy saboq.",
+    ru: 'От Достоевского до Маркеса — о произведениях, внёсших огромный вклад в культуру человечества. Чтение этих книг — не только художественное наслаждение, но и глубокий жизненный урок.',
+    en: 'From Dostoevsky to Márquez — on works that made a huge contribution to human culture. Reading these books is not only an artistic pleasure but also a deep life lesson.',
+  },
+  'articles.a5.title': { uz: "Kitob o'qish va miya salomatligi", ru: 'Чтение и здоровье мозга', en: 'Reading and brain health' },
+  'articles.a5.text': {
+    uz: "Neyrobiologlar tasdiqlagan: muntazam o'qish miyani mashq qildirib, demans va Alzheimer kasalliklariga qarshi muhim himoya vositasi hisoblanadi.",
+    ru: 'Нейробиологи подтверждают: регулярное чтение тренирует мозг и служит важной защитой от деменции и болезни Альцгеймера.',
+    en: "Neurobiologists confirm it: regular reading exercises the brain and is an important safeguard against dementia and Alzheimer's disease.",
+  },
+  'articles.a6.title': { uz: "Uyda qulay o'qish muhitini yaratish", ru: 'Как создать уютное место для чтения дома', en: 'Creating a cozy reading space at home' },
+  'articles.a6.text': {
+    uz: "Yaxshi yorug'lik, qulay o'rindiq va chalg'ituvchi narsalardan xoli joy — samarali o'qish uchun zarur muhitni qanday yaratish haqida amaliy maslahatlar.",
+    ru: 'Хорошее освещение, удобное кресло и место без отвлекающих факторов — практические советы о том, как создать подходящую среду для эффективного чтения.',
+    en: 'Good lighting, a comfortable seat and a space free of distractions — practical tips on creating the right environment for effective reading.',
+  },
 
   // Kitoblar sahifasi
   'books.title': { uz: 'Kitoblar', ru: 'Книги', en: 'Books' },
@@ -334,7 +398,7 @@ const dict = {
   'cart.orderFailed': { uz: 'Buyurtmani yuborib bo‘lmadi. Qayta urinib ko‘ring.', ru: 'Не удалось отправить заказ. Попробуйте ещё раз.', en: 'Could not send the order. Please try again.' },
 
   // Kirish / ro'yxatdan o'tish
-  'auth.brand': { uz: 'Kitobxona', ru: 'Kitobxona', en: 'Kitobxona' },
+  'auth.brand': { uz: 'BOOK.UZ', ru: 'BOOK.UZ', en: 'BOOK.UZ' },
   'auth.loginTitle': { uz: 'Kirish', ru: 'Вход', en: 'Log in' },
   'auth.loginSubtitle': { uz: 'Hisobingizga kiring', ru: 'Войдите в свой аккаунт', en: 'Sign in to your account' },
   'auth.usernameOrEmail': { uz: 'Username yoki email', ru: 'Имя пользователя или email', en: 'Username or email' },
@@ -410,6 +474,10 @@ const dict = {
   'profile.loadError': { uz: "Profilni yuklab bo'lmadi.", ru: 'Не удалось загрузить профиль.', en: 'Could not load your profile.' },
   'profile.saveError': { uz: "Saqlab bo'lmadi, qayta urinib ko'ring.", ru: 'Не удалось сохранить, попробуйте снова.', en: 'Could not save, please try again.' },
   'profile.emailTaken': { uz: 'Bu email boshqa foydalanuvchida bor.', ru: 'Этот email уже используется.', en: 'This email is already in use.' },
+  'profile.currentPassword': { uz: 'Joriy parol', ru: 'Текущий пароль', en: 'Current password' },
+  'profile.currentPasswordHint': { uz: "Emailni o'zgartirish uchun joriy parolingizni kiriting.", ru: 'Чтобы изменить email, введите текущий пароль.', en: 'Enter your current password to change your email.' },
+  'profile.currentPasswordRequired': { uz: 'Joriy parolni kiriting.', ru: 'Введите текущий пароль.', en: 'Enter your current password.' },
+  'profile.currentPasswordWrong': { uz: "Joriy parol noto'g'ri.", ru: 'Текущий пароль неверный.', en: 'The current password is incorrect.' },
   'profile.saved': { uz: 'Saqlangan', ru: 'Сохранено', en: 'Saved' },
   'profile.save': { uz: 'Saqlash', ru: 'Сохранить', en: 'Save' },
   'profile.historyEyebrow': { uz: 'Tarix', ru: 'История', en: 'History' },
@@ -421,6 +489,7 @@ const dict = {
   'cart.method': { uz: 'Qabul qilish usuli', ru: 'Способ получения', en: 'Receiving method' },
   'cart.pickup': { uz: 'Olib ketish', ru: 'Самовывоз', en: 'Pickup' },
   'cart.pickupFree': { uz: 'Olib ketish – bepul', ru: 'Самовывоз – бесплатно', en: 'Pickup – free' },
+  'cart.modalLoadFailed': { uz: "Oyna yuklanmadi. Sahifani yangilab (Ctrl+F5) qayta urinib ko'ring", ru: 'Окно не загрузилось. Обновите страницу (Ctrl+F5) и попробуйте снова', en: 'The window failed to load. Refresh the page (Ctrl+F5) and try again' },
   'cart.removedUnavailable': { uz: "Sotuvda yo'q kitoblar savatdan olib tashlandi", ru: 'Недоступные книги удалены из корзины', en: 'Unavailable books were removed from your cart' },
   'cart.chooseMethod': { uz: 'Buyurtma berish uchun qabul qilish usulini tanlang.', ru: 'Выберите способ получения, чтобы оформить заказ.', en: 'Choose a receiving method to place your order.' },
   'cart.change': { uz: "O'zgartirish", ru: 'Изменить', en: 'Change' },
@@ -431,7 +500,7 @@ const dict = {
 
   // Olib ketish oynasi
   'pickup.title': { uz: 'Olib ketish', ru: 'Самовывоз', en: 'Pickup' },
-  'pickup.store': { uz: "Kitobxona do'koni", ru: 'Магазин Kitobxona', en: 'Kitobxona store' },
+  'pickup.store': { uz: "BOOK.UZ do'koni", ru: 'Магазин BOOK.UZ', en: 'BOOK.UZ store' },
   'pickup.free': { uz: 'Olib ketsangiz, yetkazib berish puli olinmaydi.', ru: 'При самовывозе доставка не оплачивается.', en: 'No delivery fee if you pick the order up.' },
   'pickup.address': { uz: 'Manzil', ru: 'Адрес', en: 'Address' },
   'pickup.phones': { uz: 'Telefon', ru: 'Телефон', en: 'Phone' },
@@ -465,6 +534,45 @@ const dict = {
   'ship.geoDenied': { uz: "Joylashuvga ruxsat berilmadi. Xaritani bosib manzilni o'zingiz belgilashingiz mumkin.", ru: 'Доступ к местоположению не разрешён. Вы можете отметить адрес на карте вручную.', en: 'Location access was denied. You can mark the address on the map yourself.' },
   'ship.geoUnavailable': { uz: "Joylashuvni aniqlab bo'lmadi. Xaritani bosib belgilang.", ru: 'Не удалось определить местоположение. Отметьте точку на карте.', en: "Couldn't detect your location. Mark the point on the map." },
   'ship.errStreet': { uz: "Ko'cha yoki manzilni kiriting.", ru: 'Введите улицу или адрес.', en: 'Enter a street or address.' },
+
+  // Sahifa sarlavhalari (brauzer tabi): "Kitoblar — BOOK.UZ"
+  'title.home': { uz: "BOOK.UZ — Onlayn kitob do'koni", ru: 'BOOK.UZ — Интернет-магазин книг', en: 'BOOK.UZ — Online bookstore' },
+  'title.books': { uz: 'Kitoblar', ru: 'Книги', en: 'Books' },
+  'title.authors': { uz: 'Mualliflar', ru: 'Авторы', en: 'Authors' },
+  'title.cart': { uz: 'Savat', ru: 'Корзина', en: 'Cart' },
+  'title.orders': { uz: 'Buyurtmalarim', ru: 'Мои заказы', en: 'My orders' },
+  'title.profile': { uz: 'Profil', ru: 'Профиль', en: 'Profile' },
+  'title.favorites': { uz: 'Sevimlilar', ru: 'Избранное', en: 'Favorites' },
+  'title.myBooks': { uz: 'Mening kitoblarim', ru: 'Мои книги', en: 'My books' },
+  'title.login': { uz: 'Kirish', ru: 'Вход', en: 'Log in' },
+  'title.register': { uz: "Ro'yxatdan o'tish", ru: 'Регистрация', en: 'Sign up' },
+  'title.forgot': { uz: 'Parolni tiklash', ru: 'Восстановление пароля', en: 'Reset password' },
+  'title.about': { uz: 'Biz haqimizda', ru: 'О нас', en: 'About us' },
+  'title.articles': { uz: 'Maqolalar', ru: 'Статьи', en: 'Articles' },
+  'title.services': { uz: 'Xizmatlar', ru: 'Услуги', en: 'Services' },
+
+  // 404 sahifa
+  'notFound.title': { uz: 'Sahifa topilmadi', ru: 'Страница не найдена', en: 'Page not found' },
+  'notFound.text': { uz: "Siz izlayotgan sahifa mavjud emas yoki boshqa manzilga ko'chirilgan.", ru: 'Страница, которую вы ищете, не существует или была перемещена.', en: "The page you're looking for doesn't exist or has been moved." },
+  'notFound.home': { uz: 'Bosh sahifaga qaytish', ru: 'Вернуться на главную', en: 'Back to home' },
+  'notFound.books': { uz: "Kitoblarga o'tish", ru: 'Перейти к книгам', en: 'Browse books' },
+
+  // Kutilmagan xato sahifasi (ErrorBoundary)
+  'error.title': { uz: 'Nimadir xato ketdi', ru: 'Что-то пошло не так', en: 'Something went wrong' },
+  'error.text': { uz: "Sahifani ko'rsatishda kutilmagan xatolik yuz berdi. Sahifani yangilab ko'ring yoki bosh sahifaga qayting.", ru: 'При отображении страницы произошла непредвиденная ошибка. Обновите страницу или вернитесь на главную.', en: 'An unexpected error occurred while showing this page. Try reloading it or go back to the home page.' },
+  'error.reload': { uz: 'Sahifani yangilash', ru: 'Обновить страницу', en: 'Reload page' },
+  'error.home': { uz: 'Bosh sahifaga', ru: 'На главную', en: 'To home page' },
+
+  // Yuklash xatolari, ombor chegarasi, savatni tozalash tasdig'i, eskirgan ma'lumot belgisi
+  'profile.ordersLoadError': { uz: "Buyurtmalarni yuklab bo'lmadi.", ru: 'Не удалось загрузить заказы.', en: 'Could not load your orders.' },
+  'favorites.loadError': { uz: "Sevimli kitoblarni yuklab bo'lmadi.", ru: 'Не удалось загрузить избранные книги.', en: 'Could not load your favorite books.' },
+  'cart.quoteError': { uz: "Promo kodni tekshirib bo'lmadi. Aloqani tekshirib, qayta urinib ko'ring.", ru: 'Не удалось проверить промокод. Проверьте соединение и попробуйте снова.', en: 'Could not check the promo code. Check your connection and try again.' },
+  'cart.stockLimit': { uz: 'Omborda faqat {n} ta', ru: 'На складе только {n} шт.', en: 'Only {n} in stock' },
+  'cart.clearConfirmTitle': { uz: 'Savatni tozalaysizmi?', ru: 'Очистить корзину?', en: 'Clear your cart?' },
+  'cart.clearConfirmText': { uz: '{n} ta kitob savatdan olib tashlanadi.', ru: 'Книги ({n} шт.) будут удалены из корзины.', en: '{n} books will be removed from your cart.' },
+  'cart.clearYes': { uz: 'Ha, tozalash', ru: 'Да, очистить', en: 'Yes, clear' },
+  'auth.tooManyAttempts': { uz: "Juda ko'p urinish. Bir ozdan keyin qayta urinib ko'ring.", ru: 'Слишком много попыток. Попробуйте чуть позже.', en: 'Too many attempts. Please try again in a moment.' },
+  'stale.notice': { uz: "Ma'lumot eskirgan bo'lishi mumkin (internet yo'q)", ru: 'Данные могут быть устаревшими (нет интернета)', en: 'Data may be out of date (no internet)' },
 }
 
 export default dict

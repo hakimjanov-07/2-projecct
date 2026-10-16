@@ -223,8 +223,8 @@
   height: 48px;
   border: none;
   border-radius: 14px;
-  background: var(--brown);
-  color: var(--white);
+  background: color-mix(in srgb, var(--brown-2) 90%, #000); /* oq matn 4.5:1 dan yuqori bo'lishi uchun */
+  color: var(--on-accent);
   font-size: 15px;
   font-weight: 800;
   cursor: pointer;
@@ -232,7 +232,7 @@
 }
 
 .cartBtn:hover:not(:disabled) {
-  background: var(--brown-2);
+  background: var(--brown-dark);
 }
 
 .cartBtn:disabled {
@@ -338,8 +338,8 @@
 
 .tabActive,
 .tabActive:hover {
-  background: var(--brown);
-  color: var(--white);
+  background: color-mix(in srgb, var(--brown-2) 90%, #000);
+  color: var(--on-accent);
 }
 
 .tabPanel {
@@ -383,7 +383,7 @@
 
 .reviewTop time {
   margin-left: auto;
-  color: var(--gray-400);
+  color: var(--gray-600);
   font-size: 13px;
 }
 

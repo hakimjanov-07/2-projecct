@@ -197,7 +197,7 @@
 }
 
 .searchInput::placeholder {
-  color: #7a7d86;
+  color: var(--gray-600);
 }
 
 .searchBtn {
@@ -257,7 +257,7 @@
 }
 
 .iconLabel {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -268,16 +268,16 @@
   position: absolute;
   top: -6px;
   right: 2px;
-  min-width: 16px;
-  height: 16px;
+  min-width: 18px;
+  height: 18px;
   padding: 0 4px;
   border-radius: 99px;
-  background: #ef4444;
+  background: #dc2626;
   color: #fff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
 }
 
@@ -432,7 +432,7 @@
   }
 
   .iconLabel {
-    font-size: 10px;
+    font-size: 11px;
     letter-spacing: 0.05em;
   }
 
@@ -481,7 +481,7 @@
 
 .langOption strong {
   min-width: 24px;
-  color: var(--gray-400);
+  color: var(--gray-600);
   font-size: 12px;
   transition: color 0.15s;
 }
@@ -556,32 +556,29 @@
   box-shadow: 0 0 0 1px color-mix(in srgb, #d3354f 30%, var(--surface));
 }
 
-/* Kirish va Ro'yxatdan o'tish: oq tugma, ustiga borganda och jigarrang rang chapdan yoyiladi */
+/* Kirish va Ro'yxatdan o'tish: sayt kartalari/tugmalari bilan bir xil hover — ko'tarilish, jigarrang chegara, yumshoq soya */
 .loginBtn,
 .registerBtn {
-  background-color: var(--surface);
-  background-image: linear-gradient(var(--brown), var(--brown));
-  background-repeat: no-repeat;
-  background-position: left center;
-  background-size: 0% 100%;
-  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: var(--surface);
+  border: 1.5px solid rgba(15, 23, 42, 0.12);
   color: var(--text);
   transition:
-    background-size 0.35s ease,
-    color 0.25s ease,
-    border-color 0.25s ease,
-    box-shadow 0.25s ease,
-    transform 0.2s ease;
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease;
 }
 
-.loginBtn:hover,
-.registerBtn:hover,
-.loginBtn:focus-visible,
-.registerBtn:focus-visible {
-  background-size: 100% 100%;
-  border-color: var(--brown);
-  color: #ffffff;
-  box-shadow: 0 6px 16px rgba(200, 149, 108, 0.4);
+@media (hover: hover) {
+  .loginBtn:hover,
+  .registerBtn:hover,
+  .loginBtn:focus-visible,
+  .registerBtn:focus-visible {
+    transform: translateY(-3px);
+    border-color: var(--brown);
+    color: var(--brown-2);
+    box-shadow: 0 10px 22px rgba(96, 63, 39, 0.16);
+  }
 }
 
 .loginBtn:active,
@@ -679,5 +676,22 @@
   .menuLines span,
   .iconUser svg {
     transition: none;
+  }
+}
+
+/* Sensorli ekran/telefon: bosiladigan maydon kamida 40px (WCAG 2.5.5) */
+@media (pointer: coarse), (max-width: 768px) {
+  .loginBtn,
+  .registerBtn,
+  .logoutBtn {
+    min-height: 40px;
+  }
+
+  .langBtn {
+    min-height: 40px;
+  }
+
+  .langOption {
+    min-height: 44px;
   }
 }

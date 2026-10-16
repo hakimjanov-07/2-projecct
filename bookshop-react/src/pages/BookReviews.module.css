@@ -26,7 +26,7 @@
 
 .bookHeader h1 { margin: 2px 0 4px; font-size: 24px; line-height: 1.25; }
 .bookHeader p { color: var(--gray-600); font-size: 14px; }
-.eyebrow { color: var(--brown-2) !important; font-size: 11px !important; font-weight: 600; text-transform: uppercase; }
+.eyebrow { color: var(--brown-dark) !important; font-size: 12px !important; font-weight: 600; text-transform: uppercase; }
 .count { margin-left: auto; white-space: nowrap; font-size: 14px; }
 
 .form {
@@ -80,7 +80,7 @@
 .starOption:hover span { transform: scale(1.12); }
 .starOption input:focus-visible + span { outline: 2px solid var(--brown); outline-offset: 3px; border-radius: 2px; }
 .formFooter { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-.submit { padding: 11px 18px; border-radius: var(--radius-sm); color: var(--white); background: var(--brown); font-weight: 600; }
+.submit { padding: 11px 18px; border-radius: var(--radius-sm); color: var(--on-accent); background: color-mix(in srgb, var(--brown-2) 90%, #000); font-weight: 600; }
 .submit:hover { background: var(--brown-2); }
 .submit:disabled { opacity: .65; cursor: wait; }
 .notice { color: #26734d; font-size: 13px; }
