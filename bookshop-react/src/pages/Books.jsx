@@ -240,15 +240,19 @@ export default function Books() {
         <div className={styles.main}>
           <div className={styles.toolbar} data-reveal>
             <div className={styles.searchBox}>
-              <span>🔍</span>
+              <svg className={styles.searchIcon} viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="11" cy="11" r="6.5" />
+                <path d="m20 20-4.2-4.2" />
+              </svg>
               <input
                 type="text"
+                aria-label={t('books.searchPlaceholder')}
                 placeholder={t('books.searchPlaceholder')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
               {search && (
-                <button className={styles.clearSearchBtn} onClick={() => setSearch('')}>
+                <button type="button" className={styles.clearSearchBtn} aria-label={t('books.clear')} onClick={() => setSearch('')}>
                   ✕
                 </button>
               )}

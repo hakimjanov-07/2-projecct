@@ -35,7 +35,9 @@ export default function SortSelect({ options, value, onChange, label }) {
         onClick={() => setOpen((current) => !current)}
       >
         <span className={styles.selected}>{selected?.label}</span>
-        <span className={`${styles.chevron} ${open ? styles.chevronOpen : ''}`} aria-hidden="true">⌄</span>
+        <svg className={`${styles.chevron} ${open ? styles.chevronOpen : ''}`} viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m6 9 6 6 6-6" />
+        </svg>
       </button>
 
       {open && (
