@@ -21,6 +21,13 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      // Muqova rasmlari: API photo_url ni nisbiy beradi (/media/...). Proksisiz panel (5174) rasmni topa olmaydi.
+      // Production: panel bilan /media bir domenda xizmat qilinishi (yoki veb-server /media ni Django'ga yo'naltirishi) kerak.
+      '/media': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
   build: { outDir, emptyOutDir: true },

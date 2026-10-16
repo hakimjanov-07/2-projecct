@@ -42,8 +42,8 @@ export default function Users() {
       </div>
 
       <form className="filters card" onSubmit={(e) => { e.preventDefault(); update({ q: search.trim() }) }}>
-        <input placeholder="Login yoki email" value={search} onChange={(e) => setSearch(e.target.value)} />
-        <select value={staff} onChange={(e) => update({ staff: e.target.value })}>
+        <input placeholder="Login yoki email" aria-label="Login yoki email bo'yicha qidirish" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <select aria-label="Adminlar bo'yicha filtr" value={staff} onChange={(e) => update({ staff: e.target.value })}>
           <option value="">Hammasi</option>
           <option value="1">Faqat adminlar</option>
         </select>

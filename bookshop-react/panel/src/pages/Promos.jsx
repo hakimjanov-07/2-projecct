@@ -104,8 +104,8 @@ export default function Promos() {
       </form>
 
       <form className="filters card" onSubmit={(e) => { e.preventDefault(); update({ q: search.trim() }) }}>
-        <input placeholder="Kod bo'yicha qidirish" value={search} onChange={(e) => setSearch(e.target.value)} />
-        <select value={active} onChange={(e) => update({ active: e.target.value })}>
+        <input placeholder="Kod bo'yicha qidirish" aria-label="Promo kod bo'yicha qidirish" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <select aria-label="Faollik bo'yicha filtr" value={active} onChange={(e) => update({ active: e.target.value })}>
           <option value="">Hammasi</option>
           <option value="1">Faqat faol</option>
           <option value="0">Faol emas</option>

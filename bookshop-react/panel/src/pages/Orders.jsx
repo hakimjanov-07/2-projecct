@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { getOrder, getOrders, setOrderStatus } from '../api'
 import { useFetch } from '../useFetch'
@@ -49,8 +49,8 @@ export default function Orders() {
       </div>
 
       <form className="filters card" onSubmit={submit}>
-        <input placeholder="Qidirish: foydalanuvchi, email, promo kod yoki №" value={search} onChange={(e) => setSearch(e.target.value)} />
-        <select value={status} onChange={(e) => update({ status: e.target.value })}>
+        <input placeholder="Qidirish: foydalanuvchi, email, promo kod yoki №" aria-label="Buyurtmalarni qidirish" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <select aria-label="Holat bo'yicha filtr" value={status} onChange={(e) => update({ status: e.target.value })}>
           <option value="">Barcha holatlar</option>
           {[...STAGES, 'cancelled'].map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
         </select>
@@ -74,7 +74,20 @@ export default function Orders() {
                 </thead>
                 <tbody>
                   {data.results.map((o) => (
-                    <tr key={o.id} onClick={() => update({ order: String(o.id) })}>
+                    <tr
+                      key={o.id}
+                      data-order-row={o.id}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`Buyurtma #${o.id} ni ochish`}
+                      onClick={() => update({ order: String(o.id) })}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          update({ order: String(o.id) })
+                        }
+                      }}
+                    >
                       <td><strong>#{o.id}</strong></td>
                       <td>{o.username}<small className="sub">{o.email}</small></td>
                       <td>{dateTime(o.created_on)}</td>
@@ -119,12 +132,29 @@ function OrderDrawer({ id, onClose, onChanged }) {
     }
   }
 
+  // Fokus: ochilganda oynaga, yopilganda (Escape/✕/backdrop) ochgan qatorga qaytadi
+  const drawerRef = useRef(null)
+  const closeRef = useRef(onClose)
+  useEffect(() => { closeRef.current = onClose })
+  useEffect(() => {
+    const opener = document.activeElement
+    drawerRef.current?.focus()
+    const onKey = (e) => { if (e.key === 'Escape') closeRef.current() }
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      const row = document.querySelector(`[data-order-row="${id}"]`)
+      if (row) row.focus()
+      else if (opener instanceof HTMLElement && document.contains(opener)) opener.focus()
+    }
+  }, [id])
+
   const stageIndex = data ? STAGES.indexOf(data.status) : -1
   const nextStage = stageIndex >= 0 && stageIndex < STAGES.length - 1 ? STAGES[stageIndex + 1] : null
 
   return (
     <div className="drawer-backdrop" onClick={onClose}>
-      <aside className="drawer" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={`Buyurtma #${id}`}>
+      <aside className="drawer" ref={drawerRef} tabIndex={-1} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={`Buyurtma #${id}`}>
         <header className="drawer-head">
           <h2>Buyurtma #{id}</h2>
           <button type="button" className="btn btn-ghost" onClick={onClose} aria-label="Yopish">✕</button>

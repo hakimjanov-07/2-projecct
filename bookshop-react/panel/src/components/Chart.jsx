@@ -5,18 +5,31 @@ const W = 800
 const H = 240
 const PAD = { top: 16, right: 16, bottom: 28, left: 52 }
 
+// Butun sonli (soni) grafik uchun chiroyli o'q: 0, 1, 2... yoki 0, 5, 10... (kasr "1 1 1" bo'lib ko'rinmasin)
+function countAxis(rawMax) {
+  const target = Math.max(rawMax, 1)
+  if (target <= 4) return { max: target, ticks: Array.from({ length: target + 1 }, (_, i) => i) }
+  const rough = target / 4
+  const pow = 10 ** Math.floor(Math.log10(rough))
+  const step = [1, 2, 5, 10].map((m) => m * pow).find((s) => s >= rough)
+  const max = Math.ceil(target / step) * step
+  return { max, ticks: Array.from({ length: max / step + 1 }, (_, i) => i * step) }
+}
+
 // Kunlik grafik: kind="area" (tushum) yoki kind="bar" (buyurtmalar soni). SVG, kutubxonasiz.
 export default function Chart({ data, kind = 'area', format = String, axisFormat = compact, label }) {
   const [hover, setHover] = useState(null)
   if (!data.length) return <p className="muted">Ma'lumot yo'q</p>
 
-  const max = Math.max(...data.map((d) => d.value), 1)
+  const rawMax = Math.max(...data.map((d) => d.value), 1)
+  const axis = kind === 'bar' ? countAxis(rawMax) : null
+  const max = axis ? axis.max : rawMax
   const innerW = W - PAD.left - PAD.right
   const innerH = H - PAD.top - PAD.bottom
   const step = data.length > 1 ? innerW / (data.length - 1) : innerW
   const x = (i) => PAD.left + (kind === 'bar' ? (innerW / data.length) * (i + 0.5) : step * i)
   const y = (v) => PAD.top + innerH - (v / max) * innerH
-  const ticks = [0, 0.25, 0.5, 0.75, 1].map((t) => max * t)
+  const ticks = axis ? axis.ticks : [0, 0.25, 0.5, 0.75, 1].map((t) => max * t)
 
   const line = data.map((d, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(d.value).toFixed(1)}`).join(' ')
   const area = `${line} L${x(data.length - 1).toFixed(1)},${PAD.top + innerH} L${x(0).toFixed(1)},${PAD.top + innerH} Z`

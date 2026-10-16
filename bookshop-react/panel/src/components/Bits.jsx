@@ -37,6 +37,7 @@ export function Pagination({ page, count, pageSize, onChange }) {
 }
 
 export function Loading({ error }) {
+  if (error?.response?.status === 403) return <p className="alert">Bu ma'lumotni ko'rish uchun ruxsat yo'q (admin huquqi kerak).</p>
   if (error) return <p className="alert">Ma'lumotni yuklab bo'lmadi. Server ishlayotganini tekshiring.</p>
   return <p className="muted">Yuklanmoqda…</p>
 }
@@ -46,7 +47,7 @@ export function SortTh({ field, ordering, onSort, children, align }) {
   const active = ordering.replace('-', '') === field
   const desc = ordering === `-${field}`
   return (
-    <th className={`sortable ${align === 'right' ? 'right' : ''} ${active ? 'active' : ''}`}>
+    <th aria-sort={active ? (desc ? 'descending' : 'ascending') : 'none'} className={`sortable ${align === 'right' ? 'right' : ''} ${active ? 'active' : ''}`}>
       <button type="button" onClick={() => onSort(active && desc ? field : `-${field}`)}>
         {children}
         <span aria-hidden="true">{active ? (desc ? ' ↓' : ' ↑') : ''}</span>

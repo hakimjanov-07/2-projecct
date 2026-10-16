@@ -5,7 +5,7 @@ import { useFetch } from '../useFetch'
 import { date, money, num } from '../format'
 import { Loading, Pagination, SortTh } from '../components/Bits'
 import CsvButton from '../components/CsvButton'
-import BookForm from '../components/BookForm'
+import BookWorkspace from '../components/BookWorkspace'
 import { photoProblem } from '../photo'
 import BulkImport from '../components/BulkImport'
 
@@ -118,13 +118,13 @@ export default function Books() {
       </div>
 
       <form className="filters card" onSubmit={(e) => { e.preventDefault(); update({ q: search.trim() }) }}>
-        <input placeholder="Kitob yoki muallif nomi" value={search} onChange={(e) => setSearch(e.target.value)} />
-        <select value={status} onChange={(e) => update({ status: e.target.value })}>
+        <input placeholder="Kitob yoki muallif nomi" aria-label="Kitob yoki muallif nomi bo'yicha qidirish" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <select aria-label="Holat bo'yicha filtr" value={status} onChange={(e) => update({ status: e.target.value })}>
           <option value="">Barcha holatlar</option>
           <option value="active">Faol</option>
           <option value="deactive">Faol emas</option>
         </select>
-        <select value={stock} onChange={(e) => update({ stock: e.target.value })}>
+        <select aria-label="Ombor bo'yicha filtr" value={stock} onChange={(e) => update({ stock: e.target.value })}>
           <option value="">Ombor: hammasi</option>
           <option value="low">Kam qolgan (≤ {LOW})</option>
           <option value="out">Tugagan</option>
@@ -139,10 +139,7 @@ export default function Books() {
       {notice && <p className="notice-ok">{notice}</p>}
       <input ref={photoInput} type="file" hidden accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onChange={uploadPhoto} />
       {dialog === 'add' && (
-        <BookForm
-          onClose={() => setDialog(null)}
-          onCreated={(created) => { setDialog(null); setNotice(`"${created.name}" qo'shildi.`); setSearch(''); setParams({ ordering: '-created_on' }, { replace: true }); reload() }}
-        />
+        <BookWorkspace onClose={(changed) => { setDialog(null); if (changed) reload() }} />
       )}
       {dialog === 'bulk' && <BulkImport onClose={() => setDialog(null)} onDone={() => { setSearch(''); setParams({ ordering: '-created_on' }, { replace: true }); reload() }} />}
 

@@ -34,8 +34,8 @@ api.interceptors.response.use(
       }
     }
 
-    // Sessiya yaroqsiz yoki admin huquqi yo'q: login sahifasiga
-    if ((status === 401 || status === 403) && !original?.skipAuth) {
+    // Faqat token yaroqsiz (401) bo'lsa sessiya tugaydi; 403 da sessiya qoladi va sahifa xato xabarini ko'rsatadi
+    if (status === 401 && !original?.skipAuth) {
       clearSession()
       window.dispatchEvent(new Event('panel-logout'))
     }
@@ -55,7 +55,9 @@ export const getBooks = (params) => api.get('/panel/books/', { params }).then((r
 export const updateBook = (id, data) => api.patch(`/panel/books/${id}/`, data).then((r) => r.data)
 // Yangi kitob / muqova: FormData (multipart) yoki oddiy obyekt yuboriladi
 export const createBook = (data) => api.post('/panel/books/', data).then((r) => r.data)
-export const getBookOptions = () => api.get('/panel/books/options/').then((r) => r.data)
+// Tanlangan kitoblarni ommaviy tahrirlash (atomik)
+export const bulkUpdateBooks = (data) => api.post('/panel/books/bulk-update/', data).then((r) => r.data)
+export const getBookOptions =() => api.get('/panel/books/options/').then((r) => r.data)
 // Ommaviy qo'shish: mode = 'preview' (hech narsa yozilmaydi) yoki 'commit'
 export const importBooks = (file, mode, skipErrors = false) => {
   const form = new FormData()

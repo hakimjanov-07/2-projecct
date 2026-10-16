@@ -60,11 +60,16 @@ export default function BulkImport({ onClose, onDone }) {
     }
   }
 
+  // Backdrop bosilganda: fayl tanlangan/natija bor bo'lsa (va hali tugallanmagan) tasdiq so'raladi
+  const backdropClose = () => {
+    if (done || (!file && !result) || window.confirm("Kiritilgan ma'lumot yo'qoladi. Yopasizmi?")) onClose()
+  }
+
   const summary = result?.summary
   const canCommit = summary && summary.new > 0 && (summary.error === 0 || skipErrors)
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop" onClick={backdropClose}>
       <div className="modal modal-wide" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Ommaviy qo'shish">
         <header className="drawer-head">
           <h2>Kitoblarni ommaviy qo'shish</h2>
@@ -114,7 +119,7 @@ export default function BulkImport({ onClose, onDone }) {
                           <td>{r.author}</td>
                           <td>{r.category}</td>
                           <td className="right">{r.price}</td>
-                          <td><span className={`badge-mini ${STATUS[r.status][1]}`}>{STATUS[r.status][0]}</span>{r.message && <small className="sub">{r.message}</small>}</td>
+                          <td><span className={`badge-mini ${(STATUS[r.status] || [r.status, ''])[1]}`}>{(STATUS[r.status] || [r.status, ''])[0]}</span>{r.message && <small className="sub">{r.message}</small>}</td>
                         </tr>
                       ))}
                     </tbody>

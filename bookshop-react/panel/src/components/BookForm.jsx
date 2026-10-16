@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createBook, getBookOptions } from '../api'
 import { useFetch } from '../useFetch'
 import { Loading } from './Bits'
@@ -16,7 +16,8 @@ const EMPTY = {
 const isPositiveInt = (v) => /^\d+$/.test(v) && Number(v) > 0
 
 // Bitta kitob qo'shish oynasi
-export default function BookForm({ onClose, onCreated }) {
+// embedded=true: modal o'ramisiz, ish oynasining o'ng panelida ko'rsatiladi
+export default function BookForm({ onClose, onCreated, embedded = false }) {
   const { data: options, error } = useFetch(getBookOptions, 'options')
   const [form, setForm] = useState(EMPTY)
   const [authorMode, setAuthorMode] = useState('existing') // 'existing' | 'new'
@@ -26,7 +27,15 @@ export default function BookForm({ onClose, onCreated }) {
   const [busy, setBusy] = useState(false)
 
   const preview = useMemo(() => (photo ? URL.createObjectURL(photo) : ''), [photo])
+  // Muqova ko'rinishi uchun yaratilgan vaqtinchalik URL almashganda/yopilganda bo'shatiladi
+  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview) }, [preview])
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }))
+
+  // Backdrop bosilganda: ma'lumot kiritilgan bo'lsa tasdiq so'raladi
+  const dirty = photo !== null || authorSearch !== '' || JSON.stringify(form) !== JSON.stringify(EMPTY)
+  const backdropClose = () => {
+    if (!dirty || window.confirm("Kiritilgan ma'lumot yo'qoladi. Yopasizmi?")) onClose()
+  }
 
   const authors = useMemo(() => {
     const q = authorSearch.trim().toLowerCase()
@@ -97,13 +106,14 @@ export default function BookForm({ onClose, onCreated }) {
     </label>
   )
 
-  return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Kitob qo'shish">
-        <header className="drawer-head">
-          <h2>Kitob qo'shish</h2>
-          <button type="button" className="btn btn-ghost" onClick={onClose} aria-label="Yopish">✕</button>
-        </header>
+  const body = (
+    <>
+        {!embedded && (
+          <header className="drawer-head">
+            <h2>Kitob qo'shish</h2>
+            <button type="button" className="btn btn-ghost" onClick={onClose} aria-label="Yopish">✕</button>
+          </header>
+        )}
 
         {!options ? <Loading error={error} /> : (
           <form className="book-form" onSubmit={submit} noValidate>
@@ -180,7 +190,13 @@ export default function BookForm({ onClose, onCreated }) {
             </div>
           </form>
         )}
-      </div>
+    </>
+  )
+
+  if (embedded) return <div className="embedded-form">{body}</div>
+  return (
+    <div className="modal-backdrop" onClick={backdropClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Kitob qo'shish">{body}</div>
     </div>
   )
 }

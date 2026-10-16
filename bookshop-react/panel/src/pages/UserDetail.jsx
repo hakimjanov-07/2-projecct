@@ -115,7 +115,7 @@ export default function UserDetail() {
           <ul className="review-list">
             {reviews.map((r) => (
               <li key={r.id}>
-                <strong>{r.book_name}</strong> <span className="stars" aria-label={`${r.rating} / 5`}>{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span>
+                <strong>{r.book_name}</strong> <span className="stars" aria-label={`${r.rating} / 5`}>{'★'.repeat(Math.max(0, Math.min(5, r.rating)))}{'☆'.repeat(5 - Math.max(0, Math.min(5, r.rating)))}</span>
                 <small className="sub">{dateTime(r.created_on)}</small>
                 <p>{r.comment}</p>
               </li>

@@ -123,10 +123,10 @@ export default function Layout({ onLogout }) {
 
       <div className="main">
         <header className="topbar">
-          <button type="button" className="btn btn-ghost menu-btn" aria-label="Menyu" onClick={() => setOpen((v) => !v)}>☰</button>
+          <button type="button" className="btn btn-ghost menu-btn" aria-label="Menyu" onClick={() => setOpen((v) => !v)}><span aria-hidden="true">☰</span></button>
           <span className="topbar-spacer" />
-          <button type="button" className="btn btn-ghost" onClick={toggleTheme} title={theme === 'dark' ? "Yorug' rejim" : "Qorong'i rejim"}>
-            {theme === 'dark' ? '☀' : '☾'}
+          <button type="button" className="btn btn-ghost" onClick={toggleTheme} aria-pressed={theme === 'dark'} aria-label="Qorong'i rejim" title={theme === 'dark' ? "Yorug' rejim" : "Qorong'i rejim"}>
+            <span aria-hidden="true">{theme === 'dark' ? '☀' : '☾'}</span>
           </button>
           <span className="who">{getUsername()}</span>
           <button type="button" className="btn btn-ghost" onClick={logout}>Chiqish</button>
