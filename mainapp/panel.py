@@ -15,6 +15,7 @@ from django.contrib.auth.models import User, update_last_login
 from django.db.models import (
     Count, ExpressionWrapper, F, IntegerField, Max, OuterRef, Q, Subquery, Sum,
 )
+from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.db.models.functions import Coalesce, TruncDate
@@ -23,13 +24,13 @@ from rest_framework import generics, serializers
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
-from rest_framework.throttling import AnonRateThrottle
 
 from .models import Book, Order, OrderEvent, OrderItem, PromoCode, Review
 from .profit import line_cost, net_revenue_stats, order_net
 from .stock import LOW_STOCK
-from .views import tokens_for
+from .views import IPRateThrottle, tokens_for
 
+TRANSITION_ERROR = "Bu holatga o'tib bo'lmaydi."
 ACTIVE = list(Order.STAGES)  # bekor qilinmagan buyurtmalar
 PLACED = ACTIVE + ['cancelled']
 
@@ -39,6 +40,12 @@ TASHKENT = ZoneInfo('Asia/Tashkent')  # CSV va sana filtrlari O'zbekiston vaqti 
 LINE_TOTAL = ExpressionWrapper(
     Coalesce(F('price'), F('book__price'), 0) * F('quantity'), output_field=IntegerField(),
 )
+
+
+def safe_id(value):
+    """ Filtr uchun id: faqat oddiy raqamlar va bazaga sig'adigan uzunlik; aks holda None (filtr e'tiborsiz) """
+    value = (value or '').strip()
+    return int(value) if value.isascii() and value.isdigit() and len(value) <= 18 else None
 
 
 def with_totals(qs):
@@ -82,7 +89,7 @@ def growth(current, previous):
 
 """ KIRISH """
 
-class PanelLoginThrottle(AnonRateThrottle):
+class PanelLoginThrottle(IPRateThrottle):  # token yuborib aylanib o'tib bo'lmaydi
     scope = 'panel_login'
 
 
@@ -314,7 +321,21 @@ class PanelOrderDetailSerializer(PanelOrderSerializer):
         # "pending" - savat, uni buyurtma holatiga qo'yib bo'lmaydi
         if value not in PLACED:
             raise serializers.ValidationError(f"Holat quyidagilardan biri bo'lishi kerak: {', '.join(PLACED)}.")
+        if self.instance is not None and not Order.can_move(self.instance.status, value):
+            raise serializers.ValidationError(TRANSITION_ERROR)
         return value
+
+    def update(self, instance, validated_data):
+        new = validated_data.get('status')
+        with transaction.atomic():
+            # Bo'sh yozuv bazaga yozish qulfini oladi (SQLite'da select_for_update yo'q): parallel ikki PATCH
+            # navbat bilan o'tadi va ikkinchisi yangilangan holatni ko'radi (ombor ikki marta qaytmaydi).
+            Order.objects.filter(pk=instance.pk).update(status=F('status'))
+            current = Order.objects.filter(pk=instance.pk).values_list('status', flat=True).get()
+            if new is not None and not Order.can_move(current, new):
+                raise serializers.ValidationError({'status': [TRANSITION_ERROR]})
+            instance.status = current
+            return super().update(instance, validated_data)
 
     class Meta(PanelOrderSerializer.Meta):
         fields = PanelOrderSerializer.Meta.fields + ['items', 'events', 'net_revenue', 'missing_cost_count']
@@ -330,8 +351,8 @@ class PanelOrderList(generics.ListAPIView):
         params = self.request.query_params
         if params.get('status') in PLACED:
             qs = qs.filter(status=params['status'])
-        if params.get('user', '').isdigit():
-            qs = qs.filter(user_id=int(params['user']))
+        if safe_id(params.get('user')) is not None:
+            qs = qs.filter(user_id=safe_id(params['user']))
         start, end = day_bounds(params.get('from'), params.get('to'))
         if start:
             qs = qs.filter(created_on__gte=start)
@@ -340,8 +361,8 @@ class PanelOrderList(generics.ListAPIView):
         q = params.get('q', '').strip()
         if q:
             cond = Q(user__username__icontains=q) | Q(user__email__icontains=q) | Q(promo_code__icontains=q)
-            if q.lstrip('#').isdigit():
-                cond |= Q(id=int(q.lstrip('#')))
+            if safe_id(q.lstrip('#')) is not None:
+                cond |= Q(id=safe_id(q.lstrip('#')))
             qs = qs.filter(cond)
         return qs.order_by('-created_on', '-id')
 
@@ -394,9 +415,11 @@ class PanelBookSerializer(serializers.ModelSerializer):
         model = Book
         fields = [
             'id', 'name', 'category_name', 'author_name', 'language', 'price', 'cost_price', 'markup', 'status', 'stock',
-            'created_on', 'sold', 'revenue', 'orders_count', 'has_audio', 'has_pdf', 'photo', 'photo_url',
+            'pages', 'publisher', 'about', 'created_on', 'sold', 'revenue', 'orders_count', 'has_audio', 'has_pdf', 'photo', 'photo_url',
         ]
         read_only_fields = [f for f in fields if f not in ('price', 'cost_price', 'status', 'stock', 'photo')]
+        # Narx bo'sh/0 bo'lmasin: aks holda kitob bepul sotilib ketadi (tannarx bo'sh bo'lishi mumkin, o'zgarmaydi)
+        extra_kwargs = {'price': {'allow_null': False, 'min_value': 1}}
 
 
 class PanelBookList(generics.ListCreateAPIView):
@@ -424,8 +447,8 @@ class PanelBookList(generics.ListCreateAPIView):
         params = self.request.query_params
         if params.get('status') in ('active', 'deactive'):
             qs = qs.filter(status=params['status'])
-        if params.get('category', '').isdigit():
-            qs = qs.filter(category_id=int(params['category']))
+        if safe_id(params.get('category')) is not None:
+            qs = qs.filter(category_id=safe_id(params['category']))
         stock_filter = params.get('stock')
         if stock_filter == 'out':
             qs = qs.filter(stock=0)
@@ -433,7 +456,9 @@ class PanelBookList(generics.ListCreateAPIView):
             qs = qs.filter(stock__isnull=False, stock__lte=LOW_STOCK)
         elif stock_filter == 'tracked':
             qs = qs.filter(stock__isnull=False)
-        q = params.get('q', '').strip()
+        elif stock_filter == 'unlimited':
+            qs = qs.filter(stock__isnull=True)
+        q =params.get('q', '').strip()
         if q:
             qs = qs.filter(Q(name__icontains=q) | Q(author__full_name__icontains=q))
         ordering = params.get('ordering', '-created_on')

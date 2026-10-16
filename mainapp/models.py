@@ -111,6 +111,14 @@ class Order(models.Model):
         ('cancelled', 'Bekor qilingan'),
     )
     STAGES = ('confirmed', 'processing', 'shipped', 'delivered')
+    # Ruxsat etilgan holat o'tishlari (panel va admin shu qoidaga amal qiladi)
+    TRANSITIONS = {
+        'confirmed': ('processing', 'cancelled'),
+        'processing': ('shipped', 'cancelled'),
+        'shipped': ('delivered', 'cancelled'),
+        'delivered': (),
+        'cancelled': ('confirmed',),
+    }
     DELIVERY_METHODS = (('delivery', 'Yetkazib berish'), ('pickup', 'Olib ketish'))
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     status = models.CharField(max_length=20, choices=STATUS, default='pending')
@@ -130,6 +138,24 @@ class Order(models.Model):
     delivery_lat = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, verbose_name='Kenglik:')
     delivery_lng = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, verbose_name='Uzunlik:')
     created_on = models.DateTimeField(auto_now_add=True)
+    # Checkout takrorlanmasligi uchun mijoz yuboradigan kalit (ixtiyoriy)
+    idempotency_key = models.CharField(max_length=80, null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            # Har foydalanuvchida bittadan ortiq savat (pending) bo'lmaydi
+            models.UniqueConstraint(
+                fields=['user'], condition=models.Q(status='pending'), name='one_pending_cart_per_user',
+            ),
+            models.UniqueConstraint(
+                fields=['user', 'idempotency_key'], condition=models.Q(idempotency_key__isnull=False),
+                name='unique_order_idempotency_key',
+            ),
+        ]
+
+    @classmethod
+    def can_move(cls, old, new):
+        return old == new or new in cls.TRANSITIONS.get(old, ())
 
     @property
     def address_text(self):
@@ -156,7 +182,8 @@ class OrderEvent(models.Model):
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
-    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    # PROTECT: buyurtmada qatnashgan kitobni o'chirib bo'lmaydi (nofaol qilinadi)
+    book = models.ForeignKey(Book, on_delete=models.PROTECT)
     quantity = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
     # Buyurtma berilgan paytdagi narx (savatdagi qatorlarda bo'sh: joriy narx olinadi)
     price = models.PositiveIntegerField(null=True, blank=True, verbose_name='Sotuv narxi:')

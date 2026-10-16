@@ -4,6 +4,7 @@ Foydalanish statistikasi faqat bekor qilinmagan buyurtmalardan hisoblanadi.
 """
 import re
 
+from django.db import IntegrityError, transaction
 from django.db.models import Count, IntegerField, OuterRef, Q, Subquery, Sum
 from django.db.models.functions import Coalesce
 from rest_framework import generics, serializers
@@ -14,6 +15,7 @@ from .models import Order, PromoCode
 from .panel import ACTIVE, with_totals
 
 CODE_PATTERN = re.compile(r'^[A-Z0-9_-]{3,32}$')
+NEW_CODE_MIN_LENGTH = 6  # yangi kodlar uchun (mavjud qisqa kodlar ishlayveradi)
 
 
 class PanelPromoSerializer(serializers.ModelSerializer):
@@ -29,6 +31,8 @@ class PanelPromoSerializer(serializers.ModelSerializer):
             if code != self.instance.code:
                 raise serializers.ValidationError("Kodni o'zgartirib bo'lmaydi (eski buyurtmalar unga bog'liq). Yangisini yarating.")
             return code
+        if len(code) < NEW_CODE_MIN_LENGTH:
+            raise serializers.ValidationError(f"Yangi kod kamida {NEW_CODE_MIN_LENGTH} ta belgidan iborat bo'lsin.")
         if PromoCode.objects.filter(code__iexact=code).exists():
             raise serializers.ValidationError('Bunday promo kod allaqachon bor.')
         return code
@@ -71,7 +75,11 @@ class PanelPromoList(generics.ListCreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        promo = serializer.save()
+        try:
+            with transaction.atomic():
+                promo = serializer.save()
+        except IntegrityError:  # ikki marta bosilgan so'rov: validate_code ikkalasini o'tkazadi, unique ikkinchisini to'xtatadi
+            raise serializers.ValidationError({'code': ['Bunday promo kod allaqachon bor.']})
         return Response(PanelPromoSerializer(with_usage(PromoCode.objects.filter(pk=promo.pk)).get()).data, status=201)
 
 

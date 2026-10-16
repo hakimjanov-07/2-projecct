@@ -6,6 +6,7 @@ import csv
 import io
 import os
 import re
+from decimal import ROUND_HALF_UP, Decimal
 
 from django.db import transaction
 from django.http import HttpResponse
@@ -31,7 +32,7 @@ def norm(value):
     return ' '.join(value.split()).casefold()
 
 
-def validate_photo(photo):
+def validate_photo(photo, max_bytes=None):
     """ Rasm: kengaytma, MIME turi va hajm (haqiqiy rasm ekanini ImageField/Pillow o'zi tekshiradi) """
     ext = os.path.splitext(photo.name or '')[1].lower()
     if ext not in PHOTO_TYPES:
@@ -39,8 +40,9 @@ def validate_photo(photo):
     content_type = (getattr(photo, 'content_type', '') or '').lower()
     if content_type and content_type != PHOTO_TYPES[ext] and not (content_type == 'image/jpg' and ext in ('.jpg', '.jpeg')):
         raise serializers.ValidationError("Fayl turi rasm kengaytmasiga mos kelmaydi.")
-    if photo.size > MAX_PHOTO_BYTES:
-        raise serializers.ValidationError("Rasm hajmi 5 MB dan oshmasligi kerak.")
+    limit = max_bytes or MAX_PHOTO_BYTES  # chegara chaqiruv paytida olinadi (testlarda almashtirish mumkin)
+    if photo.size > limit:
+        raise serializers.ValidationError(f"Rasm hajmi {limit // (1024 * 1024)} MB dan oshmasligi kerak.")
     return photo
 
 
@@ -397,3 +399,143 @@ def panel_books_import_template(request):
     writer.writerow(TEMPLATE_HEADER)
     writer.writerows(TEMPLATE_ROWS)
     return response
+
+
+
+""" OMMAVIY TAHRIR (tanlangan kitoblar) """
+
+MAX_BULK_IDS = 200
+
+
+class BulkItemSerializer(serializers.Serializer):
+    """ Bitta kitobga alohida qiymat (umumiy qiymatdan ustun turadi) """
+    id = serializers.IntegerField(min_value=1)
+    price = serializers.IntegerField(min_value=1, required=False)
+    cost_price = serializers.IntegerField(min_value=1, required=False)
+    stock = serializers.IntegerField(min_value=0, required=False, allow_null=True)
+    status = serializers.ChoiceField(choices=STATUS, required=False)
+
+
+class BulkUpdateSerializer(serializers.Serializer):
+    ids = serializers.ListField(child=serializers.IntegerField(min_value=1), max_length=MAX_BULK_IDS, required=False)
+    items = BulkItemSerializer(many=True, required=False)
+    price_mode = serializers.ChoiceField(choices=['set', 'percent'], required=False)
+    price = serializers.IntegerField(min_value=1, required=False)
+    percent = serializers.IntegerField(min_value=-90, max_value=300, required=False)
+    cost_price = serializers.IntegerField(min_value=1, required=False)
+    stock_mode = serializers.ChoiceField(choices=['set', 'add', 'unlimited'], required=False)
+    stock = serializers.IntegerField(min_value=0, required=False)
+    status = serializers.ChoiceField(choices=STATUS, required=False)
+
+    def validate_items(self, items):
+        item_ids = [i['id'] for i in items]
+        if len(item_ids) != len(set(item_ids)):
+            raise serializers.ValidationError("Bir kitob items ichida ikki marta uchramasligi kerak.")
+        return items
+
+    def validate(self, data):
+        errors = {}
+        shared = ('price_mode', 'cost_price', 'stock_mode', 'status')
+        has_shared = any(k in data for k in shared)
+        if not data.get('ids') and not data.get('items'):
+            errors['ids'] = ["Kamida bitta kitob tanlang (ids yoki items)."]
+        mode = data.get('price_mode')
+        if mode == 'set' and 'price' not in data:
+            errors['price'] = ["Yangi narxni kiriting."]
+        if mode == 'percent' and 'percent' not in data:
+            errors['percent'] = ["Foizni kiriting."]
+        if mode is None and ('price' in data or 'percent' in data):
+            errors['price_mode'] = ["Narx rejimini tanlang (set yoki percent)."]
+        smode = data.get('stock_mode')
+        if smode in ('set', 'add') and 'stock' not in data:
+            errors['stock'] = ["Ombor sonini kiriting."]
+        if smode is None and 'stock' in data:
+            errors['stock_mode'] = ["Ombor rejimini tanlang (set, add yoki unlimited)."]
+        if errors:
+            raise serializers.ValidationError(errors)
+        if not has_shared and not data.get('items'):
+            raise serializers.ValidationError({'detail': "O'zgartiriladigan maydon berilmagan."})
+        targets = set(data.get('ids') or []) | {i['id'] for i in data.get('items') or []}
+        if len(targets) > MAX_BULK_IDS:
+            raise serializers.ValidationError({'ids': [f"Bir martada {MAX_BULK_IDS} tagacha kitob."]})
+        return data
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def panel_books_bulk_update(request):
+    """
+    POST /api/panel/books/bulk-update/ (hammasi yoki hech narsa).
+    ids + umumiy maydonlar: tanlangan kitoblarga bir xil o'zgarish;
+    items: [{id, price, ...}]: har kitobga alohida qiymat (umumiy qiymatdan ustun turadi).
+    ids berilmasa, umumiy maydonlar items dagi kitoblarga qo'llanadi.
+    """
+    serializer = BulkUpdateSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    data = serializer.validated_data
+    items = {i['id']: i for i in data.get('items') or []}
+    shared_ids = list(dict.fromkeys(data.get('ids') or list(items)))
+    ids = list(dict.fromkeys(shared_ids + list(items)))
+
+    warnings = []
+    with transaction.atomic():
+        books = {b.id: b for b in Book.objects.select_for_update().filter(pk__in=ids)}
+        missing = [i for i in ids if i not in books]
+        if missing:
+            return Response({'ids': [f"Bunday kitob(lar) yo'q: {', '.join(map(str, missing))}."]}, status=400)
+
+        problems = []
+        for book_id in ids:
+            book = books[book_id]
+            if book_id in shared_ids:
+                mode = data.get('price_mode')
+                if mode == 'set':
+                    book.price = data['price']
+                elif mode == 'percent':
+                    if book.price is None:
+                        problems.append(f'"{book.name}": narxi yo\'q, foizga o\'zgartirib bo\'lmaydi.')
+                    else:
+                        # Decimal + ROUND_HALF_UP: 38.5 -> 39 (round() banker's usulida 38 berardi)
+                        new_price = int((Decimal(book.price) * (100 + data['percent']) / 100).quantize(Decimal('1'), rounding=ROUND_HALF_UP))
+                        if new_price < 1:
+                            problems.append(f'"{book.name}": yangi narx 1 so\'mdan kam bo\'lib qoladi.')
+                        book.price = max(new_price, 1)
+                if 'cost_price' in data:
+                    book.cost_price = data['cost_price']
+                smode = data.get('stock_mode')
+                if smode == 'set':
+                    book.stock = data['stock']
+                elif smode == 'unlimited':
+                    book.stock = None
+                elif smode == 'add':
+                    if book.stock is None:
+                        problems.append(f'"{book.name}": ombori cheklanmagan, qo\'shib bo\'lmaydi.')
+                    else:
+                        book.stock += data['stock']
+                if 'status' in data:
+                    book.status = data['status']
+            own = items.get(book_id)
+            if own:
+                for field in ('price', 'cost_price', 'stock', 'status'):
+                    if field in own:
+                        setattr(book, field, own[field])
+            if book.price is not None and book.cost_price is not None and book.price < book.cost_price:
+                warnings.append(f'"{book.name}": narx tannarxdan past (zarar bilan sotiladi).')
+
+        if problems:
+            # bitta kitob ham yaroqsiz bo'lsa, hech narsa o'zgarmaydi
+            transaction.set_rollback(True)
+            return Response({'detail': problems[:10]}, status=400)
+        Book.objects.bulk_update(books.values(), ['price', 'cost_price', 'stock', 'status'])
+
+    return Response({
+        'updated': len(ids),
+        'warnings': warnings,
+        'books': [
+            {
+                'id': b.id, 'price': b.price, 'cost_price': b.cost_price, 'stock': b.stock, 'status': b.status,
+                'markup': None if b.price is None or b.cost_price is None else b.price - b.cost_price,
+            }
+            for b in (books[i] for i in ids)
+        ],
+    })
