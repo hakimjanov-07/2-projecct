@@ -31,6 +31,8 @@ export default function LocationMap({ center, marker, zoom = 15, onPick, label, 
 
   useEffect(() => {
     const map = L.map(hostRef.current, { center, zoom, scrollWheelZoom: false })
+    // "Leaflet" yozuvi va bayrog'i olib tashlandi; OSM litsenziyasi talab qiladigan "© OpenStreetMap" qoladi
+    map.attributionControl.setPrefix(false)
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>',

@@ -3,6 +3,7 @@ import { SITE } from '../config/site'
 import { REGIONS } from '../config/regions'
 import { useLang } from '../i18n/LanguageContext'
 import { formatPhone, isPhoneComplete } from './deliveryForm'
+import FormSelect from './FormSelect'
 import LocationMap from './LocationMap'
 import Modal from './Modal'
 import styles from './DeliveryModals.module.css'
@@ -16,7 +17,8 @@ export default function DeliveryModal({ initial, onConfirm, onClose }) {
   const [errors, setErrors] = useState({})
   const [geoMessage, setGeoMessage] = useState('')
 
-  const hasPoint = form.delivery_lat != null && form.delivery_lng != null
+  const regionOptions = REGIONS.map((region) => ({ value: region.uz, label: region[lang] || region.uz }))
+  const hasPoint =form.delivery_lat != null && form.delivery_lng != null
   const point = hasPoint ? [form.delivery_lat, form.delivery_lng] : null
   const pick = (lat, lng) => {
     setGeoMessage('')
@@ -104,12 +106,15 @@ export default function DeliveryModal({ initial, onConfirm, onClose }) {
         </div>
 
         <div className={styles.grid}>
-          {field('city', t('ship.region'), (
-            <select value={form.city} aria-invalid={Boolean(errors.city)} autoComplete="address-level1" onChange={(event) => set('city', event.target.value)}>
-              <option value="">{t('ship.regionPlaceholder')}</option>
-              {REGIONS.map((region) => <option key={region.uz} value={region.uz}>{region[lang] || region.uz}</option>)}
-            </select>
-          ))}
+          <FormSelect
+            label={t('ship.region')}
+            value={form.city}
+            options={regionOptions}
+            placeholder={t('ship.regionPlaceholder')}
+            error={errors.city}
+            autoComplete="address-level1"
+            onChange={(value) => set('city', value)}
+          />
           {field('district', t('ship.district'), (
             <input value={form.district} maxLength={100} autoComplete="address-level2" onChange={(event) => set('district', event.target.value)} />
           ))}

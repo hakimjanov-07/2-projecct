@@ -1,0 +1,185 @@
+.field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.label {
+  cursor: pointer;
+}
+
+/* Maydon (input) bilan bir xil o'lcham, radius va fon */
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--gray-200);
+  border-radius: 14px;
+  background: var(--cream);
+  color: var(--text);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 400;
+  text-align: left;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.trigger:hover,
+.triggerOpen,
+.trigger:focus-visible {
+  border-color: var(--brown);
+}
+
+.triggerOpen,
+.trigger:focus-visible {
+  box-shadow: 0 0 0 3px rgba(200, 149, 108, 0.25);
+}
+
+.trigger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.invalid .trigger {
+  border-color: #d3354f;
+}
+
+.selected,
+.placeholder {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.placeholder {
+  color: var(--gray-600);
+}
+
+.chevron {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: var(--brown-2);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.2s ease;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.err {
+  color: #d3354f;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Ro'yxat body'ga portal qilinadi: modal skrolli kesmaydi */
+.menu {
+  position: fixed;
+  z-index: 1100;
+  box-sizing: border-box;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 8px;
+  border: 1px solid rgba(200, 149, 108, 0.45);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 16px 40px rgba(107, 68, 41, 0.18);
+  font-size: 14px;
+  font-weight: 400;
+  transform-origin: top center;
+  animation: menuIn 0.17s ease-out;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ring) transparent;
+}
+
+.menuUp {
+  transform-origin: bottom center;
+  animation-name: menuInUp;
+}
+
+.menu::-webkit-scrollbar {
+  width: 8px;
+}
+
+.menu::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--ring);
+}
+
+.menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.optionText {
+  min-width: 0;
+}
+
+/* Hover, klaviatura faoli va tanlangan: SortSelect/FilterSelect bilan bir xil */
+.option:hover,
+.optionActive,
+.optionSelected {
+  background: var(--nav-soft);
+  color: var(--brown-dark);
+  box-shadow: 0 0 0 1px var(--ring);
+}
+
+.optionSelected {
+  font-weight: 600;
+}
+
+.check {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: var(--brown-2);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@keyframes menuIn {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes menuInUp {
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu {
+    animation: none;
+  }
+
+  .chevron,
+  .trigger {
+    transition: none;
+  }
+}

@@ -189,8 +189,8 @@
 }
 
 .primary {
-  background: var(--brown);
-  color: var(--white);
+  background: color-mix(in srgb, var(--brown-2) 90%, #000);
+  color: var(--on-accent);
 }
 
 .primary:hover {
