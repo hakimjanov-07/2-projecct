@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { checkoutOrder, getCartQuote, getProfile } from '../api'
 import { EMPTY_FORM, formatPhone, loadSavedForm, saveForm } from '../components/deliveryForm'
@@ -16,7 +16,9 @@ const DeliveryModal = lazy(() => import('../components/DeliveryModal'))
 function TrashIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />
+      {/* Qopqoq va tana alohida: hover'da qopqoq ko'tariladi, tana tebranadi */}
+      <path className={styles.trashBody} d="M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
+      <path className={styles.trashLid} d="M4 7h16M9 7V4h6v3" />
     </svg>
   )
 }
@@ -24,7 +26,9 @@ function TrashIcon() {
 function BagIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M6 8h12l1 12H5L6 8Zm3 0V6a3 3 0 0 1 6 0v2M9 13a3 3 0 0 0 6 0" />
+      <path d="M6 8h12l1 12H5L6 8Zm3 0V6a3 3 0 0 1 6 0v2" />
+      {/* Tabassum alohida path: hover'da kengayib ko'tariladi */}
+      <path className={styles.bagSmile} d="M9 13a3 3 0 0 0 6 0" />
     </svg>
   )
 }
@@ -63,8 +67,43 @@ function PercentIcon() {
   )
 }
 
+// Qator so'nib yig'ilish vaqti (ms); shundan keyin qator savatdan olib tashlanadi
+const REMOVE_MS = 400
+const COLLAPSE_MS = 380
+const STAGGER_MS = 50
+
+// Qator balandligi (va tepa oraliq) silliq 0 ga yig'iladi, pastdagi qatorlar sakramasdan ko'tariladi
+const collapseRow = (row, delay) => {
+  if (!row || row.dataset.leaving) return
+  row.dataset.leaving = '1'
+  const cs = getComputedStyle(row)
+  row.style.overflow = 'hidden'
+  row.animate(
+    [
+      {
+        height: `${row.offsetHeight}px`, marginTop: cs.marginTop, paddingTop: cs.paddingTop, paddingBottom: cs.paddingBottom,
+        borderTopWidth: cs.borderTopWidth, borderBottomWidth: cs.borderBottomWidth, opacity: 1, transform: 'translateX(0)',
+      },
+      {
+        height: '0px', marginTop: '0px', paddingTop: '0px', paddingBottom: '0px',
+        borderTopWidth: '0px', borderBottomWidth: '0px', opacity: 0, transform: 'translateX(-12px)',
+      },
+    ],
+    { duration: COLLAPSE_MS, delay, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'both' }
+  )
+}
+
+const prefersReducedMotion = () =>
+  typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+// Tugmadagi ikonka yozuv ichiga qancha siljishini o'lchaydi (CSS o'zgaruvchisi --slide)
+const setSlide = (button) => {
+  const label = button.querySelector('[data-label]')
+  if (label) button.style.setProperty('--slide', `${Math.round(label.offsetWidth / 2 + 24)}px`)
+}
+
 export default function Cart() {
-  const { items, totalItems, totalPrice, updateQuantity, removeFromCart, clearCart } = useCart()
+  const { items, totalItems, totalPrice, updateQuantity, removeFromCart, clearCart, syncItems } = useCart()
   const navigate = useNavigate()
   const { showToast } = useToast()
   const { t, locale } = useLang()
@@ -78,6 +117,67 @@ export default function Cart() {
   const [method, setMethod] = useState(null)
   const [modal, setModal] = useState(null)
   const [form, setForm] = useState(() => ({ ...EMPTY_FORM, ...loadSavedForm() }))
+  // O'chirilayotgan qatorlar (animatsiya vaqtida) va "hammasini tozalash" holati
+  const [leavingIds, setLeavingIds] = useState([])
+  const [clearing, setClearing] = useState(false)
+  const timers = useRef([])
+  const headingRef = useRef(null)
+
+  useEffect(() => {
+    const list = timers.current
+    return () => list.forEach(clearTimeout)
+  }, [])
+
+  // Fokus yo'qolayotgan qatorda qolib ketmasin: keyingi (yoki oldingi) qator tugmasiga, bo'lmasa sarlavhaga
+  const moveFocus = (row) => {
+    const active = document.activeElement
+    if (active && active !== document.body && !row?.contains(active)) return
+    let target = null
+    for (let el = row?.nextElementSibling; el && !target; el = el.nextElementSibling) {
+      if (!el.dataset.leaving) target = el.querySelector('[data-remove]')
+    }
+    for (let el = row?.previousElementSibling; el && !target; el = el.previousElementSibling) {
+      if (!el.dataset.leaving) target = el.querySelector('[data-remove]')
+    }
+    ;(target || headingRef.current)?.focus({ preventScroll: true })
+  }
+
+  const handleRemove = (event, id) => {
+    if (leavingIds.includes(id) || clearing) return
+    const row = event.currentTarget.closest('article')
+    if (prefersReducedMotion()) {
+      moveFocus(row)
+      removeFromCart(id)
+      return
+    }
+    setSlide(event.currentTarget)
+    setLeavingIds((ids) => [...ids, id])
+    collapseRow(row, 0)
+    timers.current.push(setTimeout(() => {
+      moveFocus(row)
+      removeFromCart(id)
+      setLeavingIds((ids) => ids.filter((x) => x !== id))
+    }, REMOVE_MS))
+  }
+
+  const handleClear = (event) => {
+    if (clearing) return
+    if (prefersReducedMotion()) {
+      headingRef.current?.focus({ preventScroll: true })
+      clearCart()
+      return
+    }
+    setSlide(event.currentTarget)
+    setClearing(true)
+    // Qatorlar yengil stagger bilan so'nib yig'iladi
+    const rows = [...document.querySelectorAll('[data-cart-row]')].filter((row) => !row.dataset.leaving)
+    rows.forEach((row, index) => collapseRow(row, index * STAGGER_MS))
+    timers.current.push(setTimeout(() => {
+      headingRef.current?.focus({ preventScroll: true })
+      clearCart()
+      setClearing(false)
+    }, REMOVE_MS + Math.max(0, rows.length - 1) * STAGGER_MS))
+  }
 
   // Bo'sh maydonlarni profil ma'lumoti bilan to'ldirish (kirgan foydalanuvchi uchun)
   useEffect(() => {
@@ -99,28 +199,45 @@ export default function Cart() {
     }
   }, [])
 
-  // Chegirma, yetkazib berish va to'lov summasi serverdan olinadi (buyurtmadagi hisob bilan bir xil)
+  // Qatorlar, chegirma, yetkazib berish va to'lov summasi bitta manbadan (server quote) olinadi.
+  // Usul tanlanmaguncha yetkazib berish puli hisoblanmaydi ('pickup' so'raladi).
+  const quoteMethod = method === 'delivery' ? 'delivery' : 'pickup'
   useEffect(() => {
     if (items.length === 0) return
     let active = true
     const timer = setTimeout(() => {
-      getCartQuote(items, promoCode, method === 'pickup' ? 'pickup' : 'delivery')
-        .then((response) => active && setQuote(response.data))
+      getCartQuote(items, promoCode, quoteMethod)
+        .then((response) => {
+          if (!active) return
+          const data = response.data
+          setQuote({ ...data, method: quoteMethod })
+          // Savatdagi eski nom/narx/rasmni joriy ma'lumot bilan almashtirish, yo'q kitobni olib tashlash
+          const lines = data.items || []
+          const lineIds = new Set(lines.map((line) => line.id))
+          const dropped = items.some((item) => !lineIds.has(item.id) || lines.find((line) => line.id === item.id).stock === 0)
+          syncItems(lines, data.missing || [])
+          if (dropped) showToast(t('cart.removedUnavailable'), { type: 'error', icon: '!' })
+        })
         .catch(() => active && setQuote(null))
     }, 250)
     return () => {
       active = false
       clearTimeout(timer)
     }
-  }, [items, promoCode, method])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, promoCode, quoteMethod])
 
-  const activeQuote = items.length > 0 ? quote : null
-  const subtotal = activeQuote?.subtotal ?? totalPrice
+  // Server javobi savatdagi joriy qatorlarga aynan mos bo'lsagina ishlatiladi, aks holda qatorlar yig'indisi
+  const quoteFits = items.length > 0 && quote !== null && quote.method === quoteMethod
+    && quote.items.length === items.length
+    && items.every((item) => quote.items.some((line) => line.id === item.id && Number(line.price) === item.price && line.quantity === item.quantity))
+  const activeQuote = quoteFits ? quote : null
+  const subtotal = totalPrice
   const discount = activeQuote?.discount ?? 0
-  const deliveryFee = activeQuote?.delivery_fee ?? 0
-  const payTotal = activeQuote?.total ?? totalPrice
-  const promoApplied = activeQuote?.promo || null
-  const promoInvalid = Boolean(promoCode) && activeQuote !== null && activeQuote.promo_valid === false
+  const deliveryFee = method === 'delivery' ? activeQuote?.delivery_fee ?? 0 : 0
+  const payTotal = subtotal - discount + deliveryFee
+  const promoApplied = (items.length > 0 ? quote?.promo : null) || null
+  const promoInvalid = Boolean(promoCode) && items.length > 0 && quote !== null && quote.promo_valid === false
 
   const applyPromo = (event) => {
     event.preventDefault()
@@ -166,12 +283,17 @@ export default function Cart() {
       const delivery = method === 'pickup'
         ? { delivery_method: 'pickup', recipient_name: form.recipient_name, recipient_phone: form.recipient_phone }
         : { delivery_method: 'delivery', ...form }
-      await checkoutOrder(items, promoApplied ? promoApplied.code : '', delivery)
+      const { data: order } = await checkoutOrder(items, promoApplied ? promoApplied.code : '', delivery)
       saveForm(form)
       clearCart()
       clearPromo()
       setOrderPlaced(true)
-      showToast(t('toast.orderPlaced'))
+      // Tepadan tushuvchi xabar: buyurtma raqami va "Buyurtmalarimga o'tish" havolasi bilan
+      showToast(order?.id ? t('toast.orderAcceptedNo', { n: order.id }) : t('toast.orderAccepted'), {
+        drop: true,
+        duration: 4000,
+        action: { label: t('toast.goOrders'), onClick: () => navigate('/orders') },
+      })
     } catch (error) {
       const data = error.response?.data
       const addressInvalid = error.response?.status === 400
@@ -199,11 +321,13 @@ export default function Cart() {
       <div className={styles.container}>
         <header className={styles.header} data-reveal>
           <div>
-            <h1>{t('cart.selected')}</h1>
+            <h1 ref={headingRef} tabIndex={-1}>{t('cart.selected')}</h1>
             <p>{t('cart.subtitle')}</p>
           </div>
           <div className={styles.countPill}>
-            <BagIcon /> {t('cart.itemsCount', { n: totalItems })}
+            {/* key: son o'zgarganda animatsiya qayta ishga tushadi */}
+            <span key={totalItems} className={styles.bagWrap}><BagIcon /></span>
+            <span key={`n${totalItems}`} className={styles.countText}>{t('cart.itemsCount', { n: totalItems })}</span>
           </div>
         </header>
 
@@ -221,8 +345,13 @@ export default function Cart() {
                 <span aria-hidden="true">‹</span> {t('cart.continue')}
               </Link>
               {items.length > 0 && (
-                <button type="button" className={styles.clearBtn} onClick={clearCart}>
-                  <TrashIcon /> {t('cart.clearAll')}
+                <button
+                  type="button"
+                  className={`${styles.clearBtn} ${clearing ? styles.removing : ''}`}
+                  onClick={handleClear}
+                  disabled={clearing}
+                >
+                  <TrashIcon /> <span data-label className={styles.btnLabel}>{t('cart.clearAll')}</span>
                 </button>
               )}
             </div>
@@ -235,7 +364,12 @@ export default function Cart() {
               </div>
             ) : (
               items.map((item) => (
-                <article key={item.id} className={styles.item} data-reveal>
+                <article
+                  key={item.id}
+                  className={styles.item}
+                  data-cart-row
+                  data-reveal
+                >
                   <Link to={`/books/${item.id}`} className={styles.cover}>
                     <img src={item.photo || fallbackImage} alt={item.name} />
                   </Link>
@@ -268,8 +402,14 @@ export default function Cart() {
                         >+</button>
                       </div>
 
-                      <button type="button" className={styles.removeBtn} onClick={() => removeFromCart(item.id)}>
-                        <TrashIcon /> {t('cart.remove')}
+                      <button
+                        type="button"
+                        className={`${styles.removeBtn} ${leavingIds.includes(item.id) ? styles.removing : ''}`}
+                        onClick={(event) => handleRemove(event, item.id)}
+                        data-remove
+                        disabled={leavingIds.includes(item.id) || clearing}
+                      >
+                        <TrashIcon /> <span data-label className={styles.btnLabel}>{t('cart.remove')}</span>
                       </button>
                     </div>
                   </div>

@@ -65,6 +65,38 @@ export function CartProvider({ children }) {
 
   const clearCart = () => setItems([])
 
+  // Savatni serverdagi joriy kitob ma'lumoti bilan sinxronlash: nom/narx/rasm yangilanadi, yo'q kitob olib tashlanadi.
+  // O'zgarish bo'lmasa o'sha holat qaytadi (ortiqcha render va qayta so'rov bo'lmaydi).
+  const syncItems = (lines, missing = []) => {
+    const byId = new Map(lines.map((line) => [line.id, line]))
+    const gone = new Set(missing)
+    setItems((current) => {
+      let changed = false
+      const next = []
+      for (const item of current) {
+        const line = byId.get(item.id)
+        if (!line) {
+          if (gone.has(item.id)) {
+            changed = true
+            continue
+          }
+          next.push(item)
+          continue
+        }
+        const stock = line.stock ?? null
+        const quantity = Math.min(item.quantity, stock ?? Infinity)
+        if (quantity < 1) {
+          changed = true
+          continue
+        }
+        const fresh = { ...item, name: line.name, price: Number(line.price), photo: line.photo || '', category_name: line.category_name || '', stock, quantity }
+        if (Object.keys(fresh).some((key) => fresh[key] !== item[key])) changed = true
+        next.push(fresh)
+      }
+      return changed ? next : current
+    })
+  }
+
   const totalItems = useMemo(
     () => items.reduce((sum, item) => sum + item.quantity, 0),
     [items]
@@ -85,6 +117,7 @@ export function CartProvider({ children }) {
         removeFromCart,
         updateQuantity,
         clearCart,
+        syncItems,
       }}
     >
       {children}

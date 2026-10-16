@@ -233,6 +233,19 @@ class PricingTests(BookShopAPITestCase):
         self.assertEqual(res.data['delivery_fee'], 20000)
         self.assertEqual(res.data['total'], 110000)
 
+    def test_quote_returns_current_lines_and_missing(self):
+        # Qatorlar joriy narx bilan, yo'q kitob 'missing'da; jami qatorlar yig'indisiga teng
+        res = self.client.post(
+            '/api/cart/quote/',
+            {'items': [{'book_id': self.book.id, 'quantity': 2}, {'book_id': 999999, 'quantity': 1}]},
+            format='json',
+        )
+        self.assertEqual(res.data['missing'], [999999])
+        self.assertEqual(len(res.data['items']), 1)
+        line = res.data['items'][0]
+        self.assertEqual((line['id'], line['name'], line['price'], line['line_total']), (self.book.id, self.book.name, 45000, 90000))
+        self.assertEqual(res.data['subtotal'], sum(i['line_total'] for i in res.data['items']))
+
     def test_free_delivery_from_threshold(self):
         res = self.quote(7)  # 315 000
         self.assertEqual(res.data['delivery_fee'], 0)

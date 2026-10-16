@@ -168,12 +168,28 @@ def quote(request):
     serializer.is_valid(raise_exception=True)
     quantities = merge_quantities(serializer.validated_data['items'])
 
-    books = {b.id: b for b in Book.objects.filter(id__in=quantities, status='active')}
+    books = {b.id: b for b in Book.objects.filter(id__in=quantities, status='active').select_related('category')}
     subtotal = sum((books[book_id].price or 0) * qty for book_id, qty in quantities.items() if book_id in books)
 
     code = serializer.validated_data.get('promo_code', '')
     promo = find_promo(code)
     result = calculate_totals(subtotal, promo, serializer.validated_data['delivery_method'])
+    # Qatorlar joriy narx bilan: mijoz savatdagi eski nom/narxni shu bilan yangilaydi (jami bilan bir manba)
+    result['items'] = [
+        {
+            'id': book_id,
+            'name': books[book_id].name,
+            'price': books[book_id].price or 0,
+            'photo': request.build_absolute_uri(books[book_id].photo.url) if books[book_id].photo else '',
+            'category_name': books[book_id].category.name,
+            'stock': books[book_id].stock,
+            'quantity': qty,
+            'line_total': (books[book_id].price or 0) * qty,
+        }
+        for book_id, qty in quantities.items() if book_id in books
+    ]
+    # Bazada yo'q yoki faol bo'lmagan kitoblar (savatdan olib tashlanadi)
+    result['missing'] = [book_id for book_id in quantities if book_id not in books]
     result['promo'] = {'code': promo.code, 'percent': promo.discount_percent} if promo else None
     result['promo_valid'] = promo is not None or not code.strip()
     return Response(result)

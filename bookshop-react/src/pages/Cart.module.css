@@ -52,6 +52,58 @@
   stroke-linejoin: round;
 }
 
+.bagWrap {
+  display: inline-flex;
+}
+
+.bagWrap svg,
+.bagSmile {
+  transform-box: fill-box;
+}
+
+.bagWrap svg { transform-origin: 50% 0; }
+.bagSmile { transform-origin: 50% 100%; }
+
+/* Hover: sumka dastasidan osilgandek tebranadi, tabassum kengayib ko'tariladi;
+   son o'zgarganda: sumka "pop", raqam yonib o'chadi (key bilan qayta ishga tushadi) */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .countPill:hover .bagWrap svg {
+    animation: 0.5s ease-in-out bagSwing;
+  }
+
+  .countPill:hover .bagSmile {
+    animation: 0.5s ease-in-out bagSmile;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bagWrap {
+    animation: 0.4s ease-out bagPop;
+  }
+
+  .countText {
+    animation: 0.45s ease-out flash;
+  }
+}
+
+@keyframes bagSwing {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-8deg); }
+  55% { transform: rotate(6deg); }
+  80% { transform: rotate(-3deg); }
+}
+
+@keyframes bagSmile {
+  0%, 100% { transform: scaleX(1) translateY(0); }
+  40%, 60% { transform: scaleX(1.25) translateY(-1px); }
+}
+
+@keyframes bagPop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
 .success {
   display: flex;
   flex-direction: column;
@@ -76,8 +128,13 @@
 }
 
 .list {
-  display: grid;
-  gap: 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Oraliq gap emas margin: o'chirilayotgan qator uni ham silliq yig'ishi uchun */
+.list > * + * {
+  margin-top: 14px;
 }
 
 .actions {
@@ -135,6 +192,72 @@
   stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
+  overflow: visible; /* katta ochilgan qopqoq kesilmasin */
+}
+
+/* Paqir: qopqoq (chap-pastdan) ko'tarilib qiyshayadi, tana tebranadi */
+.trashLid,
+.trashBody {
+  transform-box: fill-box;
+}
+
+.trashLid { transform-origin: 0% 100%; }
+.trashBody { transform-origin: 50% 100%; }
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .clearBtn:hover .trashLid,
+  .clearBtn:focus-visible .trashLid,
+  .removeBtn:hover .trashLid,
+  .removeBtn:focus-visible .trashLid {
+    animation: trashLid 0.4s cubic-bezier(0.34, 1.4, 0.5, 1);
+  }
+
+  .clearBtn:hover .trashBody,
+  .clearBtn:focus-visible .trashBody,
+  .removeBtn:hover .trashBody,
+  .removeBtn:focus-visible .trashBody {
+    animation: trashShake 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+@keyframes trashLid {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  35%, 65% { transform: translateY(-3px) rotate(-40deg); }
+}
+
+/* Bosilganda: paqir yozuv ichiga siljib kirib kichrayadi, yozuv "pop" qiladi, qator so'nadi */
+.btnLabel {
+  display: inline-block;
+}
+
+.removing {
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .removing svg {
+    animation: trashIn 0.32s ease-in forwards;
+  }
+
+  .removing .btnLabel {
+    animation: labelPop 0.32s ease-out;
+  }
+}
+
+@keyframes trashIn {
+  to { transform: translateX(var(--slide, 40px)) scale(0); opacity: 0; }
+}
+
+@keyframes labelPop {
+  0%, 100% { transform: scale(1); }
+  55% { transform: scale(1.1); }
+}
+
+@keyframes trashShake {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-8deg); }
+  50% { transform: rotate(6deg); }
+  75% { transform: rotate(-3deg); }
 }
 
 .item {

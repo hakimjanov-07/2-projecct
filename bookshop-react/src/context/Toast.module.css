@@ -36,3 +36,89 @@
 .toastError {
   background: #d3354f;
 }
+
+/* Tepadan tushuvchi variant: havola va yopish tugmasi bilan */
+.toastDrop {
+  z-index: 1000;
+  border-radius: 18px;
+  padding: 12px 14px 12px 20px;
+  animation: toast-drop 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.toastLeaving {
+  animation: toast-lift 0.28s ease-in forwards;
+}
+
+.toastText {
+  min-width: 0;
+}
+
+.toastAction {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.toastAction:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.toastClose {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.toastClose:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+@keyframes toast-drop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -100%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes toast-lift {
+  to {
+    opacity: 0;
+    transform: translate(-50%, -100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .toastDrop,
+  .toastLeaving {
+    animation: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .toastDrop {
+    flex-wrap: wrap;
+    width: calc(100vw - 32px);
+  }
+
+  .toastText {
+    flex: 1 1 60%;
+  }
+}
