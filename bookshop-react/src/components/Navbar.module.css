@@ -641,11 +641,6 @@
     animation: 0.55s ease var(--kf-wiggle);
   }
 
-  .iconButton:hover .iconBooks svg,
-  .iconButton:focus-visible .iconBooks svg {
-    animation: 0.5s cubic-bezier(0.4, 0, 0.2, 1) var(--kf-hop);
-  }
-
   .iconButton:hover .iconUser svg,
   .iconButton:focus-visible .iconUser svg {
     transform: scale(1.14);

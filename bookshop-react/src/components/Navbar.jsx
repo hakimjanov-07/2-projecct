@@ -1,7 +1,6 @@
 import { NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { useCart } from '../context/CartContext'
-import { useFavorites } from '../context/FavoritesContext'
 import { clearSession } from '../api'
 import { SITE } from '../config/site'
 import { LANGUAGES } from '../i18n/translations'
@@ -53,14 +52,6 @@ function CartIcon() {
   )
 }
 
-function BookIcon() {
-  return (
-    <svg className={styles.outlineIcon} viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 6.5C10.5 5 8 4.5 4 4.5v13c4 0 6.5.5 8 2c1.5-1.5 4-2 8-2v-13c-4 0-6.5.5-8 2ZM12 6.5v13" />
-    </svg>
-  )
-}
-
 function UserIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -97,7 +88,6 @@ export default function Navbar() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { totalItems } = useCart()
-  const { favoritesCount } = useFavorites()
   const activeSearch = searchParams.get('search') || ''
   const [query, setQuery] = useState(activeSearch)
   const { lang, setLang, t } = useLang()
@@ -350,12 +340,6 @@ export default function Navbar() {
               <span className={`${styles.iconWrap} ${styles.iconCart}`}><CartIcon /></span>
               <span className={styles.iconLabel}>{t('nav.cart')}</span>
               {totalItems > 0 && <span className={styles.cartCount}>{totalItems}</span>}
-            </button>
-
-            <button className={styles.iconButton} type="button" onClick={() => navigate('/my-books')}>
-              <span className={`${styles.iconWrap} ${styles.iconBooks}`}><BookIcon /></span>
-              <span className={styles.iconLabel}>{t('nav.myBooks')}</span>
-              {favoritesCount > 0 && <span className={styles.cartCount}>{favoritesCount}</span>}
             </button>
 
             {token ? (
